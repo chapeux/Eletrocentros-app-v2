@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dim">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eletrocentros — Tempos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="assets/icone.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="assets/icone.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="app-shell">
+
+    <!-- ================= TOOLBAR ================= -->
+    <div class="toolbar">
+      <div class="brandmark">
+        <span class="mark">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M13 2 7 14h5l-1 8 7-13h-5z" fill="currentColor" />
+          </svg>
+        </span>
+        <div class="brandmark-text">
+          <b>Eletrocentros</b>
+          <span id="subTitleText">PCP &amp; PLANEJAMENTO</span>
+        </div>
+      </div>
+
+      <div class="seg-nav" role="tablist">
+        <button class="active" id="tabBtnPlanejamento" data-view="planejamento">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+          </svg>
+          Planejamento
+        </button>
+        <button id="tabBtnManutencao" data-view="manutencao">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+          </svg>
+          Regras
+          <span class="badge-lock" id="maintLockBadge">RESTRITO</span>
+        </button>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <!-- Ring Progress (for Planejamento View) -->
+      <div class="ring-wrap" id="ringWrap">
+        <svg class="ring" viewBox="0 0 22 22">
+          <circle class="track" cx="11" cy="11" r="8.5" />
+          <circle class="fill" id="ringFill" cx="11" cy="11" r="8.5" stroke-dasharray="0 53.4" />
+        </svg>
+        <span class="ring-text" id="ringText">0/8</span>
+      </div>
+
+      <button class="icon-btn" id="btnHist" title="Histórico de alterações" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+          <path d="M12 8v4l3 2" />
+        </svg>
+      </button>
+      <button class="icon-btn" id="btnCarregar" title="Carregar última execução">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+        </svg>
+      </button>
+      <button class="icon-btn" id="btnSettings" title="Configurações (editar JSON)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeToggle" title="Alternar tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <path
+            d="M12 3v1.6M12 19.4V21M4.9 4.9l1.1 1.1M18 18l1.1 1.1M3 12h1.6M19.4 12H21M4.9 19.1l1.1-1.1M18 6l1.1-1.1" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- ================= APP BODY ================= -->
+    <div class="app-body">
+
+      <!-- VIEW 1: DADOS PARA PLANEJAMENTO -->
+      <div class="view-pane" id="view-planejamento">
+        <nav class="section-nav" id="sectionNavPlanejamento">
+          <button class="snav-btn active" data-anchor="sec-estrutura">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M3 7l9-4 9 4-9 4-9-4Z" />
+              <path d="M3 12l9 4 9-4M3 17l9 4 9-4" />
+            </svg>
+            Estrutura<span class="n zero">0</span>
+          </button>
+          <button class="snav-btn" data-anchor="sec-eletrica">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M13 2 7 14h5l-1 8 7-13h-5z" />
+            </svg>
+            Elétrica &amp; Equip.<span class="n zero">0</span>
+          </button>
+          <button class="snav-btn" data-anchor="sec-acessorios">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+            Acessórios<span class="n zero">0</span>
+          </button>
+          <button class="snav-btn" data-anchor="sec-horas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.5V12l3 2" />
+            </svg>
+            Horas Orçadas<span class="n zero">0</span>
+          </button>
+          <button class="snav-btn" data-anchor="sec-sap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <ellipse cx="12" cy="5.5" rx="8" ry="3" />
+              <path d="M4 5.5V12c0 1.7 3.6 3 8 3s8-1.3 8-3V5.5" />
+              <path d="M4 12v6.5c0 1.7 3.6 3 8 3s8-1.3 8-3V12" />
+            </svg>
+            Automação SAP<span class="n zero">0</span>
+          </button>
+          <button class="snav-btn" data-anchor="sec-sapinfo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="5" width="18" height="14" rx="2.2" />
+              <path d="M7 15h4M7 11.2h.01" />
+              <circle cx="16" cy="11" r="1.6" />
+            </svg>
+            Dados do SAP<span class="n">0</span>
+          </button>
+        </nav>
+
+        <div class="content" id="contentPlanejamento">
+          <div class="content-title">
+            <h1>Novo projeto PCP</h1>
+            <div class="legend">
+              <span class="lg"><i class="dot amber"></i>obrigatório</span>
+              <span class="lg"><i class="dot green"></i>preenchido</span>
+            </div>
+          </div>
+
+          <div class="stack">
+            <!-- ESTRUTURA -->
+            <section class="pane" id="sec-estrutura">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M3 7l9-4 9 4-9 4-9-4Z" />
+                    <path d="M3 12l9 4 9-4M3 17l9 4 9-4" />
+                  </svg>
+                  Mecânica — Estrutura
+                </div>
+                <div class="pane-hint">Define os campos abaixo</div>
+              </div>
+              <div class="pane-body">
+                <div class="row">
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="tipoestrutura"></i><span class="txt">Tipo de
+                        Estrutura</span></span>
+                    <div class="csel" id="csel-tipoestrutura" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="nrmodulos"></i><span class="txt">Qtd.
+                        Módulos</span></span>
+                    <div class="csel" id="csel-nrmodulos" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="planpin"></i><span class="txt">Plano de
+                        Pintura</span></span>
+                    <div class="csel" id="csel-planpin" data-req="1"></div>
+                  </div>
+                </div>
+
+                <div id="modulesBlock">
+                  <div class="mtable">
+                    <div class="mhead"><span>Módulo</span><span>Comprim.</span><span></span><span>Largura</span></div>
+                    <div id="moduleRows"></div>
+                  </div>
+                </div>
+
+                <div class="warn" id="warnRoofTop1Mod">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path
+                      d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z" />
+                  </svg>
+                  <span>Ar-condicionado Roof Top exige casa de máquinas — selecione 2 ou mais módulos.</span>
+                </div>
+
+                <div class="row c2" style="margin-top:12px;">
+                  <label class="check"><input type="checkbox" id="chapaRemovivel"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Chapa Removível</label>
+                  <label class="check"><input type="checkbox" id="peDireito"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Pé Direito 3,3 metros</label>
+                </div>
+              </div>
+            </section>
+
+            <!-- ELÉTRICA & EQUIPAMENTOS -->
+            <section class="pane" id="sec-eletrica">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M13 2 7 14h5l-1 8 7-13h-5z" />
+                  </svg>
+                  Elétrica &amp; Equipamentos
+                </div>
+              </div>
+              <div class="pane-body">
+                <div class="row">
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="tipomaq"></i><span class="txt">Tipo Máq. Ar
+                        Cond.</span></span>
+                    <div class="csel" id="csel-tipomaq" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="qtdmaq"></i><span class="txt">Qtd. Ar
+                        Cond.</span></span>
+                    <div class="stepper" id="stepper-qtdmaq">
+                      <button type="button" class="dec">–</button>
+                      <input type="text" inputmode="numeric" class="mono" id="qtdmaq" value="0" disabled>
+                      <button type="button" class="inc">+</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="complexidade"></i><span
+                        class="txt">Complexidade</span></span>
+                    <div class="csel" id="csel-complexidade" data-req="1"></div>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:11px;">
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="incendio"></i><span class="txt">Tipo Sist.
+                        Incêndio</span></span>
+                    <div class="csel" id="csel-incendio" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="seguranca"></i><span class="txt">Tipo Sist.
+                        Segurança</span></span>
+                    <div class="csel" id="csel-seguranca" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="nrcolunas"></i><span class="txt">Nº Colunas
+                        Total</span></span>
+                    <div class="stepper" id="stepper-nrcolunas" data-req="1">
+                      <button type="button" class="dec">–</button>
+                      <input type="text" inputmode="numeric" class="mono" id="nrcolunas" value="">
+                      <button type="button" class="inc">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row c2" style="margin-top:12px;">
+                  <label class="check"><input type="checkbox" id="testesw"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Teste de Software</label>
+                  <label class="check"><input type="checkbox" id="whiteMartins"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>White Martins</label>
+                  <label class="check"><input type="checkbox" id="trafoOleo"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Transformador a Óleo c/ Bacia</label>
+                </div>
+              </div>
+            </section>
+
+            <!-- ACESSÓRIOS -->
+            <section class="pane" id="sec-acessorios">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
+                  Acessórios
+                </div>
+                <div class="pane-hint" id="acessoriosCount">0 selecionados</div>
+              </div>
+              <div class="pane-body">
+                <div class="check-grid">
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Escada Padrão WEG</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Escada Especial</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Porão de Cabos</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Pilotis</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Rede de Dutos</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Fundo Falso</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Dutos BWW</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Calhas Pluviais</label>
+                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Dutos de Gases</label>
+                </div>
+
+                <div style="height:1px; background:var(--hairline); margin:14px 0;"></div>
+
+                <div class="row c2">
+                  <div>
+                    <div class="pane-hint" id="containerHint"
+                      style="margin-bottom:7px; display:flex; gap:6px; align-items:center;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="2" y="7" width="20" height="10" rx="1.5" />
+                        <path d="M6 7V5h12v2M2 12h20" />
+                      </svg>
+                      Container Marítimo — requer "Container Solar"
+                    </div>
+                    <label class="check"><input type="checkbox" id="progReles"><span class="box"><svg
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Programação de Relés</label>
+                    <label class="check"><input type="checkbox" id="diagBTI"><span class="box"><svg viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Diagrama de Produção BTI</label>
+                    <label class="check"><input type="checkbox" id="diagAgrup"><span class="box"><svg
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Diagrama Agrupador</label>
+                  </div>
+                  <div>
+                    <div class="pane-hint" style="margin-bottom:7px;">Fabricação — padrão 1306</div>
+                    <label class="check"><input type="checkbox" id="fab1313"><span class="box"><svg viewBox="0 0 24 24"
+                          fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Usar fabricação 1313</label>
+                    <label class="check"><input type="checkbox" id="itemFilho"><span class="box"><svg
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Item Filho</label>
+                    <label class="check"><input type="checkbox" id="semEngenharia"><span class="box"><svg
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <path d="M4 12l5 5L20 6" />
+                        </svg></span>Sem Engenharia</label>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- HORAS ORÇADAS -->
+            <section class="pane" id="sec-horas">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="8.5" />
+                    <path d="M12 7.5V12l3 2" />
+                  </svg>
+                  Horas Orçadas
+                </div>
+              </div>
+              <div class="pane-body">
+                <div class="row">
+                  <div class="field">
+                    <span class="field-label"><span class="txt">LOM — Layout p/ Aprovação</span></span>
+                    <div class="stepper"><button type="button" class="dec">–</button><input type="text"
+                        inputmode="numeric" class="mono" id="horLOM" value=""><button type="button"
+                        class="inc">+</button></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><span class="txt">EDF — Edificação</span></span>
+                    <div class="stepper"><button type="button" class="dec">–</button><input type="text"
+                        inputmode="numeric" class="mono" id="horEDF" value=""><button type="button"
+                        class="inc">+</button></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><span class="txt">INT — Interligações</span></span>
+                    <div class="stepper"><button type="button" class="dec">–</button><input type="text"
+                        inputmode="numeric" class="mono" id="horINT" value=""><button type="button"
+                        class="inc">+</button></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- SAP AUTOMAÇÃO -->
+            <section class="pane" id="sec-sap">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <ellipse cx="12" cy="5.5" rx="8" ry="3" />
+                    <path d="M4 5.5V12c0 1.7 3.6 3 8 3s8-1.3 8-3V5.5" />
+                    <path d="M4 12v6.5c0 1.7 3.6 3 8 3s8-1.3 8-3V12" />
+                  </svg>
+                  Automação SAP
+                </div>
+                <div class="pane-hint">Executado após o cálculo de tempos</div>
+              </div>
+              <div class="pane-body">
+                <div class="check-grid">
+                  <label class="check"><input type="checkbox" id="criarDRs"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Criar DRs</label>
+                  <label class="check"><input type="checkbox" id="cpc47"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>CPC47</label>
+                  <label class="check"><input type="checkbox" id="solar"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>SOLAR</label>
+                  <label class="check"><input type="checkbox" id="planejar"><span class="box"><svg viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Planejar</label>
+                  <label class="check"><input type="checkbox" id="camposUsuario"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Campos usuário</label>
+                  <label class="check"><input type="checkbox" id="amarrarMaterial"><span class="box"><svg
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M4 12l5 5L20 6" />
+                      </svg></span>Amarrar material</label>
+                </div>
+              </div>
+            </section>
+
+            <!-- SAP INFO -->
+            <section class="pane disabled" id="sec-sapinfo">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="5" width="18" height="14" rx="2.2" />
+                    <path d="M7 15h4M7 11.2h.01" />
+                    <circle cx="16" cy="11" r="1.6" />
+                  </svg>
+                  Dados do SAP
+                </div>
+                <div class="lock-chip" id="sapLockChip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="4.5" y="10.5" width="15" height="9" rx="1.6" />
+                    <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+                  </svg>
+                  Marque uma automação
+                </div>
+              </div>
+              <div class="pane-body">
+                <div class="row">
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="pep"></i><span class="txt">PEP</span></span>
+                    <input type="text" id="pep" class="ipt" placeholder="XXX-XX-XXXXX-XXX" disabled>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="cliente"></i><span
+                        class="txt">Cliente</span></span>
+                    <input type="text" id="cliente" class="ipt" disabled>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="planejadorSel"></i><span
+                        class="txt">Planejador</span></span>
+                    <div class="csel" id="csel-planejadorSel"></div>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:11px;">
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="valorMec"></i><span class="txt">Valor Mecânica
+                        (R$)</span></span>
+                    <input type="text" id="valorMec" class="ipt" placeholder="0,00" disabled>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="valorEletr"></i><span class="txt">Valor
+                        Elétrica (R$)</span></span>
+                    <input type="text" id="valorEletr" class="ipt" placeholder="0,00" disabled>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="dataOV"></i><span class="txt">Data
+                        OV</span></span>
+                    <input type="text" id="dataOV" class="ipt" placeholder="dd.mm.aaaa" disabled>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:11px;">
+                  <div class="field">
+                    <span class="field-label"><span class="txt">Nº / Item OV</span></span>
+                    <div style="display:grid; grid-template-columns:2.4fr 1fr; gap:6px;">
+                      <input type="text" id="nrOV" class="ipt" placeholder="Nº OV" disabled>
+                      <input type="text" id="itemOV" class="ipt" placeholder="Item" disabled>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="material"></i><span
+                        class="txt">Material</span></span>
+                    <input type="text" id="material" class="ipt" disabled>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led na" data-led="dataInicio"></i><span class="txt">Data Início
+                        Projeto</span></span>
+                    <input type="text" id="dataInicio" class="ipt" placeholder="dd.mm.aaaa" disabled>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:11px;">
+                  <div class="field"><span class="field-label"><span class="txt">Material MEC</span></span><input
+                      type="text" id="materialMec" class="ipt" disabled></div>
+                  <div class="field"><span class="field-label"><span class="txt">Material ELE</span></span><input
+                      type="text" id="materialEle" class="ipt" disabled></div>
+                  <div class="field"><span class="field-label"><span class="txt">Material Avó</span></span><input
+                      type="text" id="materialAvo" class="ipt" disabled></div>
+                </div>
+                <div class="warn" id="warnPep">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path
+                      d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z" />
+                  </svg>
+                  <span>PEP é obrigatório quando qualquer automação SAP está marcada.</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="app-footer">
+          <span class="footer-meta" id="footerMeta">0 / 8 obrigatórios</span>
+          <div class="footer-btns">
+            <button class="btn" id="btnSair">Sair</button>
+            <button class="btn primary" id="btnOk">Calcular Tempos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: PAINEL DE MANUTENÇÃO (PROTEGIDO) -->
+      <div class="view-pane hidden" id="view-manutencao">
+        <nav class="section-nav" id="sectionNavManutencao"></nav>
+        <div class="maint-content">
+          <div class="col-list" id="colList"></div>
+          <div class="col-editor" id="colEditor"></div>
+        </div>
+
+        <div class="app-footer">
+          <span class="footer-meta" id="maintFooterMeta">Selecione um campo para editar</span>
+          <button class="hist-toggle" id="btnHistFooter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+            </svg>
+            Ver histórico
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= CREDENTIALS AUTH MODAL ================= -->
+  <div class="modal-overlay" id="authModalOverlay">
+    <div class="modal sm">
+      <div class="modal-head">
+        <span class="mark" style="color: var(--amber);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4.5" y="10.5" width="15" height="9" rx="1.6" />
+            <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+          </svg>
+        </span>
+        <div class="modal-head-text">
+          <b>Acesso ao Painel de Manutenção</b>
+          <span>Área restrita a mantenedores de regras e fórmulas</span>
+        </div>
+        <button class="icon-btn modal-close" id="btnCloseAuth"><svg viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg></button>
+      </div>
+      <div class="modal-body">
+        <form class="auth-form" id="authForm" onsubmit="return false;">
+          <div class="auth-field">
+            <label for="authPassword">Senha de Acesso</label>
+            <div class="auth-input-wrap">
+              <input type="password" id="authPassword" placeholder="Digite a senha..." autocomplete="current-password"
+                autofocus>
+              <button type="button" class="auth-toggle-pwd" id="btnTogglePwd" title="Mostrar/ocultar senha">
+                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="auth-error" id="authError">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path
+                d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z" />
+            </svg>
+            <span id="authErrorMsg">Senha incorreta. Tente novamente.</span>
+          </div>
+        </form>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="btnCancelAuth">Cancelar</button>
+        <button class="btn primary" id="btnSubmitAuth">Desbloquear Acesso</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS MODAL ================= -->
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+          </svg></span>
+        <div class="modal-head-text">
+          <b>Configurações do formulário</b>
+          <span>Editado a partir de config.json — dados dinâmicos</span>
+        </div>
+        <button class="icon-btn modal-close" id="btnCloseSettings"><svg viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg></button>
+      </div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-pane="pane-listas">Listas (config.json)</button>
+        <button class="modal-tab" data-pane="pane-json">Config JSON</button>
+        <button class="modal-tab" data-pane="pane-regras-json">Regras JSON</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-pane active" id="pane-listas">
+          <div class="cfg-selector-wrap">
+            <label for="cfgKeySelect" style="font-size: 11.5px; font-weight: 600; color: var(--text-dim);"><b>Selecione
+                a Lista para Editar:</b></label>
+            <select id="cfgKeySelect" class="ipt"
+              style="margin-top: 6px; font-family: inherit; font-size: 13px; padding: 9px 12px; cursor: pointer;">
+              <option value="tipoestrutura">Tipo de Estrutura</option>
+              <option value="planpin">Plano de Pintura</option>
+              <option value="tipomaq">Tipo Máq. Ar Condicionado</option>
+              <option value="incendio">Tipo Sist. Incêndio</option>
+              <option value="seguranca">Tipo Sist. Segurança</option>
+              <option value="complexidade">Complexidade</option>
+              <option value="planejadorSel">Planejadores</option>
+            </select>
+          </div>
+
+          <div class="cfg-items-head"
+            style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <b id="cfgListTitle" style="font-size: 12.5px; color: var(--text);">Itens da Lista</b>
+            <span class="cfg-count" id="cfgItemCount">0 itens</span>
+          </div>
+
+          <div id="cfgItemsList" class="cfg-items-list"
+            style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; padding-right: 4px;">
+          </div>
+
+          <div class="cfg-add-wrap" style="margin-top: 14px; display: flex; gap: 8px;">
+            <input type="text" id="cfgNewItemInput" class="ipt" placeholder="Digite um novo item para adicionar..."
+              style="flex: 1;">
+            <button type="button" class="btn" id="btnAddCfgItem" style="flex: none;">＋ Adicionar</button>
+          </div>
+        </div>
+        <div class="modal-pane" id="pane-json">
+          <textarea class="json-editor mono" id="jsonEditor" spellcheck="false"></textarea>
+          <div class="json-status" id="jsonStatus"><span class="dot"></span><span id="jsonStatusText">JSON válido</span>
+          </div>
+        </div>
+        <div class="modal-pane" id="pane-regras-json">
+          <textarea class="json-editor mono" id="regrasJsonEditor" spellcheck="false"
+            placeholder="Edite o regras.json diretamente aqui..."></textarea>
+          <div class="json-status" id="regrasJsonStatus"><span class="dot"></span><span id="regrasJsonStatusText">JSON
+              de Regras válido</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <div class="left">
+          <button class="btn" id="btnRestoreDefault">Restaurar padrão</button>
+          <button class="btn" id="btnDownloadJson">Baixar .json</button>
+        </div>
+        <button class="btn primary" id="btnApplyConfig">Aplicar alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HISTORY MODAL OVERLAY ================= -->
+  <div class="modal-overlay" id="histModalOverlay">
+    <div class="modal" style="max-width: 640px; max-height: 82vh;">
+      <div class="modal-head">
+        <div class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+        </div>
+        <div class="modal-head-text">
+          <b>Histórico de Alterações de Regras</b>
+          <span>Registros de auditoria salvos no Banco de Dados (MySQL)</span>
+        </div>
+        <button class="btn-refresh" id="btnRefreshHist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+          Atualizar
+        </button>
+        <button class="btn-close" id="btnCloseHist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-search">
+        <div class="box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="histSearchInput" placeholder="Pesquisar por regra, campo, área, usuário ou data...">
+        </div>
+      </div>
+
+      <div class="modal-body" id="histModalBody">
+        <div class="hist-empty">Carregando histórico do banco de dados…</div>
+      </div>
+
+      <div class="modal-foot">
+        <span class="count" id="histFooterCount">0 alterações encontradas</span>
+        <button id="btnCloseHistFoot">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST ================= -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+      <path d="M4 12l5 5L20 6" />
+    </svg>
+    <span id="toastText"></span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

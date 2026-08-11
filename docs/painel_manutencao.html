@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Manutenção — Tempos de Eletrocentros</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #07080A;
+      --shell: #0E1013;
+      --sidebar: #0A0C0F;
+      --panel: #131619;
+      --panel-2: #191D21;
+      --panel-3: #20252A;
+      --border: rgba(255, 255, 255, .07);
+      --border-strong: rgba(255, 255, 255, .13);
+      --hairline: rgba(255, 255, 255, .045);
+      --text: #EAEDF0;
+      --text-dim: #8B93A0;
+      --text-faint: #535A64;
+      --accent: #6C8EFF;
+      --accent-ink: #080B18;
+      --accent-dim: rgba(108, 142, 255, .14);
+      --amber: #F0A93E;
+      --amber-dim: rgba(240, 169, 62, .15);
+      --green: #3DD68C;
+      --green-dim: rgba(61, 214, 140, .14);
+      --red: #FF6B76;
+      --red-dim: rgba(255, 107, 118, .13);
+      --tl-red: #FF5F57;
+      --tl-yellow: #FEBC2E;
+      --tl-green: #28C840;
+      --sheen: rgba(255, 255, 255, .03);
+    }
+
+    :root[data-theme="dim"] {
+      --bg: #1B1E24;
+      --shell: #1F232A;
+      --sidebar: #1B1E24;
+      --panel: #262A32;
+      --panel-2: #2D323B;
+      --panel-3: #343A44;
+      --border: rgba(255, 255, 255, .08);
+      --border-strong: rgba(255, 255, 255, .14);
+      --hairline: rgba(255, 255, 255, .05);
+      --text: #D7DBE0;
+      --text-dim: #9BA3AF;
+      --text-faint: #6B7280;
+      --accent: #7C9CFF;
+      --accent-ink: #12151C;
+      --accent-dim: rgba(124, 156, 255, .16);
+      --amber: #E8A94A;
+      --amber-dim: rgba(232, 169, 74, .15);
+      --green: #4FD69A;
+      --green-dim: rgba(79, 214, 154, .15);
+      --red: #FF7B85;
+      --red-dim: rgba(255, 123, 133, .14);
+      --tl-red: #FF5F57;
+      --tl-yellow: #FEBC2E;
+      --tl-green: #28C840;
+      --sheen: rgba(255, 255, 255, .035);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #DEE2E7;
+      --shell: #F4F5F7;
+      --sidebar: #EBEDF0;
+      --panel: #FFFFFF;
+      --panel-2: #F2F3F5;
+      --panel-3: #E7E9EC;
+      --border: rgba(15, 23, 42, .09);
+      --border-strong: rgba(15, 23, 42, .16);
+      --hairline: rgba(15, 23, 42, .05);
+      --text: #181B20;
+      --text-dim: #5E6672;
+      --text-faint: #959CA6;
+      --accent: #3E5FD9;
+      --accent-ink: #FFFFFF;
+      --accent-dim: rgba(62, 95, 217, .10);
+      --amber: #B06A05;
+      --amber-dim: rgba(176, 106, 5, .12);
+      --green: #12875A;
+      --green-dim: rgba(18, 135, 90, .10);
+      --red: #C7303F;
+      --red-dim: rgba(199, 48, 63, .09);
+      --tl-red: #FF5F57;
+      --tl-yellow: #FEBC2E;
+      --tl-green: #28C840;
+      --sheen: rgba(255, 255, 255, .6);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 13.5px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+    }
+
+    svg {
+      display: block;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    ::selection {
+      background: var(--accent-dim);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .app-shell {
+      max-width: 1360px;
+      margin: 22px auto;
+      background: var(--shell);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .5);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 44px);
+      min-height: 640px;
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 38px;
+      flex: none;
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .traffic {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .traffic i {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .traffic i:nth-child(1) {
+      background: var(--tl-red);
+    }
+
+    .traffic i:nth-child(2) {
+      background: var(--tl-yellow);
+    }
+
+    .traffic i:nth-child(3) {
+      background: var(--tl-green);
+    }
+
+    .titlebar-text {
+      font-size: 12px;
+      color: var(--text-faint);
+      font-weight: 500;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: 52px;
+      flex: none;
+      padding: 0 16px;
+      background: var(--shell);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .brandmark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex: none;
+    }
+
+    .brandmark .mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: linear-gradient(160deg, var(--amber), #C9791B);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+    }
+
+    .brandmark .mark svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .brandmark b {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .brandmark span {
+      font-size: 10.5px;
+      color: var(--text-faint);
+      font-family: "IBM Plex Mono";
+      display: block;
+    }
+
+    .toolbar-spacer {
+      flex: 1;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      flex: none;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--panel-3);
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .icon-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .mode-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--amber);
+      background: var(--amber-dim);
+      border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--border));
+      border-radius: 99px;
+      padding: 5px 11px;
+      font-family: "IBM Plex Mono";
+    }
+
+    .mode-chip svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .app-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .section-nav {
+      flex: none;
+      display: flex;
+      gap: 6px;
+      padding: 10px 20px;
+      background: var(--shell);
+      border-bottom: 1px solid var(--hairline);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .section-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .snav-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex: none;
+      padding: 7px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      transition: all .12s ease;
+      white-space: nowrap;
+    }
+
+    .snav-btn:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .snav-btn.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .snav-btn .n {
+      font-family: "IBM Plex Mono";
+      font-size: 10px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel-3);
+      color: var(--text-faint);
+      flex: none;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 26px 40px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .col-list {
+      flex: 0 0 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .col-editor {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .list-head h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .list-head span {
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .field-row {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      cursor: pointer;
+      transition: all .12s ease;
+    }
+
+    .field-row .fr-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-row:hover {
+      border-color: var(--border-strong);
+      background: var(--panel-2);
+    }
+
+    .field-row.active {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      background: var(--accent-dim);
+    }
+
+    .field-row .fr-name {
+      font-weight: 600;
+      font-size: 12px;
+      font-family: "IBM Plex Mono";
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .field-row .fr-meta {
+      min-width: 0;
+    }
+
+    .field-row .fr-meta b {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .field-row .fr-meta span {
+      font-size: 10.5px;
+      color: var(--text-faint);
+    }
+
+    .badge {
+      font-size: 9.5px;
+      font-family: "IBM Plex Mono";
+      padding: 2px 7px;
+      border-radius: 99px;
+      flex: none;
+      white-space: nowrap;
+    }
+
+    .badge.simples {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .badge.avancado {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+    .pane {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      position: relative;
+    }
+
+    .pane::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: var(--sheen);
+      pointer-events: none;
+    }
+
+    .editor-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .editor-head h1 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+
+    .editor-head .path {
+      font-size: 11px;
+      color: var(--text-faint);
+      font-family: "IBM Plex Mono";
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-faint);
+    }
+
+    .empty-state svg {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 14px;
+      opacity: .5;
+    }
+
+    .field-block {
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-label .hint {
+      font-size: 10.5px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-faint);
+    }
+
+    .base-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .num-field {
+      display: flex;
+      align-items: center;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    .num-field input {
+      width: 110px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      text-align: right;
+      font-family: "IBM Plex Mono";
+      font-size: 13px;
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    .num-field span {
+      padding: 9px 10px;
+      color: var(--text-faint);
+      font-size: 11.5px;
+      border-left: 1px solid var(--border);
+    }
+
+    .num-field:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .scale-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 12px;
+    }
+
+    .scale-chip svg {
+      width: 13px;
+      height: 13px;
+      color: var(--accent);
+    }
+
+    .cond-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cond-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      flex-wrap: wrap;
+    }
+
+    .cond-row .cr-txt {
+      font-size: 12px;
+      color: var(--text-dim);
+      flex: none;
+    }
+
+    .cond-select {
+      background: var(--panel-3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 8px;
+      font-family: inherit;
+    }
+
+    .cond-num {
+      width: 70px;
+      background: var(--panel-3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      text-align: right;
+      font-family: "IBM Plex Mono";
+      font-size: 12px;
+      padding: 6px 8px;
+    }
+
+    .cond-type {
+      display: flex;
+      gap: 2px;
+      background: var(--panel-3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 2px;
+      flex-wrap: wrap;
+    }
+
+    .cond-type button {
+      border: none;
+      background: transparent;
+      color: var(--text-faint);
+      font-size: 11px;
+      padding: 4px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s ease, color .15s ease;
+    }
+
+    .cond-type button:hover {
+      color: var(--text);
+    }
+
+    .cond-type button.active {
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 600;
+    }
+
+    .cond-remove {
+      margin-left: auto;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel-3);
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: none;
+    }
+
+    .cond-remove:hover {
+      color: var(--red);
+      border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+    }
+
+    .add-cond {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--accent);
+      background: none;
+      border: 1px dashed var(--border-strong);
+      border-radius: 9px;
+      padding: 9px 12px;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .add-cond:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+    }
+
+    .add-cond svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .warn-adv {
+      display: flex;
+      gap: 10px;
+      background: var(--amber-dim);
+      border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--border));
+      color: var(--amber);
+      border-radius: 10px;
+      padding: 11px 13px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .warn-adv svg {
+      flex: none;
+      width: 15px;
+      height: 15px;
+      margin-top: 1px;
+    }
+
+    .adv-table {
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .adv-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--hairline);
+      align-items: center;
+    }
+
+    .adv-row:last-child {
+      border-bottom: none;
+    }
+
+    .adv-row:nth-child(odd) {
+      background: var(--panel-2);
+    }
+
+    .adv-row .am {
+      font-family: "IBM Plex Mono";
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .adv-row textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: "IBM Plex Mono";
+      font-size: 11.5px;
+      resize: none;
+      outline: none;
+      padding: 4px 0;
+    }
+
+    .adv-row:hover {
+      background: var(--panel-3);
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .preview-table th {
+      text-align: right;
+      font-weight: 500;
+      color: var(--text-faint);
+      font-size: 10.5px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--hairline);
+      font-family: "IBM Plex Mono";
+    }
+
+    .preview-table th:first-child {
+      text-align: left;
+    }
+
+    .preview-table td {
+      text-align: right;
+      padding: 7px 8px;
+      font-family: "IBM Plex Mono";
+      border-bottom: 1px solid var(--hairline);
+      color: var(--text-dim);
+    }
+
+    .preview-table td:first-child {
+      text-align: left;
+      color: var(--text-faint);
+      font-family: "IBM Plex Sans";
+      font-size: 11.5px;
+    }
+
+    .preview-table td.changed {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .preview-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .editor-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+    }
+
+    .btn {
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--border-strong);
+      background: var(--panel-2);
+      color: var(--text);
+      transition: all .15s ease;
+    }
+
+    .btn:hover {
+      background: var(--panel-3);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .btn.primary:disabled {
+      filter: none;
+    }
+
+    .app-footer {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 11px 20px;
+      background: var(--sidebar);
+      border-top: 1px solid var(--hairline);
+    }
+
+    .hist-toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+
+    .hist-toggle svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--panel-3);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all .25s ease;
+      z-index: 300;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast svg {
+      width: 14px;
+      height: 14px;
+      color: var(--green);
+      flex: none;
+    }
+
+    .hist-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 340px;
+      background: var(--shell);
+      border-left: 1px solid var(--border-strong);
+      box-shadow: -20px 0 40px -20px rgba(0, 0, 0, .5);
+      transform: translateX(100%);
+      transition: transform .25s ease;
+      z-index: 250;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hist-panel.open {
+      transform: translateX(0);
+    }
+
+    .hist-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .hist-head b {
+      font-size: 13px;
+    }
+
+    .hist-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+    }
+
+    .hist-item {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 11.5px;
+    }
+
+    .hist-item .hi-top {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin-bottom: 3px;
+    }
+
+    .hist-item .hi-meta {
+      color: var(--text-faint);
+      font-family: "IBM Plex Mono";
+      font-size: 10.5px;
+    }
+
+    .hist-empty {
+      color: var(--text-faint);
+      font-size: 12px;
+      padding: 20px 10px;
+      text-align: center;
+    }
+
+    @media (max-width:900px) {
+      .content {
+        flex-direction: column;
+      }
+
+      .col-list {
+        flex: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition-duration: .001ms !important;
+      }
+    }
+
+    @media (max-width:700px) {
+      .app-shell {
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        height: 100vh;
+      }
+
+      .titlebar {
+        display: none;
+      }
+
+      .toolbar {
+        padding: 10px 12px;
+      }
+
+      .brandmark span {
+        display: none;
+      }
+
+      .content {
+        padding: 14px;
+      }
+
+      .hist-panel {
+        width: 100%;
+      }
+
+      .adv-row {
+        grid-template-columns: 60px 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-shell">
+    <div class="titlebar">
+      <div class="traffic"><i></i><i></i><i></i></div>
+      <div class="titlebar-text">Painel de Manutenção — Tempos.app</div>
+    </div>
+
+    <div class="toolbar">
+      <div class="brandmark">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+          </svg></span>
+        <div><b>Manutenção de Tempos</b><span>ELETROCENTROS · DADOS</span></div>
+      </div>
+      <button class="icon-btn" id="btnHist" title="Histórico de alterações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+          <path d="M12 8v4l3 2" />
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeToggle" title="Alternar tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path
+            d="M12 3v1.6M12 19.4V21M4.9 4.9l1.1 1.1M18 18l1.1 1.1M3 12h1.6M19.4 12H21M4.9 19.1l1.1-1.1M18 6l1.1-1.1" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="app-body">
+      <nav class="section-nav" id="sectionNav"></nav>
+      <div class="content">
+        <div class="col-list" id="colList"></div>
+        <div class="col-editor" id="colEditor"></div>
+      </div>
+    </div>
+
+    <div class="app-footer">
+      <span class="mono" style="font-size:11px; color:var(--text-faint);" id="footerMeta">Selecione um campo para
+        editar</span>
+      <button class="hist-toggle" id="btnHist2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+        </svg>
+        Ver histórico
+      </button>
+    </div>
+  </div>
+
+  <div class="hist-panel" id="histPanel">
+    <div class="hist-head"><b>Histórico de alterações</b><button class="icon-btn" id="btnCloseHist"><svg
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg></button></div>
+    <div class="hist-body" id="histBody">
+      <div class="hist-empty">Nenhuma alteração ainda nesta sessão.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+      <path d="M4 12l5 5L20 6" />
+    </svg><span id="toastText"></span></div>
+
+  <script>
+    (function () {
+      "use strict";
+      var $ = function (id) { return document.getElementById(id); };
+
+      /* ---------------- CONFIG ---------------- */
+      var API_BASE_CANDIDATES = (function () {
+        var candidates = [];
+        if (window.location.protocol !== 'file:') {
+          candidates.push(window.location.origin + '/api');
+        }
+        candidates.push('http://127.0.0.1:8000/api', 'http://localhost:8000/api');
+        return candidates;
+      })();
+
+      /* ---------------- TEMA ---------------- */
+      var root = document.documentElement;
+      $('themeToggle').addEventListener('click', function () {
+        root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+
+      /* ---------------- FLAGS conhecidos (nomes amigáveis para exibição) ---------------- */
+      var FLAGS = [
+        { key: 'sist_seguranca', nome: 'Sist. Segurança' }, { key: 'climat_c_dutos', nome: 'Climat. c/ dutos' },
+        { key: 'incendio_c_combate', nome: 'Incêndio c/ combate' }, { key: 'casa_maquinas', nome: 'Casa Máquinas' },
+        { key: 'teste_software', nome: 'Teste Software' }, { key: 'chapa_remov', nome: 'Chapa Removível' },
+        { key: 'trafo_a_oleo', nome: 'Trafo a Óleo' }, { key: 'pe_direito_3_3_m', nome: 'Pé Direito 3,3m' },
+        { key: 'esc_plat_padao_weg', nome: 'Esc./Plat. Padrão WEG' }, { key: 'esc_plat_especial', nome: 'Esc./Plat. Especial' },
+        { key: 'porao_de_cabos', nome: 'Porão de Cabos' }, { key: 'pilotis', nome: 'Pilotis' },
+        { key: 'rede_de_dutos', nome: 'Rede de Dutos' }, { key: 'fundo_falso', nome: 'Fundo Falso' },
+        { key: 'dutos_bww', nome: 'Dutos BWW' }, { key: 'calhas_pluviais', nome: 'Calhas Pluviais' },
+        { key: 'duto_de_gases', nome: 'Duto de Gases' },
+      ];
+      function flagNome(key) { var f = FLAGS.find(function (x) { return x.key === key; }); return f ? f.nome : key; }
+      var MULT = { 1: 1, 2: 1.5, 3: 2, 4: 2.5, 5: 3, 6: 3.5, 7: 4, 8: 4.5 };
+
+      /* ---------------- CHAMADAS À API ---------------- */
+      function api(path, options) {
+        return apiTry(path, options, 0);
+      }
+
+      function apiTry(path, options, index) {
+        var base = API_BASE_CANDIDATES[index];
+        return fetch(base + path, options).then(function (resp) {
+          if (!resp.ok) {
+            return resp.json().catch(function () { return { detail: resp.statusText }; }).then(function (err) {
+              var e = new Error(err.detail || 'Erro na API'); e.status = resp.status; e.base = base; throw e;
+            });
+          }
+          return resp.json();
+        }).catch(function (err) {
+          if (index + 1 < API_BASE_CANDIDATES.length) {
+            return apiTry(path, options, index + 1);
+          }
+          err.base = base;
+          throw err;
+        });
+      }
+
+      /* ---------------- ESTADO ---------------- */
+      var state = { disciplinas: [], disciplina: null, campos: {}, campo: null, dirty: null, historico: [] };
+
+      /* ---------------- CARREGAMENTO INICIAL ---------------- */
+      function carregarDisciplinas() {
+        var nav = $('sectionNav');
+        nav.innerHTML = '<span style="color:var(--text-faint); font-size:12px; padding:8px 4px;">Carregando disciplinas…</span>';
+        api('/manutencao/disciplinas').then(function (lista) {
+          state.disciplinas = lista;
+          nav.innerHTML = '';
+          lista.forEach(function (d, i) {
+            var btn = document.createElement('button');
+            btn.className = 'snav-btn' + (i === 0 ? ' active' : '');
+            btn.innerHTML = d.disciplina + ' <span class="n">' + d.total_campos + '</span>';
+            btn.addEventListener('click', function () {
+              document.querySelectorAll('.snav-btn').forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+              selecionarDisciplina(d.disciplina);
+            });
+            nav.appendChild(btn);
+          });
+          if (lista.length) selecionarDisciplina(lista[0].disciplina);
+        }).catch(function (err) {
+          var tried = API_BASE_CANDIDATES.join(', ');
+          nav.innerHTML = '<span style="color:var(--red); font-size:12px; padding:8px 4px;">Não foi possível conectar à API. Tente iniciar o backend com <b>uvicorn app.main:app --reload</b> e verifique se a rota <b>/api/manutencao/disciplinas</b> responde. Tentativas: ' + tried + ' — ' + err.message + '</span>';
+        });
+      }
+
+      function selecionarDisciplina(nome) {
+        state.disciplina = nome; state.campo = null; state.dirty = null;
+        var wrap = $('colList');
+        wrap.innerHTML = '<div class="list-head"><h2>Campos</h2><span>carregando…</span></div>';
+        api('/manutencao/disciplinas/' + encodeURIComponent(nome)).then(function (resp) {
+          state.campos = resp.campos;
+          renderList(); renderEditor();
+        }).catch(function (err) {
+          wrap.innerHTML = '<div class="list-head"><h2>Campos</h2></div><div style="color:var(--red); font-size:12px; padding:10px;">Erro ao carregar: ' + err.message + '</div>';
+        });
+      }
+
+      /* ---------------- LISTA DE CAMPOS ---------------- */
+      function descricaoResumo(c) {
+        if (!c.analise) return 'cálculo customizado';
+        var b = c.analise.base;
+        if (b.forma === 'constante') return b.valor + 'h fixo';
+        if (b.forma === 'multiplicativa') {
+          var esc = b.escala !== undefined ? b.escala : 0.5;
+          var str = b.valor_base + 'h base (+' + esc + '×/mód)';
+          if (b.adicao_final) str += ' + ' + b.adicao_final + ' (2m+)';
+          if (b.subtracao_final) str += ' - ' + b.subtracao_final + ' (2m+)';
+          return str + condStr(c.analise.condicoes);
+        }
+        if (b.forma === 'degrau_fixo') {
+          var fat = b.fator !== undefined ? b.fator : (b.escala !== undefined ? b.escala : 1.5);
+          var str = b.valor_base + 'h (1m) → ' + fat + '× fixo (2m+)';
+          if (b.adicao_final) str += ' + ' + b.adicao_final;
+          if (b.subtracao_final) str += ' - ' + b.subtracao_final;
+          return str + condStr(c.analise.condicoes);
+        }
+        if (b.forma === 'aditiva') return b.valor_base + 'h + ' + b.passo + 'h/módulo' + condStr(c.analise.condicoes);
+        if (b.forma === 'tabela') return '8 valores (tabela)' + condStr(c.analise.condicoes);
+        if (b.forma === 'por_opcao') return Object.keys(b.opcoes).length + ' opções';
+        return b.forma;
+      }
+      function condStr(condicoes) {
+        if (!condicoes || !condicoes.length) return '';
+        return ' + ' + condicoes.length + ' condiç' + (condicoes.length > 1 ? 'ões' : 'ão');
+      }
+
+      function renderList() {
+        var wrap = $('colList');
+        var nomes = Object.keys(state.campos);
+        var html = '<div class="list-head"><h2>Campos</h2><span>' + nomes.length + ' nesta disciplina</span></div>';
+        nomes.forEach(function (nome) {
+          var c = state.campos[nome];
+          var isSimples = !!c.analise;
+          html += '<div class="field-row' + (state.campo === nome ? ' active' : '') + '" data-campo="' + nome + '">' +
+            '<div class="fr-top"><span class="fr-name">' + nome + '</span>' +
+            '<span class="badge ' + (isSimples ? 'simples' : 'avancado') + '">' + (isSimples ? 'simples' : 'avançado') + '</span></div>' +
+            '<span class="fr-meta"><b>' + descricaoResumo(c) + '</b></span>' +
+            '</div>';
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll('.field-row').forEach(function (row) {
+          row.addEventListener('click', function () {
+            state.campo = row.dataset.campo;
+            state.dirty = JSON.parse(JSON.stringify(state.campos[state.campo]));
+            renderList(); renderEditor();
+          });
+        });
+      }
+
+      /* ---------------- CÁLCULO LOCAL (só para a prévia, em modo simples) ---------------- */
+      function valorBase(base, mod, vH) {
+        if (base.forma === 'constante') return parseFloat(base.valor !== undefined ? base.valor : base.valor_base) || 0;
+        if (base.forma === 'multiplicativa') {
+          var vBase = parseFloat(base.valor_base !== undefined ? base.valor_base : base.valor) || 0;
+          var esc = base.escala !== undefined ? parseFloat(base.escala) : 0.5;
+          if (isNaN(esc)) esc = 0.5;
+          var res = vBase * (1 + (mod - 1) * esc);
+          if (mod > 1) {
+            if (base.adicao_final) res += parseFloat(base.adicao_final) || 0;
+            if (base.subtracao_final) res -= parseFloat(base.subtracao_final) || 0;
+          }
+          return res;
+        }
+        if (base.forma === 'degrau_fixo') {
+          var vBase = parseFloat(base.valor_base !== undefined ? base.valor_base : base.valor) || 0;
+          if (mod === 1) return vBase;
+          var fat = base.fator !== undefined ? parseFloat(base.fator) : (base.escala !== undefined ? parseFloat(base.escala) : 1.5);
+          if (isNaN(fat)) fat = 1.5;
+          var res = vBase * fat;
+          if (base.adicao_final) res += parseFloat(base.adicao_final) || 0;
+          if (base.subtracao_final) res -= parseFloat(base.subtracao_final) || 0;
+          return res;
+        }
+        if (base.forma === 'aditiva') return (parseFloat(base.valor_base !== undefined ? base.valor_base : base.valor) || 0) + (parseFloat(base.passo) || 0) * (mod - 1);
+        if (base.forma === 'tabela') {
+          if (!base.valores || base.valores[mod - 1] === undefined) return 0;
+          var hVal = (vH !== undefined) ? vH : 0;
+          return evalExpr(base.valores[mod - 1], hVal);
+        }
+        return null;
+      }
+      function evalExpr(val, vH) {
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        if (!val || typeof val !== 'string') return 0;
+        var str = val.trim();
+        if (!str) return 0;
+
+        var hVal = (vH !== undefined && !isNaN(vH)) ? vH : 0;
+
+        var expr = str.replace(/\bH\b/gi, hVal).replace(/,/g, '.');
+
+        expr = expr.replace(/arredondar\.para\.cima\s*\(\s*([^;)]+)(?:\s*;\s*[0-9]+)?\s*\)/gi, 'Math.ceil($1)');
+        expr = expr.replace(/ceil\s*\(\s*([^)]+)\s*\)/gi, 'Math.ceil($1)');
+
+        if (/\bH\b/i.test(str) && /\/\s*[0-9\.]+/i.test(expr) && !/Math\.ceil/i.test(expr)) {
+          expr = 'Math.ceil(' + expr + ')';
+        }
+
+        try {
+          var fn = new Function('Math', '"use strict"; return (' + expr + ');');
+          var res = fn(Math);
+          return typeof res === 'number' && !isNaN(res) ? res : 0;
+        } catch (e) {
+          var num = parseFloat(expr.replace(/[^0-9\.-]/g, ''));
+          return isNaN(num) ? 0 : num;
+        }
+      }
+
+      function valorBonus(b, mod, vAtual, vH) {
+        var val = evalExpr(b.valor, vH);
+        if (!vAtual) vAtual = 0;
+        if (b.forma === 'tabela') {
+          if (b.valores && b.valores[mod - 1] !== undefined) {
+            return evalExpr(b.valores[mod - 1], vH);
+          }
+          return val;
+        }
+        if (b.forma === 'fixo') return val;
+        if (b.forma === 'por_modulo') return val * mod;
+        if (b.forma === 'escala_multiplicativa' || b.forma === 'escalonado') {
+          var esc = b.escala !== undefined ? parseFloat(b.escala) : 0.5;
+          if (isNaN(esc)) esc = 0.5;
+          return val * (1 + (mod - 1) * esc);
+        }
+        if (b.forma === 'subtrair' || b.forma === 'subtrair_fixo') return -val;
+        if (b.forma === 'subtrair_por_modulo') return -val * mod;
+
+        if (b.forma === 'multiplicar' || b.forma === 'multiplicar_fixo') return vAtual * (val - 1);
+        if (b.forma === 'multiplicar_por_modulo') return vAtual * ((val * mod) - 1);
+
+        if (b.forma === 'dividir' || b.forma === 'dividir_fixo') {
+          var d = val || 1;
+          return vAtual * ((1 / d) - 1);
+        }
+        if (b.forma === 'dividir_por_modulo') {
+          var dm = (val || 1) * mod;
+          return dm ? vAtual * ((1 / dm) - 1) : 0;
+        }
+
+        return 0;
+      }
+      function calcValor(analise, mod, flagsAtivos, vH) {
+        var v = valorBase(analise.base, mod, vH);
+        if (v === null) return null;
+        (analise.condicoes || []).forEach(function (c) {
+          if (flagsAtivos[c.flag]) v += valorBonus(c, mod, v, vH);
+        });
+        return v;
+      }
+
+      /* ---------------- EDITOR ---------------- */
+      function renderEditor() {
+        var wrap = $('colEditor');
+        if (!state.campo) {
+          wrap.innerHTML = '<div class="pane"><div class="empty-state">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3v4M15 3v4M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/></svg>' +
+            '<div>Selecione um campo à esquerda para editar</div></div></div>';
+          $('footerMeta').textContent = 'Selecione um campo para editar';
+          return;
+        }
+        var original = state.campos[state.campo];
+        var campo = state.dirty;
+        var isAvancado = !campo.analise;
+
+        var html = '<div class="pane"><div class="editor-head"><div>' +
+          '<h1>' + state.campo + '</h1><div class="path">' + state.disciplina + '</div>' +
+          '</div></div>';
+
+        if (isAvancado) {
+          html += '<div class="warn-adv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z"/></svg>' +
+            '<span>Este campo usa cálculo customizado (uma função Python), sem representação simples. Não há mais fórmula Excel para editar aqui — o cálculo é código Python de verdade. Para mudar este campo, edite o arquivo .py da disciplina e reinicie o servidor.</span></div>';
+          html += '<div class="field-block"><div class="field-label">Prévia — valor calculado por nº de módulos <span class="hint">com um contexto de exemplo (não os dados de um projeto real)</span></div>';
+          html += '<table class="preview-table"><thead><tr><th>—</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '</tr></thead><tbody><tr><td>valor</td>' +
+            (campo.previa || []).map(function (v) { return '<td>' + (v === null ? '—' : v.toFixed(2)) + '</td>'; }).join('') + '</tr></tbody></table></div>';
+          html += '</div>';
+          wrap.innerHTML = html;
+          $('footerMeta').textContent = state.disciplina + ' · ' + state.campo + ' (avançado, somente leitura)';
+          return;
+        }
+
+        var base = campo.analise.base;
+        html += '<div class="field-block"><div class="field-label">Valor base</div>';
+
+        if (base.forma === 'tabela') {
+          html += '<div class="adv-table">';
+          for (var m = 1; m <= 8; m++) {
+            html += '<div class="adv-row"><span class="am">' + m + ' módulo' + (m > 1 ? 's' : '') + '</span>' +
+              '<input type="number" step="0.0001" data-tabela-mod="' + m + '" value="' + base.valores[m - 1] + '" style="background:transparent;border:none;color:var(--text);font-family:var(--mono,monospace);width:100%;"></div>';
+          }
+          html += '</div>';
+        } else if (base.forma === 'por_opcao') {
+          html += '<div class="adv-table">';
+          Object.keys(base.opcoes).forEach(function (op) {
+            html += '<div class="adv-row"><span class="am" style="font-family:inherit;">' + op + '</span>' +
+              '<input type="number" step="0.0001" class="popcao-valor" data-opcao="' + op.replace(/"/g, '&quot;') + '" value="' + base.opcoes[op] + '" style="background:transparent;border:none;color:var(--text);width:100%;"></div>';
+          });
+          html += '<div class="adv-row"><span class="am">(qualquer outra opção)</span>' +
+            '<input type="number" step="0.0001" id="popcaoPadrao" value="' + (base.padrao || 0) + '" style="background:transparent;border:none;color:var(--text);width:100%;"></div>';
+          html += '</div>';
+        } else {
+          var currentBaseVal = base.forma === 'constante' ? (base.valor !== undefined ? base.valor : (base.valor_base || 0)) : (base.valor_base !== undefined ? base.valor_base : (base.valor || 0));
+          html += '<div class="base-row"><div class="num-field"><input type="number" step="0.01" id="baseInput" value="' + currentBaseVal + '"><span>h</span></div>';
+          if (base.forma === 'multiplicativa') {
+            var valEscala = base.escala !== undefined ? base.escala : 0.5;
+            var valAdicao = base.adicao_final || 0;
+            var valSubtracao = base.subtracao_final || 0;
+            var chipExtra = '';
+            if (valEscala || valAdicao || valSubtracao) {
+              var formulaPart = '(Base × (1 + (m-1)×' + valEscala + '))';
+              if (valAdicao) formulaPart += ' + ' + valAdicao + 'h';
+              if (valSubtracao) formulaPart += ' - ' + valSubtracao + 'h';
+              chipExtra = ' | 2m+: ' + formulaPart;
+            }
+            html += '<div class="num-field" title="Quantidade da escala por módulo adicional"><input type="number" step="0.01" id="escalaInput" value="' + valEscala + '"><span>+×/mód</span></div>' +
+              '<div class="num-field" title="Adição de valor fixo no final (a partir do 2º módulo)"><input type="number" step="0.01" id="adicaoFinalInput" value="' + valAdicao + '"><span>+ h final (2m+)</span></div>' +
+              '<div class="num-field" title="Subtração de valor fixo no final (a partir do 2º módulo)"><input type="number" step="0.01" id="subtracaoFinalInput" value="' + valSubtracao + '"><span>- h final (2m+)</span></div>' +
+              '<div class="scale-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg>1m = ' + currentBaseVal + 'h' + chipExtra + '</div>';
+          } else if (base.forma === 'degrau_fixo') {
+            var valFator = base.fator !== undefined ? base.fator : (base.escala !== undefined ? base.escala : 1.5);
+            var valAdicao = base.adicao_final || 0;
+            var valSubtracao = base.subtracao_final || 0;
+            var val2m = (currentBaseVal * valFator) + valAdicao - valSubtracao;
+            html += '<div class="num-field" title="Fator multiplicador fixo para 2 ou mais módulos"><input type="number" step="0.01" id="fatorInput" value="' + valFator + '"><span>× fator (2m+)</span></div>' +
+              '<div class="num-field" title="Adição de valor fixo no final (a partir do 2º módulo)"><input type="number" step="0.01" id="adicaoFinalInput" value="' + valAdicao + '"><span>+ h final (2m+)</span></div>' +
+              '<div class="num-field" title="Subtração de valor fixo no final (a partir do 2º módulo)"><input type="number" step="0.01" id="subtracaoFinalInput" value="' + valSubtracao + '"><span>- h final (2m+)</span></div>' +
+              '<div class="scale-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/></svg>1m = ' + currentBaseVal + 'h | 2m a 8m = ' + val2m.toFixed(2) + 'h (Fixo)</div>';
+          } else if (base.forma === 'aditiva') {
+            html += '<div class="num-field"><input type="number" step="0.01" id="passoInput" value="' + base.passo + '"><span>h/módulo</span></div>';
+          } else {
+            html += '<div class="scale-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>Valor constante</div>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+
+        if (base.forma !== 'por_opcao') {
+          html += '<div class="field-block"><div class="field-label">Condições adicionais <span class="hint">horas extras quando um item do formulário está marcado</span></div><div class="cond-list" id="condList">';
+          (campo.analise.condicoes || []).forEach(function (c, i) { html += condRowHtml(c, i); });
+          html += '</div><button class="add-cond" id="btnAddCond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Adicionar condição</button></div>';
+        }
+
+        html += '<div class="field-block"><div class="field-label">Prévia <span class="hint">valor calculado por nº de módulos — marque as condições para simular</span></div>' +
+          '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '</tr></thead><tbody id="previewBody"></tbody></table></div>';
+
+        html += '<div class="editor-foot"><button class="btn" id="btnCancel">Cancelar</button>' +
+          '<button class="btn primary" id="btnSave" disabled>Salvar alteração</button></div></div>';
+
+        wrap.innerHTML = html;
+        wireEditorEvents(original, campo);
+        renderPreview(original, campo);
+        $('footerMeta').textContent = state.disciplina + ' · ' + state.campo;
+      }
+
+      function condRowHtml(c, i) {
+        var opts = FLAGS.map(function (f) { return '<option value="' + f.key + '"' + (f.key === c.flag ? ' selected' : '') + '>' + f.nome + '</option>'; }).join('');
+        var valorAtual = c.forma === 'tabela' ? (c.valores ? c.valores[0] : 0) : (c.valor !== undefined ? c.valor : 0);
+        var escalaAtual = c.escala !== undefined ? c.escala : 0.5;
+
+        var formaOptions = [
+          { tipo: 'fixo', label: '＋ Valor Fixo (+V fixo)' },
+          { tipo: 'por_modulo', label: '＋ Adicionar por Módulo (+V × mód)' },
+          { tipo: 'escala_multiplicativa', label: '📈 Escala Multiplicativa' },
+          { tipo: 'subtrair', label: '－ Subtrair Fixo (-V fixo)' },
+          { tipo: 'subtrair_por_modulo', label: '－ Subtrair por Módulo (-V × mód)' },
+          { tipo: 'multiplicar', label: '× Multiplicar Fixo (× V fixo)' },
+          { tipo: 'multiplicar_por_modulo', label: '× Multiplicar por Módulo (× V × mód)' },
+          { tipo: 'dividir', label: '÷ Dividir Fixo (÷ V fixo)' },
+          { tipo: 'dividir_por_modulo', label: '÷ Dividir por Módulo (÷ (V × mód))' }
+        ];
+
+        var cForma = c.forma || 'fixo';
+        if (cForma === 'subtrair_fixo') cForma = 'subtrair';
+        if (cForma === 'multiplicar_fixo') cForma = 'multiplicar';
+        if (cForma === 'dividir_fixo') cForma = 'dividir';
+
+        var selectFormaHtml = '<select class="cond-select cond-forma" style="max-width:210px; font-weight:500;">' +
+          formaOptions.map(function (opt) {
+            return '<option value="' + opt.tipo + '"' + (opt.tipo === cForma ? ' selected' : '') + '>' + opt.label + '</option>';
+          }).join('') +
+          '</select>';
+
+        var escalaInputHtml = '';
+        if (cForma === 'escala_multiplicativa') {
+          escalaInputHtml = '<span class="cr-txt" style="margin-left:2px; font-size:11px;">(+</span>' +
+            '<input type="number" step="0.01" class="cond-num cond-escala" title="Fator de escala por módulo adicional (ex: 0.50 = +0,5x por módulo)" value="' + escalaAtual + '" style="width:62px;">' +
+            '<span class="cr-txt" style="font-size:11px;">×/mód)</span>';
+        }
+
+        return '<div class="cond-row" data-idx="' + i + '">' +
+          '<span class="cr-txt">Se</span><select class="cond-select cond-flag">' + opts + '</select>' +
+          '<span class="cr-txt">marcado, opera</span><input type="number" step="0.1" class="cond-num cond-valor" value="' + valorAtual + '">' +
+          selectFormaHtml +
+          escalaInputHtml +
+          '<button type="button" class="cond-remove" data-idx="' + i + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+          (c.forma === 'tabela' ? '<div style="width:100%; font-size:10.5px; color:var(--amber); margin-top:4px;">Esta condição era uma tabela de 8 valores na origem — editar aqui a simplifica para um valor fixo.</div>' : '') +
+          '</div>';
+      }
+
+      function markDirty() {
+        var changed = JSON.stringify(state.dirty) !== JSON.stringify(state.campos[state.campo]);
+        var btn = $('btnSave');
+        if (btn) btn.disabled = !changed;
+      }
+
+      function wireEditorEvents(original, campo) {
+        var base = campo.analise.base;
+        if (base.forma === 'tabela') {
+          document.querySelectorAll('#colEditor input[data-tabela-mod]').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+              base.valores[+inp.dataset.tabelaMod - 1] = parseFloat(inp.value) || 0;
+              markDirty(); renderPreview(original, campo);
+            });
+          });
+        } else if (base.forma === 'por_opcao') {
+          document.querySelectorAll('.popcao-valor').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+              base.opcoes[inp.dataset.opcao] = parseFloat(inp.value) || 0;
+              markDirty();
+            });
+          });
+          $('popcaoPadrao').addEventListener('input', function () {
+            base.padrao = parseFloat(this.value) || 0;
+            markDirty();
+          });
+        } else {
+          $('baseInput').addEventListener('input', function () {
+            var val = parseFloat(this.value) || 0;
+            base.valor = val;
+            base.valor_base = val;
+            markDirty(); renderPreview(original, campo);
+          });
+          if (base.forma === 'multiplicativa') {
+            if ($('escalaInput')) {
+              $('escalaInput').addEventListener('input', function () {
+                base.escala = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+            if ($('adicaoFinalInput')) {
+              $('adicaoFinalInput').addEventListener('input', function () {
+                base.adicao_final = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+            if ($('subtracaoFinalInput')) {
+              $('subtracaoFinalInput').addEventListener('input', function () {
+                base.subtracao_final = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+          }
+          if (base.forma === 'degrau_fixo') {
+            if ($('fatorInput')) {
+              $('fatorInput').addEventListener('input', function () {
+                base.fator = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+            if ($('adicaoFinalInput')) {
+              $('adicaoFinalInput').addEventListener('input', function () {
+                base.adicao_final = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+            if ($('subtracaoFinalInput')) {
+              $('subtracaoFinalInput').addEventListener('input', function () {
+                base.subtracao_final = parseFloat(this.value) || 0;
+                markDirty(); renderPreview(original, campo);
+              });
+            }
+          }
+          if (base.forma === 'aditiva') {
+            $('passoInput').addEventListener('input', function () {
+              base.passo = parseFloat(this.value) || 0;
+              markDirty(); renderPreview(original, campo);
+            });
+          }
+          var btnAdd = $('btnAddCond');
+          if (btnAdd) {
+            btnAdd.addEventListener('click', function () {
+              campo.analise.condicoes.push({ flag: FLAGS[0].key, forma: 'fixo', valor: 1 });
+              renderEditor();
+            });
+            wireCondRows(original, campo);
+          }
+        }
+        $('btnCancel').addEventListener('click', function () { state.campo = null; renderList(); renderEditor(); });
+        $('btnSave').addEventListener('click', function () { saveField(original, campo); });
+      }
+
+      function wireCondRows(original, campo) {
+        document.querySelectorAll('.cond-row').forEach(function (row) {
+          var idx = +row.dataset.idx;
+          var c = campo.analise.condicoes[idx];
+          row.querySelector('.cond-flag').addEventListener('change', function () { c.flag = this.value; markDirty(); renderPreview(original, campo); });
+          row.querySelector('.cond-valor').addEventListener('input', function () { c.valor = parseFloat(this.value) || 0; if (c.forma === 'tabela') { c.forma = 'fixo'; delete c.valores; } markDirty(); renderPreview(original, campo); });
+          var formaSel = row.querySelector('.cond-forma');
+          if (formaSel) {
+            formaSel.addEventListener('change', function () {
+              c.forma = this.value; delete c.valores;
+              if (c.forma === 'escala_multiplicativa' && c.escala === undefined) c.escala = 0.5;
+              markDirty(); renderEditor();
+            });
+          }
+          var escalaIpt = row.querySelector('.cond-escala');
+          if (escalaIpt) {
+            escalaIpt.addEventListener('input', function () {
+              c.escala = parseFloat(this.value) || 0;
+              markDirty(); renderPreview(original, campo);
+            });
+          }
+          row.querySelector('.cond-remove').addEventListener('click', function () {
+            campo.analise.condicoes.splice(idx, 1); markDirty(); renderEditor();
+          });
+        });
+      }
+
+      function renderPreview(original, campo) {
+        var body = $('previewBody');
+        if (!body) return;
+        var base = campo.analise.base;
+        if (base.forma === 'por_opcao') {
+          body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-faint); padding:14px;">Prévia por módulo não se aplica a campos "por opção" (o valor não varia com o nº de módulos).</td></tr>';
+          return;
+        }
+        function rowFor(label, flagsAtivos) {
+          var origVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return calcValor(original.analise, m, {}); });
+          var newVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return calcValor(campo.analise, m, flagsAtivos); });
+          return '<tr><td>' + label + '</td>' + newVals.map(function (v, i) {
+            var changed = v !== null && origVals[i] !== null && Math.abs(v - origVals[i]) > 0.001;
+            return '<td class="' + (changed ? 'changed' : '') + '">' + (v !== null ? v.toFixed(2) : '—') + '</td>';
+          }).join('') + '</tr>';
+        }
+        var html = rowFor('nenhuma marcada', {});
+        (campo.analise.condicoes || []).forEach(function (c) {
+          var m = {}; m[c.flag] = true;
+          html += rowFor(flagNome(c.flag) + ' marcado', m);
+        });
+        body.innerHTML = html;
+      }
+
+      function saveField(original, campo) {
+        var btn = $('btnSave');
+        btn.disabled = true; btn.textContent = 'Salvando…';
+        api('/manutencao/campo/' + encodeURIComponent(state.campo), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base: campo.analise.base, condicoes: campo.analise.condicoes || [] }),
+        }).then(function (resp) {
+          state.campos[state.campo].analise = resp.analise;
+          state.historico.unshift({
+            disciplina: state.disciplina, campo: state.campo,
+            quando: new Date().toLocaleString('pt-BR'),
+            resumo: 'gravado no arquivo .py de origem',
+          });
+          renderHistorico();
+          showToast('Alteração salva e gravada no arquivo-fonte.');
+          state.dirty = JSON.parse(JSON.stringify(state.campos[state.campo]));
+          renderList(); renderEditor();
+        }).catch(function (err) {
+          showToast('Erro ao salvar: ' + err.message, true);
+          btn.disabled = false; btn.textContent = 'Salvar alteração';
+        });
+      }
+
+      function showToast(msg, isError) {
+        var t = $('toast'); $('toastText').textContent = msg;
+        t.style.borderColor = isError ? 'var(--red)' : '';
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.classList.remove('show'); }, 3800);
+      }
+
+      /* ---------------- HISTÓRICO (sessão local) ---------------- */
+      function renderHistorico() {
+        var body = $('histBody');
+        if (!state.historico.length) { body.innerHTML = '<div class="hist-empty">Nenhuma alteração ainda nesta sessão.</div>'; return; }
+        body.innerHTML = state.historico.map(function (h) {
+          return '<div class="hist-item"><div class="hi-top"><span>' + h.campo + '</span><span>' + h.disciplina.split(' ')[0] + '</span></div>' +
+            '<div>' + h.resumo + '</div><div class="hi-meta">' + h.quando + '</div></div>';
+        }).join('');
+      }
+      var histPanel = $('histPanel');
+      function openHist() { histPanel.classList.add('open'); }
+      $('btnHist').addEventListener('click', openHist);
+      $('btnHist2').addEventListener('click', openHist);
+      $('btnCloseHist').addEventListener('click', function () { histPanel.classList.remove('open'); });
+
+      carregarDisciplinas();
+      renderEditor();
+      renderHistorico();
+
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dados para Planejamento — Eletrocentros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="dark"]{
+    --bg:#07080A;
+    --shell:#0E1013;
+    --sidebar:#0A0C0F;
+    --panel:#131619;
+    --panel-2:#191D21;
+    --panel-3:#20252A;
+    --border:rgba(255,255,255,.07);
+    --border-strong:rgba(255,255,255,.13);
+    --hairline:rgba(255,255,255,.045);
+    --text:#EAEDF0;
+    --text-dim:#8B93A0;
+    --text-faint:#535A64;
+    --accent:#6C8EFF;
+    --accent-ink:#080B18;
+    --accent-dim:rgba(108,142,255,.14);
+    --amber:#F0A93E;
+    --amber-dim:rgba(240,169,62,.15);
+    --green:#3DD68C;
+    --green-dim:rgba(61,214,140,.14);
+    --red:#FF6B76;
+    --red-dim:rgba(255,107,118,.13);
+    --tl-red:#FF5F57; --tl-yellow:#FEBC2E; --tl-green:#28C840;
+    --sheen: rgba(255,255,255,.03);
+  }
+  :root[data-theme="dim"]{
+    --bg:#1B1E24;
+    --shell:#1F232A;
+    --sidebar:#1B1E24;
+    --panel:#262A32;
+    --panel-2:#2D323B;
+    --panel-3:#343A44;
+    --border:rgba(255,255,255,.08);
+    --border-strong:rgba(255,255,255,.14);
+    --hairline:rgba(255,255,255,.05);
+    --text:#D7DBE0;
+    --text-dim:#9BA3AF;
+    --text-faint:#6B7280;
+    --accent:#7C9CFF;
+    --accent-ink:#12151C;
+    --accent-dim:rgba(124,156,255,.16);
+    --amber:#E8A94A;
+    --amber-dim:rgba(232,169,74,.15);
+    --green:#4FD69A;
+    --green-dim:rgba(79,214,154,.15);
+    --red:#FF7B85;
+    --red-dim:rgba(255,123,133,.14);
+    --tl-red:#FF5F57; --tl-yellow:#FEBC2E; --tl-green:#28C840;
+    --sheen: rgba(255,255,255,.035);
+  }
+  :root[data-theme="light"]{
+    --bg:#DEE2E7;
+    --shell:#F4F5F7;
+    --sidebar:#EBEDF0;
+    --panel:#FFFFFF;
+    --panel-2:#F2F3F5;
+    --panel-3:#E7E9EC;
+    --border:rgba(15,23,42,.09);
+    --border-strong:rgba(15,23,42,.16);
+    --hairline:rgba(15,23,42,.05);
+    --text:#181B20;
+    --text-dim:#5E6672;
+    --text-faint:#959CA6;
+    --accent:#3E5FD9;
+    --accent-ink:#FFFFFF;
+    --accent-dim:rgba(62,95,217,.10);
+    --amber:#B06A05;
+    --amber-dim:rgba(176,106,5,.12);
+    --green:#12875A;
+    --green-dim:rgba(18,135,90,.10);
+    --red:#C7303F;
+    --red-dim:rgba(199,48,63,.09);
+    --tl-red:#FF5F57; --tl-yellow:#FEBC2E; --tl-green:#28C840;
+    --sheen: rgba(255,255,255,.6);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:13.5px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;}
+  svg{display:block;}
+  ::selection{background:var(--accent-dim);}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+  button{font-family:inherit;}
+
+  /* ================= APP SHELL ================= */
+  .app-shell{
+    max-width:1360px;
+    margin:22px auto;
+    background:var(--shell);
+    border:1px solid var(--border-strong);
+    border-radius:16px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.2);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    height:calc(100vh - 44px);
+    min-height:640px;
+  }
+
+  /* ---- titlebar ---- */
+  .titlebar{
+    display:flex; align-items:center; justify-content:center; position:relative;
+    height:38px; flex:none;
+    background:var(--sidebar);
+    border-bottom:1px solid var(--hairline);
+    -webkit-app-region:drag;
+  }
+  .traffic{position:absolute; left:14px; display:flex; gap:8px;}
+  .traffic i{width:11px; height:11px; border-radius:50%; display:block;}
+  .traffic i:nth-child(1){background:var(--tl-red);}
+  .traffic i:nth-child(2){background:var(--tl-yellow);}
+  .traffic i:nth-child(3){background:var(--tl-green);}
+  .titlebar-text{font-size:12px; color:var(--text-faint); font-weight:500; letter-spacing:.2px;}
+
+  /* ---- toolbar ---- */
+  .toolbar{
+    display:flex; align-items:center; gap:14px;
+    height:52px; flex:none; padding:0 16px;
+    background:var(--shell);
+    border-bottom:1px solid var(--hairline);
+  }
+  .brandmark{display:flex; align-items:center; gap:9px; flex:none;}
+  .brandmark .mark{
+    width:26px; height:26px; border-radius:7px;
+    background:linear-gradient(160deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7A4CFF));
+    display:flex; align-items:center; justify-content:center; flex:none;
+  }
+  .brandmark .mark svg{width:14px; height:14px;}
+  .brandmark b{font-size:13px; font-weight:600; letter-spacing:.1px; white-space:nowrap;}
+
+  .seg{display:flex; gap:2px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px; padding:2px; flex:none;}
+  .seg button{
+    border:none; background:transparent; color:var(--text-dim);
+    font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:7px; cursor:pointer;
+    transition:color .15s ease, background .15s ease;
+  }
+  .seg button.active{background:var(--panel-3); color:var(--text); box-shadow:inset 0 0 0 1px var(--border-strong);}
+  .seg button:not(.active):hover{color:var(--text);}
+
+  .toolbar-spacer{flex:1;}
+
+  .icon-btn{
+    width:32px; height:32px; border-radius:8px; flex:none;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:all .15s ease;
+  }
+  .icon-btn:hover{background:var(--panel-3); color:var(--text); border-color:var(--border-strong);}
+  .icon-btn svg{width:15px; height:15px;}
+
+  .ring-wrap{display:flex; align-items:center; gap:8px; padding:4px 10px 4px 6px; border:1px solid var(--border); background:var(--panel-2); border-radius:9px; flex:none;}
+  .ring{width:22px; height:22px; transform:rotate(-90deg); flex:none;}
+  .ring circle{fill:none; stroke-width:3;}
+  .ring .track{stroke:var(--panel-3);}
+  .ring .fill{stroke:var(--amber); stroke-linecap:round; transition:stroke-dasharray .3s ease, stroke .3s ease;}
+  .ring-wrap.complete .fill{stroke:var(--green);}
+  .ring-text{font-family:"IBM Plex Mono"; font-size:11px; color:var(--text-dim); white-space:nowrap;}
+
+  .icon-btn.spin-on-hover:hover svg{animation:spin .6s linear;}
+  @keyframes spin{ to{ transform:rotate(90deg); } }
+
+  /* ================= SETTINGS MODAL ================= */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:500;
+    background:rgba(3,4,6,.6); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    width:100%; max-width:640px; max-height:82vh;
+    background:var(--shell); border:1px solid var(--border-strong); border-radius:14px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.6);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .modal-head{
+    display:flex; align-items:center; gap:10px; padding:14px 16px;
+    border-bottom:1px solid var(--hairline); flex:none;
+  }
+  .modal-head .mark{
+    width:26px; height:26px; border-radius:7px; background:var(--panel-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; color:var(--accent); flex:none;
+  }
+  .modal-head .mark svg{width:14px; height:14px;}
+  .modal-head-text b{font-size:13px; font-weight:600; display:block;}
+  .modal-head-text span{font-size:11px; color:var(--text-faint);}
+  .modal-close{margin-left:auto;}
+
+  .modal-tabs{display:flex; gap:4px; padding:10px 16px 0;}
+  .modal-tab{
+    border:none; background:transparent; color:var(--text-dim); cursor:pointer;
+    font-size:12px; font-weight:600; padding:8px 4px; border-bottom:2px solid transparent;
+  }
+  .modal-tab.active{color:var(--accent); border-color:var(--accent);}
+
+  .modal-body{flex:1; overflow-y:auto; padding:14px 16px 16px;}
+  .modal-pane{display:none;}
+  .modal-pane.active{display:block;}
+
+  .cfg-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 2px; border-bottom:1px solid var(--hairline);}
+  .cfg-row:last-child{border-bottom:none;}
+  .cfg-row-label{display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .cfg-row-label b{font-size:12px; font-weight:500;}
+  .cfg-row-label span{font-size:10.5px; color:var(--text-faint); font-family:"IBM Plex Mono";}
+  .cfg-count{font-family:"IBM Plex Mono"; font-size:11px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); border-radius:99px; padding:3px 10px; flex:none;}
+
+  .json-editor{
+    width:100%; min-height:340px; resize:vertical;
+    background:var(--panel-2); border:1px solid var(--border); border-radius:9px;
+    color:var(--text); font-family:"IBM Plex Mono"; font-size:11.5px; line-height:1.6;
+    padding:12px; outline:none; tab-size:2;
+  }
+  .json-editor:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+  .json-status{display:flex; align-items:center; gap:7px; font-size:11.5px; margin-top:9px; color:var(--text-dim);}
+  .json-status .dot{width:7px; height:7px; border-radius:50%; background:var(--green); flex:none;}
+  .json-status.err .dot{background:var(--red);}
+  .json-status.err{color:var(--red);}
+
+  .modal-foot{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; border-top:1px solid var(--hairline); flex:none;}
+  .modal-foot .left{display:flex; gap:8px;}
+
+  /* ================= BODY ================= */
+  .app-body{flex:1; display:flex; flex-direction:column; min-height:0;}
+
+  /* ---- horizontal section nav (replaces sidebar) ---- */
+  .section-nav{
+    flex:none; display:flex; gap:6px; padding:10px 20px;
+    background:var(--shell); border-bottom:1px solid var(--hairline);
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .section-nav::-webkit-scrollbar{display:none;}
+  .snav-btn{
+    display:flex; align-items:center; gap:7px; flex:none;
+    padding:7px 12px; border-radius:9px; cursor:pointer;
+    color:var(--text-dim); font-size:12px; font-weight:500;
+    background:var(--panel-2); border:1px solid var(--border);
+    transition:all .12s ease; white-space:nowrap;
+  }
+  .snav-btn svg{width:14px; height:14px; flex:none; opacity:.85;}
+  .snav-btn:hover{color:var(--text); border-color:var(--border-strong);}
+  .snav-btn.active{background:var(--accent-dim); color:var(--accent); border-color:color-mix(in srgb, var(--accent) 30%, transparent);}
+  .snav-btn .n{
+    font-family:"IBM Plex Mono"; font-size:10px;
+    min-width:16px; height:16px; padding:0 4px; border-radius:99px; display:flex; align-items:center; justify-content:center;
+    background:var(--amber-dim); color:var(--amber); flex:none;
+  }
+  .snav-btn.ok-badge .n{background:var(--green-dim); color:var(--green);}
+  .snav-btn .n.zero{display:none;}
+
+  /* ---- content ---- */
+  .content{flex:1; overflow-y:auto; padding:22px 26px 40px;}
+  .content-title{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
+  .content-title h1{font-size:16px; font-weight:600; margin:0;}
+  .content-title .legend{display:flex; gap:14px; font-size:11px; color:var(--text-faint); align-items:center;}
+  .legend .lg{display:inline-flex; align-items:center; gap:5px;}
+  .legend .dot{width:6px; height:6px; border-radius:50%; display:inline-block;}
+  .legend .dot.amber{background:var(--amber);}
+  .legend .dot.green{background:var(--green);}
+
+  .stack{display:flex; flex-direction:column; gap:14px;}
+
+  section.pane{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 16px 15px;
+    position:relative;
+    scroll-margin-top:14px;
+    transition:border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  @keyframes paneHighlightPulse {
+    0% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 16px color-mix(in srgb, var(--accent) 25%, transparent); border-color: var(--accent); }
+    40% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent), 0 0 24px color-mix(in srgb, var(--accent) 35%, transparent); border-color: var(--accent); }
+    100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; border-color: var(--border); }
+  }
+  section.pane.highlighted { animation: paneHighlightPulse 2s ease-in-out forwards; }
+  section.pane::before{
+    content:""; position:absolute; inset:0 0 auto 0; height:1px;
+    background:var(--sheen); pointer-events:none;
+  }
+  section.pane.disabled{
+    background:var(--panel);
+  }
+  section.pane.disabled .pane-body{opacity:.38; filter:saturate(.5);}
+  section.pane.disabled input,
+  section.pane.disabled .csel-btn,
+  section.pane.disabled .check{pointer-events:none;}
+
+  .pane-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; gap:10px;}
+  .pane-title{display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.7px; color:var(--text-dim);}
+  .pane-title svg{width:14px; height:14px; color:var(--accent); opacity:.9;}
+  .pane-hint{font-size:11px; color:var(--text-faint); display:flex; align-items:center; gap:6px;}
+  .pane-hint svg{width:12px; height:12px;}
+  .lock-chip{
+    display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--text-faint);
+    background:var(--panel-2); border:1px solid var(--border); border-radius:99px; padding:3px 9px 3px 7px;
+  }
+  .lock-chip svg{width:10px; height:10px;}
+
+  .row{display:grid; grid-template-columns:repeat(3,1fr); gap:11px 12px;}
+  .row.c2{grid-template-columns:repeat(2,1fr);}
+  .row.c4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:680px){ .row, .row.c2, .row.c4{grid-template-columns:1fr 1fr;} }
+  @media (max-width:460px){ .row, .row.c2, .row.c4{grid-template-columns:1fr;} }
+
+  .field{display:flex; flex-direction:column; gap:6px; min-width:0;}
+  .field-label{display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:500; color:var(--text-dim);}
+  .field-label .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  /* ---- base inputs (text only now; number replaced by stepper) ---- */
+  .ipt{
+    width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:8px 10px; font-family:"IBM Plex Mono"; font-size:12px;
+    outline:none; transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .ipt::placeholder{color:var(--text-faint);}
+  .ipt:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); background:var(--panel-3);}
+  .ipt:disabled{opacity:.4; cursor:not-allowed;}
+  .ipt[data-req="1"]:not(:disabled){box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--amber) 45%, transparent);}
+  .ipt[data-req="1"][data-filled="1"]:not(:disabled){box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--green) 45%, transparent);}
+
+  /* ================= CUSTOM SELECT ================= */
+  .csel{position:relative;}
+  .csel-btn{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:8px 10px; font-size:12.5px; font-family:inherit; cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .csel-btn .lbl{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left;}
+  .csel-btn .lbl.ph{color:var(--text-faint);}
+  .csel-btn svg{width:11px; height:11px; flex:none; color:var(--text-faint); transition:transform .15s ease;}
+  .csel.open .csel-btn svg{transform:rotate(180deg);}
+  .csel-btn:hover{background:var(--panel-3);}
+  .csel-btn:disabled{opacity:.4; cursor:not-allowed; pointer-events:none;}
+  .csel[data-req="1"] .csel-btn{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--amber) 45%, transparent);}
+  .csel[data-req="1"][data-filled="1"] .csel-btn{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--green) 45%, transparent);}
+  .csel.open .csel-btn{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+
+  .csel-panel{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:200;
+    background:var(--panel-3); border:1px solid var(--border-strong); border-radius:10px;
+    box-shadow:0 16px 32px -8px rgba(0,0,0,.55);
+    padding:5px; max-height:240px; overflow-y:auto;
+    display:none;
+  }
+  .csel.open .csel-panel{display:block;}
+  .csel-opt{
+    padding:7px 9px; border-radius:6px; font-size:12.5px; cursor:pointer; color:var(--text-dim);
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .csel-opt:hover, .csel-opt.hl{background:var(--accent-dim); color:var(--text);}
+  .csel-opt.sel{color:var(--accent); font-weight:600;}
+  .csel-opt.sel svg{width:12px; height:12px;}
+  .csel-opt svg{width:12px; height:12px; visibility:hidden;}
+  .csel-opt.sel svg{visibility:visible;}
+
+  /* ================= STEPPER (custom number) ================= */
+  .stepper{display:flex; align-items:stretch; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+  .stepper input{
+    flex:1; min-width:0; border:none; background:transparent; color:var(--text); text-align:center;
+    font-family:"IBM Plex Mono"; font-size:12.5px; padding:8px 4px; outline:none;
+  }
+  .stepper button{
+    width:26px; flex:none; border:none; background:transparent; color:var(--text-dim); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+    transition:background .12s ease, color .12s ease;
+  }
+  .stepper button:hover{background:var(--panel-3); color:var(--text);}
+  .stepper button:first-child{border-right:1px solid var(--border);}
+  .stepper button:last-child{border-left:1px solid var(--border);}
+  .stepper.disabled{opacity:.4; pointer-events:none;}
+  .stepper[data-req="1"]{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--amber) 45%, transparent);}
+  .stepper[data-req="1"][data-filled="1"]{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--green) 45%, transparent);}
+  .stepper:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);}
+
+  .unit-suffix{position:relative; flex:1; min-width:0;}
+  .unit-suffix input{padding-right:22px;}
+  .unit-suffix::after{content:"m"; position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10.5px; color:var(--text-faint); font-family:"IBM Plex Mono"; pointer-events:none;}
+
+  /* ---- LED ---- */
+  .led{width:7px; height:7px; border-radius:50%; flex:none; background:var(--border); transition:all .15s ease;}
+  .led.na{background:var(--panel-3); border:1px solid var(--border);}
+  .led.req{background:var(--amber); box-shadow:0 0 0 3px var(--amber-dim); animation:pulse 1.8s ease-in-out infinite;}
+  .led.ok{background:var(--green); box-shadow:0 0 0 3px var(--green-dim);}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--amber-dim);} 50%{box-shadow:0 0 0 4px var(--amber-dim);}}
+  @media (prefers-reduced-motion: reduce){ .led.req{animation:none;} }
+
+  /* ---- checkbox ---- */
+  .check{display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:8px; cursor:pointer; font-size:12.5px; user-select:none;}
+  .check:hover{background:var(--panel-2);}
+  .check input{display:none;}
+  .check .box{width:15px; height:15px; border-radius:5px; flex:none; border:1.5px solid var(--border-strong); background:var(--panel-2); display:flex; align-items:center; justify-content:center; transition:all .12s ease;}
+  .check input:checked + .box{background:var(--accent); border-color:var(--accent);}
+  .check .box svg{width:9px; height:9px; opacity:0; transform:scale(.5); transition:all .12s ease; color:var(--accent-ink);}
+  .check input:checked + .box svg{opacity:1; transform:scale(1);}
+  .check-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px 6px;}
+  @media (max-width:680px){ .check-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:460px){ .check-grid{grid-template-columns:1fr;} }
+
+  /* ---- module table ---- */
+  .mtable{border:1px solid var(--hairline); border-radius:9px; overflow:hidden; margin-top:12px;}
+  .mtable .mhead, .mtable .mrow{display:grid; grid-template-columns:82px 1fr 12px 1fr; gap:9px; align-items:center; padding:7px 11px;}
+  .mtable .mhead{font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-faint); background:var(--panel-2); border-bottom:1px solid var(--hairline);}
+  .mtable .mrow{border-bottom:1px solid var(--hairline);}
+  .mtable .mrow:last-child, .mtable .mrow.last-visible{border-bottom:none;}
+  .mtable .mrow.locked{opacity:.32;}
+  .mtable .mrow .mlabel{font-family:"IBM Plex Mono"; font-size:11.5px; color:var(--text-dim); display:flex; align-items:center; gap:8px;}
+  .mtable .x{text-align:center; color:var(--text-faint); font-size:10.5px;}
+
+  /* ---- warning ---- */
+  .warn{display:none; align-items:flex-start; gap:9px; background:var(--red-dim); border:1px solid color-mix(in srgb, var(--red) 40%, var(--border)); color:var(--red); border-radius:9px; padding:9px 11px; font-size:11.5px; margin-top:11px;}
+  .warn.show{display:flex;}
+  .warn svg{flex:none; width:13px; height:13px; margin-top:1px;}
+
+  /* ---- footer ---- */
+  .app-footer{
+    flex:none; display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:11px 20px; background:var(--sidebar); border-top:1px solid var(--hairline);
+  }
+  .footer-meta{font-family:"IBM Plex Mono"; font-size:11px; color:var(--text-faint);}
+  .footer-btns{display:flex; gap:9px;}
+  .btn{font-size:12.5px; font-weight:600; padding:9px 18px; border-radius:8px; cursor:pointer; border:1px solid var(--border-strong); background:var(--panel-2); color:var(--text); transition:all .15s ease;}
+  .btn:hover{background:var(--panel-3);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .btn.primary:hover{filter:brightness(1.1);}
+
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important; transition-duration:.001ms !important;} }
+
+  /* ================= MOBILE: full-screen native app feel ================= */
+  @media (max-width:700px){
+    .app-shell{margin:0; border-radius:0; border:none; box-shadow:none; height:100vh;}
+    .titlebar{display:none;}
+    .toolbar{flex-wrap:wrap; row-gap:8px; padding:10px 12px;}
+    .brandmark b{display:none;}
+    .toolbar-spacer{flex-basis:100%; height:0; order:4;}
+    .content{padding:16px 14px 28px;}
+    .row, .row.c2, .row.c4{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:460px){
+    .row, .row.c2, .row.c4{grid-template-columns:1fr;}
+    .app-footer{padding:10px 14px;}
+    .footer-meta{display:none;}
+    .footer-btns{width:100%;}
+    .footer-btns .btn{flex:1;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="titlebar">
+    <div class="traffic"><i></i><i></i><i></i></div>
+    <div class="titlebar-text">Dados para Planejamento — Eletrocentros.app</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="brandmark">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 7 14h5l-1 8 7-13h-5z" fill="white"/></svg></span>
+      <b>Planejamento PCP</b>
+    </div>
+    <div class="seg" role="tablist">
+      <button class="active" data-tab="pcp">PCP</button>
+      <button data-tab="vendas">Vendas</button>
+    </div>
+    <div class="toolbar-spacer"></div>
+    <div class="ring-wrap" id="ringWrap">
+      <svg class="ring" viewBox="0 0 22 22"><circle class="track" cx="11" cy="11" r="8.5"/><circle class="fill" id="ringFill" cx="11" cy="11" r="8.5" stroke-dasharray="0 53.4"/></svg>
+      <span class="ring-text" id="ringText">0/8</span>
+    </div>
+    <button class="icon-btn" id="btnCarregar" title="Carregar última execução">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
+    </button>
+    <button class="icon-btn" id="btnSettings" title="Configurações (editar JSON)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </button>
+    <button class="icon-btn" id="themeToggle" title="Alternar tema">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M12 3v1.6M12 19.4V21M4.9 4.9l1.1 1.1M18 18l1.1 1.1M3 12h1.6M19.4 12H21M4.9 19.1l1.1-1.1M18 6l1.1-1.1"/>
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="app-body">
+
+    <nav class="section-nav" id="sectionNav">
+      <button class="snav-btn active" data-anchor="sec-estrutura">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+        Estrutura<span class="n zero">0</span>
+      </button>
+      <button class="snav-btn" data-anchor="sec-eletrica">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 7 14h5l-1 8 7-13h-5z"/></svg>
+        Elétrica &amp; Equip.<span class="n zero">0</span>
+      </button>
+      <button class="snav-btn" data-anchor="sec-acessorios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Acessórios<span class="n zero">0</span>
+      </button>
+      <button class="snav-btn" data-anchor="sec-horas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        Horas Orçadas<span class="n zero">0</span>
+      </button>
+      <button class="snav-btn" data-anchor="sec-sap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5V12c0 1.7 3.6 3 8 3s8-1.3 8-3V5.5"/><path d="M4 12v6.5c0 1.7 3.6 3 8 3s8-1.3 8-3V12"/></svg>
+        Automação SAP<span class="n zero">0</span>
+      </button>
+      <button class="snav-btn" data-anchor="sec-sapinfo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.2"/><path d="M7 15h4M7 11.2h.01"/><circle cx="16" cy="11" r="1.6"/></svg>
+        Dados do SAP<span class="n">0</span>
+      </button>
+    </nav>
+
+    <div class="content" id="content">
+
+      <div id="tab-pcp">
+        <div class="content-title">
+          <h1>Novo projeto</h1>
+          <div class="legend">
+            <span class="lg"><i class="dot amber"></i>obrigatório</span>
+            <span class="lg"><i class="dot green"></i>preenchido</span>
+          </div>
+        </div>
+
+        <div class="stack">
+
+          <!-- ESTRUTURA -->
+          <section class="pane" id="sec-estrutura">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+                Mecânica — Estrutura
+              </div>
+              <div class="pane-hint">Define os campos abaixo</div>
+            </div>
+            <div class="pane-body">
+              <div class="row">
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="tipoestrutura"></i><span class="txt">Tipo de Estrutura</span></span>
+                  <div class="csel" id="csel-tipoestrutura" data-req="1"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="nrmodulos"></i><span class="txt">Qtd. Módulos</span></span>
+                  <div class="csel" id="csel-nrmodulos" data-req="1"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="planpin"></i><span class="txt">Plano de Pintura</span></span>
+                  <div class="csel" id="csel-planpin" data-req="1"></div>
+                </div>
+              </div>
+
+              <div id="modulesBlock">
+                <div class="mtable">
+                  <div class="mhead"><span>Módulo</span><span>Comprim.</span><span></span><span>Largura</span></div>
+                  <div id="moduleRows"></div>
+                </div>
+              </div>
+
+              <div class="warn" id="warnRoofTop1Mod">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z"/></svg>
+                <span>Ar-condicionado Roof Top exige casa de máquinas — selecione 2 ou mais módulos.</span>
+              </div>
+
+              <div class="row c2" style="margin-top:12px;">
+                <label class="check"><input type="checkbox" id="chapaRemovivel"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Chapa Removível</label>
+                <label class="check"><input type="checkbox" id="peDireito"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Pé Direito 3,3 metros</label>
+              </div>
+            </div>
+          </section>
+
+          <!-- ELÉTRICA & EQUIPAMENTOS -->
+          <section class="pane" id="sec-eletrica">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 7 14h5l-1 8 7-13h-5z"/></svg>
+                Elétrica &amp; Equipamentos
+              </div>
+            </div>
+            <div class="pane-body">
+              <div class="row">
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="tipomaq"></i><span class="txt">Tipo Máq. Ar Cond.</span></span>
+                  <div class="csel" id="csel-tipomaq" data-req="1"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="qtdmaq"></i><span class="txt">Qtd. Ar Cond.</span></span>
+                  <div class="stepper" id="stepper-qtdmaq">
+                    <button type="button" class="dec">–</button>
+                    <input type="text" inputmode="numeric" class="mono" id="qtdmaq" value="0" disabled>
+                    <button type="button" class="inc">+</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="complexidade"></i><span class="txt">Complexidade</span></span>
+                  <div class="csel" id="csel-complexidade" data-req="1"></div>
+                </div>
+              </div>
+              <div class="row" style="margin-top:11px;">
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="incendio"></i><span class="txt">Tipo Sist. Incêndio</span></span>
+                  <div class="csel" id="csel-incendio" data-req="1"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="seguranca"></i><span class="txt">Tipo Sist. Segurança</span></span>
+                  <div class="csel" id="csel-seguranca" data-req="1"></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led req" data-led="nrcolunas"></i><span class="txt">Nº Colunas Total</span></span>
+                  <div class="stepper" id="stepper-nrcolunas" data-req="1">
+                    <button type="button" class="dec">–</button>
+                    <input type="text" inputmode="numeric" class="mono" id="nrcolunas" value="">
+                    <button type="button" class="inc">+</button>
+                  </div>
+                </div>
+              </div>
+              <div class="row c2" style="margin-top:12px;">
+                <label class="check"><input type="checkbox" id="testesw"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Teste de Software</label>
+                <label class="check"><input type="checkbox" id="whiteMartins"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>White Martins</label>
+                <label class="check"><input type="checkbox" id="trafoOleo"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Transformador a Óleo c/ Bacia</label>
+              </div>
+            </div>
+          </section>
+
+          <!-- ACESSÓRIOS -->
+          <section class="pane" id="sec-acessorios">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                Acessórios
+              </div>
+              <div class="pane-hint" id="acessoriosCount">0 selecionados</div>
+            </div>
+            <div class="pane-body">
+              <div class="check-grid">
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Escada Padrão WEG</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Escada Especial</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Porão de Cabos</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Pilotis</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Rede de Dutos</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Fundo Falso</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Dutos BWW</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Calhas Pluviais</label>
+                <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Dutos de Gases</label>
+              </div>
+
+              <div style="height:1px; background:var(--hairline); margin:14px 0;"></div>
+
+              <div class="row c2">
+                <div>
+                  <div class="pane-hint" id="containerHint" style="margin-bottom:7px; display:flex; gap:6px; align-items:center;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="1.5"/><path d="M6 7V5h12v2M2 12h20"/></svg>
+                    Container Marítimo — requer "Container Solar"
+                  </div>
+                  <label class="check"><input type="checkbox" id="progReles"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Programação de Relés</label>
+                  <label class="check"><input type="checkbox" id="diagBTI"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Diagrama de Produção BTI</label>
+                  <label class="check"><input type="checkbox" id="diagAgrup"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Diagrama Agrupador</label>
+                </div>
+                <div>
+                  <div class="pane-hint" style="margin-bottom:7px;">Fabricação — padrão 1306</div>
+                  <label class="check"><input type="checkbox" id="fab1313"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Usar fabricação 1313</label>
+                  <label class="check"><input type="checkbox" id="itemFilho"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Item Filho</label>
+                  <label class="check"><input type="checkbox" id="semEngenharia"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Sem Engenharia</label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- HORAS ORÇADAS -->
+          <section class="pane" id="sec-horas">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+                Horas Orçadas
+              </div>
+            </div>
+            <div class="pane-body">
+              <div class="row">
+                <div class="field">
+                  <span class="field-label"><span class="txt">LOM — Layout p/ Aprovação</span></span>
+                  <div class="stepper"><button type="button" class="dec">–</button><input type="text" inputmode="numeric" class="mono" id="horLOM" value=""><button type="button" class="inc">+</button></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><span class="txt">EDF — Edificação</span></span>
+                  <div class="stepper"><button type="button" class="dec">–</button><input type="text" inputmode="numeric" class="mono" id="horEDF" value=""><button type="button" class="inc">+</button></div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><span class="txt">INT — Interligações</span></span>
+                  <div class="stepper"><button type="button" class="dec">–</button><input type="text" inputmode="numeric" class="mono" id="horINT" value=""><button type="button" class="inc">+</button></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SAP AUTOMAÇÃO -->
+          <section class="pane" id="sec-sap">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5V12c0 1.7 3.6 3 8 3s8-1.3 8-3V5.5"/><path d="M4 12v6.5c0 1.7 3.6 3 8 3s8-1.3 8-3V12"/></svg>
+                Automação SAP
+              </div>
+              <div class="pane-hint">Executado após o cálculo de tempos</div>
+            </div>
+            <div class="pane-body">
+              <div class="check-grid">
+                <label class="check"><input type="checkbox" id="criarDRs"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Criar DRs</label>
+                <label class="check"><input type="checkbox" id="cpc47"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>CPC47</label>
+                <label class="check"><input type="checkbox" id="solar"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>SOLAR</label>
+                <label class="check"><input type="checkbox" id="planejar"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Planejar</label>
+                <label class="check"><input type="checkbox" id="camposUsuario"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Campos usuário</label>
+                <label class="check"><input type="checkbox" id="amarrarMaterial"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg></span>Amarrar material</label>
+              </div>
+            </div>
+          </section>
+
+          <!-- SAP INFO -->
+          <section class="pane disabled" id="sec-sapinfo">
+            <div class="pane-head">
+              <div class="pane-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2.2"/><path d="M7 15h4M7 11.2h.01"/><circle cx="16" cy="11" r="1.6"/></svg>
+                Dados do SAP
+              </div>
+              <div class="lock-chip" id="sapLockChip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4.5" y="10.5" width="15" height="9" rx="1.6"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+                Marque uma automação
+              </div>
+            </div>
+            <div class="pane-body">
+              <div class="row">
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="pep"></i><span class="txt">PEP</span></span>
+                  <input type="text" id="pep" class="ipt" placeholder="XXX-XX-XXXXX-XXX" disabled>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="cliente"></i><span class="txt">Cliente</span></span>
+                  <input type="text" id="cliente" class="ipt" disabled>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="planejadorSel"></i><span class="txt">Planejador</span></span>
+                  <div class="csel" id="csel-planejadorSel"></div>
+                </div>
+              </div>
+              <div class="row" style="margin-top:11px;">
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="valorMec"></i><span class="txt">Valor Mecânica (R$)</span></span>
+                  <input type="text" id="valorMec" class="ipt" placeholder="0,00" disabled>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="valorEletr"></i><span class="txt">Valor Elétrica (R$)</span></span>
+                  <input type="text" id="valorEletr" class="ipt" placeholder="0,00" disabled>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="dataOV"></i><span class="txt">Data OV</span></span>
+                  <input type="text" id="dataOV" class="ipt" placeholder="dd.mm.aaaa" disabled>
+                </div>
+              </div>
+              <div class="row" style="margin-top:11px;">
+                <div class="field">
+                  <span class="field-label"><span class="txt">Nº / Item OV</span></span>
+                  <div style="display:grid; grid-template-columns:2.4fr 1fr; gap:6px;">
+                    <input type="text" id="nrOV" class="ipt" placeholder="Nº OV" disabled>
+                    <input type="text" id="itemOV" class="ipt" placeholder="Item" disabled>
+                  </div>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="material"></i><span class="txt">Material</span></span>
+                  <input type="text" id="material" class="ipt" disabled>
+                </div>
+                <div class="field">
+                  <span class="field-label"><i class="led na" data-led="dataInicio"></i><span class="txt">Data Início Projeto</span></span>
+                  <input type="text" id="dataInicio" class="ipt" placeholder="dd.mm.aaaa" disabled>
+                </div>
+              </div>
+              <div class="row" style="margin-top:11px;">
+                <div class="field"><span class="field-label"><span class="txt">Material MEC</span></span><input type="text" id="materialMec" class="ipt" disabled></div>
+                <div class="field"><span class="field-label"><span class="txt">Material ELE</span></span><input type="text" id="materialEle" class="ipt" disabled></div>
+                <div class="field"><span class="field-label"><span class="txt">Material Avó</span></span><input type="text" id="materialAvo" class="ipt" disabled></div>
+              </div>
+              <div class="warn" id="warnPep">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a1.7 1.7 0 0 0 1.46 2.5h17.5a1.7 1.7 0 0 0 1.46-2.5L13.7 3.86a1.7 1.7 0 0 0-2.94 0Z"/></svg>
+                <span>PEP é obrigatório quando qualquer automação SAP está marcada.</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <div id="tab-vendas" style="display:none;">
+        <div class="content-title"><h1>Aba Vendas</h1></div>
+        <section class="pane">
+          <div class="pane-body" style="text-align:center; padding:36px 12px; color:var(--text-dim); font-size:12.5px;">
+            O formulário original possui uma segunda aba (TabStrip) para o fluxo comercial, com código VBA não
+            documentado nesta prova de conceito — layout/lógica a levantar a partir do <span class="mono">TabStrip1_Change</span>.
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="app-footer">
+    <span class="footer-meta" id="footerMeta">0 / 8 obrigatórios</span>
+    <div class="footer-btns">
+      <button class="btn" id="btnSair">Sair</button>
+      <button class="btn primary" id="btnOk">Calcular Tempos</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= SETTINGS MODAL ================= -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span>
+      <div class="modal-head-text">
+        <b>Configurações do formulário</b>
+        <span>Editado a partir de config.json — nada aqui é hardcoded</span>
+      </div>
+      <button class="icon-btn modal-close" id="btnCloseSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-pane="pane-listas">Listas</button>
+      <button class="modal-tab" data-pane="pane-json">Editor JSON</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-pane active" id="pane-listas">
+        <div id="cfgRows"></div>
+      </div>
+      <div class="modal-pane" id="pane-json">
+        <textarea class="json-editor mono" id="jsonEditor" spellcheck="false"></textarea>
+        <div class="json-status" id="jsonStatus"><span class="dot"></span><span id="jsonStatusText">JSON válido</span></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div class="left">
+        <button class="btn" id="btnRestoreDefault">Restaurar padrão</button>
+        <button class="btn" id="btnDownloadJson">Baixar .json</button>
+      </div>
+      <button class="btn primary" id="btnApplyConfig">Aplicar alterações</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------------- THEME ---------------- */
+  var root = document.documentElement;
+  $('themeToggle').addEventListener('click', function(){
+    root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------------- TABS ---------------- */
+  document.querySelectorAll('.seg button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.seg button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      $('tab-pcp').style.display = btn.dataset.tab === 'pcp' ? '' : 'none';
+      $('tab-vendas').style.display = btn.dataset.tab === 'vendas' ? '' : 'none';
+    });
+  });
+
+  /* ---------------- SECTION NAV (horizontal) ---------------- */
+  var snavBtns = document.querySelectorAll('.snav-btn');
+  snavBtns.forEach(function(link){
+    link.addEventListener('click', function(){
+      var el = document.getElementById(link.dataset.anchor);
+      if (el) {
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        document.querySelectorAll('section.pane.highlighted').forEach(function(p){ p.classList.remove('highlighted'); });
+        void el.offsetWidth;
+        el.classList.add('highlighted');
+        setTimeout(function(){ el.classList.remove('highlighted'); }, 2000);
+      }
+    });
+  });
+  var sections = Array.prototype.map.call(snavBtns, function(l){ return document.getElementById(l.dataset.anchor); });
+  var content = $('content');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          var id = entry.target.id;
+          snavBtns.forEach(function(l){ l.classList.toggle('active', l.dataset.anchor === id); });
+        }
+      });
+    }, {root: content, rootMargin:'-10% 0px -75% 0px', threshold:0});
+    sections.forEach(function(s){ if (s) io.observe(s); });
+  }
+
+  /* ---------------- CONFIG (this is the config.json) ---------------- */
+  var DEFAULT_CONFIG = {
+    listas: {
+      tipoestrutura: ['Móvel','Semimóvel','Modular','Fixo','Embarcado','Container Solar','Skid (mecânica)','Skid (com elétrica)','Pilotis','ESSW (mecânica)','ESSW (elétrica)','Serviço Engenharia'],
+      planpin: ['WAU-ELETRO-08','WAU-ELETRO-09','WAU-ELETRO-04','Não aplicável'],
+      tipomaq: ['Split','Wall Mounted','Roof Top','Não possui','Não aplicável'],
+      incendio: ['Com combate','Com instalações','Somente infra','Não aplicável'],
+      seguranca: ['CFTV','Controle Acesso','CFTV + Controle Acesso','Não possui','Não aplicável'],
+      complexidade: ['Simples','Médio','Complexo','Não aplicável'],
+      planejadorSel: ['MAGLIONI','MAURICIOFA','CAMILARM']
+    },
+    regras: {
+      estruturasSemModulo: ['Container Solar','Skid (mecânica)','Skid (com elétrica)','Pilotis','ESSW (mecânica)','ESSW (elétrica)','Serviço Engenharia'],
+      estruturasSemValorMec: ['ESSW (elétrica)','Serviço Engenharia'],
+      estruturasSemValorEletr: ['ESSW (mecânica)','Pilotis','Skid (mecânica)']
+    }
+  };
+  var CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+  /* ---------------- CUSTOM SELECT COMPONENT ---------------- */
+  var SELECTS = {}; // id -> {value, required, options:[{value,label}]}
+
+  function buildSelect(containerId, dataId, options, opts){
+    opts = opts || {};
+    var container = $(containerId);
+    container.innerHTML =
+      '<button type="button" class="csel-btn"><span class="lbl ph">'+(opts.placeholder || 'Selecione…')+'</span>'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>'+
+      '<div class="csel-panel" role="listbox"></div>';
+    var panel = container.querySelector('.csel-panel');
+    var btn = container.querySelector('.csel-btn');
+    var placeholder = opts.placeholder || 'Selecione…';
+
+    var allOpts = [{value:'', label:placeholder}].concat(options.map(function(o){
+      return typeof o === 'string' ? {value:o, label:o} : o;
+    }));
+
+    allOpts.forEach(function(o){
+      var row = document.createElement('div');
+      row.className = 'csel-opt';
+      row.dataset.value = o.value;
+      row.setAttribute('role','option');
+      row.innerHTML = '<span>'+o.label+'</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>';
+      row.addEventListener('click', function(){
+        setSelectValue(dataId, o.value);
+        closeAll();
+      });
+      panel.appendChild(row);
+    });
+
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var wasOpen = container.classList.contains('open');
+      closeAll();
+      if (!wasOpen && !btn.disabled) container.classList.add('open');
+    });
+
+    SELECTS[dataId] = {value:'', options:allOpts, container:container, disabled:false, placeholder:placeholder};
+  }
+
+  function closeAll(){
+    document.querySelectorAll('.csel.open').forEach(function(c){ c.classList.remove('open'); });
+  }
+  document.addEventListener('click', closeAll);
+
+  function setSelectValue(id, val){
+    var s = SELECTS[id];
+    if (!s) return;
+    s.value = val;
+    var lbl = s.container.querySelector('.lbl');
+    var found = s.options.find(function(o){ return o.value === val; });
+    lbl.textContent = found ? found.label : s.placeholder;
+    lbl.classList.toggle('ph', val === '');
+    s.container.querySelectorAll('.csel-opt').forEach(function(row){
+      row.classList.toggle('sel', row.dataset.value === val);
+    });
+    recompute();
+  }
+
+  function selVal(id){ return SELECTS[id] ? SELECTS[id].value : ''; }
+
+  function selDisable(id, disabled){
+    var s = SELECTS[id];
+    if (!s) return;
+    s.disabled = disabled;
+    s.container.querySelector('.csel-btn').disabled = disabled;
+    if (disabled) s.container.classList.remove('open');
+  }
+
+  /* build all selects — driven entirely by CONFIG.listas */
+  function buildAllSelectsFromConfig(){
+    buildSelect('csel-tipoestrutura', 'tipoestrutura', CONFIG.listas.tipoestrutura);
+    buildSelect('csel-nrmodulos', 'nrmodulos', [
+      {value:'1', label:'1 Módulo'},{value:'2', label:'2 Módulos'},{value:'3', label:'3 Módulos'},{value:'4', label:'4 Módulos'},
+      {value:'5', label:'5 Módulos'},{value:'6', label:'6 Módulos'},{value:'7', label:'7 Módulos'},{value:'8', label:'8 Módulos'}
+    ]);
+    buildSelect('csel-planpin', 'planpin', CONFIG.listas.planpin);
+    buildSelect('csel-tipomaq', 'tipomaq', CONFIG.listas.tipomaq);
+    buildSelect('csel-incendio', 'incendio', CONFIG.listas.incendio);
+    buildSelect('csel-seguranca', 'seguranca', CONFIG.listas.seguranca);
+    buildSelect('csel-complexidade', 'complexidade', CONFIG.listas.complexidade);
+    buildSelect('csel-planejadorSel', 'planejadorSel', CONFIG.listas.planejadorSel);
+  }
+  buildAllSelectsFromConfig();
+
+  /* ---------------- STEPPERS ---------------- */
+  document.querySelectorAll('.stepper').forEach(function(st){
+    var input = st.querySelector('input');
+    var dec = st.querySelector('.dec');
+    var inc = st.querySelector('.inc');
+    function step(delta){
+      if (input.disabled) return;
+      var v = parseInt(input.value || '0', 10);
+      if (isNaN(v)) v = 0;
+      v = Math.max(0, v + delta);
+      input.value = v;
+      input.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+    dec.addEventListener('click', function(){ step(-1); });
+    inc.addEventListener('click', function(){ step(1); });
+    input.addEventListener('input', function(){
+      input.value = input.value.replace(/[^0-9]/g, '');
+    });
+  });
+
+  /* ---------------- MODULE ROWS ---------------- */
+  var moduleRowsEl = $('moduleRows');
+  var moduleInputs = [];
+  for (var i = 1; i <= 8; i++){
+    var row = document.createElement('div');
+    row.className = 'mrow locked';
+    row.innerHTML =
+      '<span class="mlabel"><i class="led na" data-led="mod'+i+'"></i>Módulo '+i+'</span>'+
+      '<span class="unit-suffix"><input type="text" inputmode="decimal" class="ipt mono mod-comp" placeholder="0,00"></span>'+
+      '<span class="x">×</span>'+
+      '<span class="unit-suffix"><input type="text" inputmode="decimal" class="ipt mono mod-larg" placeholder="0,00"></span>';
+    moduleRowsEl.appendChild(row);
+    moduleInputs.push(row);
+  }
+
+  /* ---------------- RULE ENGINE (reads live from CONFIG.regras) ---------------- */
+
+  function setLed(name, state){
+    document.querySelectorAll('[data-led="'+name+'"]').forEach(function(el){
+      el.classList.remove('na','req','ok'); el.classList.add(state);
+    });
+  }
+  function isFilledEl(el){
+    if (!el) return false;
+    if (el.type === 'checkbox') return el.checked;
+    return String(el.value || '').trim() !== '';
+  }
+
+  var reqTotal = 0, reqDone = 0;
+  var secCount = {}; // anchor id -> pending count
+
+  function track(section, pending){
+    if (pending === null || pending === undefined) return;
+    reqTotal += 1;
+    if (!pending) reqDone += 1;
+    secCount[section] = (secCount[section] || 0) + (pending ? 1 : 0);
+  }
+
+  function applyInput(section, id, required, applicable){
+    var el = $(id);
+    if (!el) return;
+    el.disabled = !applicable;
+    var wrap = el.closest('.stepper');
+    if (wrap) wrap.classList.toggle('disabled', !applicable);
+    var field = el.closest('.field');
+    if (field && section === 'sec-sapinfo') {
+      field.style.display = applicable ? '' : 'none';
+    }
+    if (!applicable){ setLed(id, 'na'); if (wrap) wrap.removeAttribute('data-req'); el.removeAttribute('data-req'); return; }
+    var filled = isFilledEl(el);
+    el.dataset.req = required ? '1' : '0';
+    el.dataset.filled = filled ? '1' : '0';
+    if (wrap){ wrap.dataset.req = required ? '1':'0'; wrap.dataset.filled = filled?'1':'0'; }
+    setLed(id, required ? (filled ? 'ok' : 'req') : (filled ? 'ok' : 'na'));
+    if (required) track(section, !filled);
+  }
+
+  function applySelect(section, id, required, applicable){
+    selDisable(id, !applicable);
+    var container = SELECTS[id].container;
+    var field = container.closest('.field');
+    if (field && section === 'sec-sapinfo') {
+      field.style.display = applicable ? '' : 'none';
+    }
+    if (!applicable){ setLed(id, 'na'); container.removeAttribute('data-req'); return; }
+    var filled = selVal(id) !== '';
+    container.dataset.req = required ? '1' : '0';
+    container.dataset.filled = filled ? '1' : '0';
+    setLed(id, required ? (filled ? 'ok' : 'req') : (filled ? 'ok' : 'na'));
+    if (required) track(section, !filled);
+  }
+
+  function recompute(){
+    reqTotal = 0; reqDone = 0; secCount = {};
+
+    var tipo = selVal('tipoestrutura');
+    var nrmod = parseInt(selVal('nrmodulos') || '0', 10);
+    var temModulos = tipo !== '' && CONFIG.regras.estruturasSemModulo.indexOf(tipo) === -1;
+
+    applySelect('sec-estrutura', 'tipoestrutura', true, true);
+    applySelect('sec-estrutura', 'nrmodulos', true, true);
+    applySelect('sec-estrutura', 'planpin', true, true);
+
+    var expandirModulos = temModulos && nrmod > 0;
+    $('modulesBlock').style.display = expandirModulos ? '' : 'none';
+    moduleInputs.forEach(function(row, i0){
+      var idx = i0 + 1;
+      var active = expandirModulos && idx <= nrmod;
+      row.style.display = active ? '' : 'none';
+      row.classList.toggle('locked', !active);
+      row.classList.toggle('last-visible', active && idx === nrmod);
+      var comp = row.querySelector('.mod-comp');
+      var larg = row.querySelector('.mod-larg');
+      comp.disabled = !active; larg.disabled = !active;
+      var filled = active && comp.value.trim() !== '' && larg.value.trim() !== '';
+      setLed('mod'+idx, !active ? 'na' : (filled ? 'ok' : 'req'));
+      if (active) track('sec-estrutura', !filled);
+    });
+
+    var roofTop1 = selVal('tipomaq') === 'Roof Top' && nrmod === 1 && temModulos;
+    $('warnRoofTop1Mod').classList.toggle('show', roofTop1);
+
+    var tipomaqVal = selVal('tipomaq');
+    var maqAtiva = tipomaqVal !== '' && tipomaqVal !== 'Não possui' && tipomaqVal !== 'Não aplicável';
+    applySelect('sec-eletrica', 'tipomaq', true, true);
+    applyInput('sec-eletrica', 'qtdmaq', true, maqAtiva);
+    applySelect('sec-eletrica', 'incendio', true, true);
+    applySelect('sec-eletrica', 'seguranca', true, true);
+    applySelect('sec-eletrica', 'complexidade', true, true);
+    applyInput('sec-eletrica', 'nrcolunas', true, true);
+
+    var isContainer = tipo === 'Container Solar';
+    $('containerHint').style.opacity = isContainer ? '1' : '.55';
+
+    var anySap = $('criarDRs').checked ||
+      ($('cpc47') && $('cpc47').checked) ||
+      ($('solar') && $('solar').checked) ||
+      $('planejar').checked ||
+      $('camposUsuario').checked ||
+      $('amarrarMaterial').checked;
+
+    var sapSection = $('sec-sapinfo');
+    if (sapSection) {
+      sapSection.style.display = anySap ? '' : 'none';
+      sapSection.classList.toggle('disabled', !anySap);
+    }
+    $('sapLockChip').style.display = anySap ? 'none' : 'flex';
+    $('warnPep').classList.toggle('show', anySap && !isFilledEl($('pep')));
+
+    var hasCamposUser = $('camposUsuario').checked;
+    var hasPlanejar = $('planejar').checked;
+    var hasAmarrar = $('amarrarMaterial').checked;
+
+    applyInput('sec-sapinfo', 'pep', anySap, anySap);
+    applyInput('sec-sapinfo', 'cliente', hasCamposUser, hasCamposUser);
+    applySelect('sec-sapinfo', 'planejadorSel', hasCamposUser, hasCamposUser);
+    applyInput('sec-sapinfo', 'dataOV', hasCamposUser, hasCamposUser);
+    applyInput('sec-sapinfo', 'valorMec', hasCamposUser && CONFIG.regras.estruturasSemValorMec.indexOf(tipo) === -1, hasCamposUser);
+    applyInput('sec-sapinfo', 'valorEletr', hasCamposUser && CONFIG.regras.estruturasSemValorEletr.indexOf(tipo) === -1, hasCamposUser);
+    applyInput('sec-sapinfo', 'dataInicio', hasPlanejar, hasPlanejar);
+    applyInput('sec-sapinfo', 'material', hasAmarrar && tipo !== 'Serviço Engenharia', hasAmarrar);
+
+    ['nrOV', 'itemOV'].forEach(function(id){
+      var el = $(id);
+      if (el) {
+        el.disabled = !hasCamposUser;
+        var f = el.closest('.field');
+        if (f) f.style.display = hasCamposUser ? '' : 'none';
+      }
+    });
+
+    ['materialMec','materialEle','materialAvo'].forEach(function(id){
+      var el = $(id);
+      if (el) {
+        el.disabled = !hasAmarrar;
+        var f = el.closest('.field');
+        if (f) f.style.display = hasAmarrar ? '' : 'none';
+      }
+    });
+
+    if (sapSection) {
+      sapSection.querySelectorAll('.row').forEach(function (r) {
+        var visibleChildren = Array.from(r.children).filter(function (child) {
+          return child.style.display !== 'none';
+        });
+        r.style.display = visibleChildren.length > 0 ? '' : 'none';
+      });
+    }
+
+    var acCount = document.querySelectorAll('.acessorio:checked').length;
+    $('acessoriosCount').textContent = acCount + ' selecionado' + (acCount === 1 ? '' : 's');
+
+    /* section-nav badges */
+    snavBtns.forEach(function(link){
+      var n = secCount[link.dataset.anchor] || 0;
+      var badge = link.querySelector('.n');
+      badge.textContent = n;
+      badge.classList.toggle('zero', n === 0);
+      link.classList.toggle('ok-badge', n === 0);
+    });
+
+    /* header ring + footer */
+    var pct = reqTotal ? reqDone / reqTotal : 0;
+    var circumference = 2 * Math.PI * 8.5;
+    $('ringFill').setAttribute('stroke-dasharray', (circumference*pct).toFixed(1) + ' ' + circumference.toFixed(1));
+    $('ringText').textContent = reqDone + '/' + reqTotal;
+    $('ringWrap').classList.toggle('complete', reqTotal > 0 && reqDone === reqTotal);
+    $('footerMeta').textContent = reqDone + ' / ' + reqTotal + ' obrigatórios';
+  }
+
+  document.querySelectorAll('input, .acessorio').forEach(function(el){
+    el.addEventListener('input', recompute);
+    el.addEventListener('change', recompute);
+  });
+
+  recompute();
+
+  /* ---------------- FOOTER ACTIONS (demo) ---------------- */
+  $('btnOk').addEventListener('click', function(){
+    recompute();
+    if (reqDone < reqTotal){
+      alert('Existem ' + (reqTotal - reqDone) + ' campo(s) obrigatório(s) pendente(s). Verifique os indicadores âmbar.');
+    } else {
+      alert('Prova de conceito de layout — sem motor de cálculo conectado nesta tela.');
+    }
+  });
+  $('btnSair').addEventListener('click', function(){
+    confirm('Sair sem salvar as alterações desta sessão?');
+  });
+  $('btnCarregar').addEventListener('click', function(){
+    alert('Em produção: restaura os valores salvos na última execução (equivalente a set_controlStatus/FieldValues).');
+  });
+
+  /* ---------------- SETTINGS MODAL (edit config.json without touching the file) ---------------- */
+  var LIST_LABELS = {
+    tipoestrutura: 'Tipo de Estrutura',
+    planpin: 'Plano de Pintura',
+    tipomaq: 'Tipo Máq. Ar Condicionado',
+    incendio: 'Tipo Sist. Incêndio',
+    seguranca: 'Tipo Sist. Segurança',
+    complexidade: 'Complexidade',
+    planejadorSel: 'Planejador'
+  };
+
+  var overlay = $('settingsOverlay');
+  var jsonEditor = $('jsonEditor');
+  var jsonStatus = $('jsonStatus');
+  var jsonStatusText = $('jsonStatusText');
+
+  function renderCfgRows(){
+    var wrap = $('cfgRows');
+    wrap.innerHTML = '';
+    Object.keys(CONFIG.listas).forEach(function(key){
+      var items = CONFIG.listas[key];
+      var row = document.createElement('div');
+      row.className = 'cfg-row';
+      row.innerHTML =
+        '<div class="cfg-row-label"><b>'+(LIST_LABELS[key] || key)+'</b><span>listas.'+key+'</span></div>'+
+        '<span class="cfg-count">'+items.length+' itens</span>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function validateJson(){
+    try{
+      var parsed = JSON.parse(jsonEditor.value);
+      if (!parsed.listas || !parsed.regras) throw new Error('Faltam as chaves "listas" e/ou "regras"');
+      jsonStatus.classList.remove('err');
+      jsonStatusText.textContent = 'JSON válido';
+      return parsed;
+    }catch(e){
+      jsonStatus.classList.add('err');
+      jsonStatusText.textContent = 'Erro: ' + e.message;
+      return null;
+    }
+  }
+
+  function openSettings(){
+    renderCfgRows();
+    jsonEditor.value = JSON.stringify(CONFIG, null, 2);
+    validateJson();
+    overlay.classList.add('open');
+  }
+  function closeSettings(){ overlay.classList.remove('open'); }
+
+  $('btnSettings').addEventListener('click', openSettings);
+  $('btnCloseSettings').addEventListener('click', closeSettings);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeSettings(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSettings(); });
+
+  document.querySelectorAll('.modal-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.modal-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.modal-pane').forEach(function(p){ p.classList.remove('active'); });
+      tab.classList.add('active');
+      $(tab.dataset.pane).classList.add('active');
+    });
+  });
+
+  jsonEditor.addEventListener('input', validateJson);
+
+  $('btnApplyConfig').addEventListener('click', function(){
+    var parsed = validateJson();
+    if (!parsed) return;
+    // preserve current selections where the value still exists in the new lists
+    var previous = {};
+    Object.keys(SELECTS).forEach(function(id){ previous[id] = selVal(id); });
+
+    CONFIG = parsed;
+    buildAllSelectsFromConfig();
+
+    Object.keys(previous).forEach(function(id){
+      var s = SELECTS[id];
+      if (!s) return;
+      var stillExists = s.options.some(function(o){ return o.value === previous[id]; });
+      if (stillExists) setSelectValue(id, previous[id]);
+    });
+
+    renderCfgRows();
+    recompute();
+    closeSettings();
+  });
+
+  $('btnDownloadJson').addEventListener('click', function(){
+    var blob = new Blob([JSON.stringify(CONFIG, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'config.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  $('btnRestoreDefault').addEventListener('click', function(){
+    if (!confirm('Restaurar todas as listas para os valores padrão? Isso descarta suas edições.')) return;
+    CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    buildAllSelectsFromConfig();
+    renderCfgRows();
+    jsonEditor.value = JSON.stringify(CONFIG, null, 2);
+    validateJson();
+    recompute();
+  });
+
+})();
+</script>
+</body>
+</html>

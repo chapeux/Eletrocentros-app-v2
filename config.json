@@ -1,0 +1,75 @@
+{
+  "listas": {
+    "tipoestrutura": [
+      "Móvel",
+      "Semimóvel",
+      "Modular",
+      "Fixo",
+      "Embarcado",
+      "Container Solar",
+      "Skid (mecânica)",
+      "Skid (com elétrica)",
+      "Pilotis",
+      "ESSW (mecânica)",
+      "ESSW (elétrica)",
+      "Serviço Engenharia"
+    ],
+    "planpin": [
+      "WAU-ELETRO-08",
+      "WAU-ELETRO-09",
+      "WAU-ELETRO-04",
+      "Não aplicável"
+    ],
+    "tipomaq": [
+      "Split",
+      "Wall Mounted",
+      "Roof Top",
+      "Não possui",
+      "Não aplicável"
+    ],
+    "incendio": [
+      "Com combate",
+      "Com instalações",
+      "Somente infra",
+      "Não aplicável"
+    ],
+    "seguranca": [
+      "CFTV",
+      "Controle Acesso",
+      "CFTV + Controle Acesso",
+      "Não possui",
+      "Não aplicável"
+    ],
+    "complexidade": [
+      "Simples",
+      "Médio",
+      "Complexo",
+      "Não aplicável"
+    ],
+    "planejadorSel": [
+      "MAGLIONI",
+      "MAURICIOFA",
+      "CAMILARM"
+    ]
+  },
+  "regras": {
+    "estruturasSemModulo": [
+      "Container Solar",
+      "Skid (mecânica)",
+      "Skid (com elétrica)",
+      "Pilotis",
+      "ESSW (mecânica)",
+      "ESSW (elétrica)",
+      "Serviço Engenharia"
+    ],
+    "estruturasSemValorMec": [
+      "ESSW (elétrica)",
+      "Serviço Engenharia"
+    ],
+    "estruturasSemValorEletr": [
+      "ESSW (mecânica)",
+      "Pilotis",
+      "Skid (mecânica)"
+    ]
+  }
+}
