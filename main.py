@@ -12,8 +12,9 @@ import threading
 import webbrowser
 from pathlib import Path
 
-# Módulo Backend de Banco de Dados MySQL
+# Módulo Backend de Banco de Dados MySQL e Sincronização GitHub
 from backend.database import init_db, comparar_e_registrar_alteracoes, obter_logs, registrar_log
+from backend.git_sync import sync_github_async
 
 # Base Directory Setup
 BASE_DIR = Path(__file__).resolve().parent
@@ -59,13 +60,17 @@ class AppAPI:
         return {}
 
     def save_config(self, config_data: dict) -> dict:
-        """Salva a nova configuração enviada pelo usuário no arquivo config.json."""
+        """Salva a nova configuração enviada pelo usuário no arquivo config.json e sincroniza no GitHub."""
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
             with open(FRONTEND_CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
             print("[Backend Python] Configurações salvas em config.json com sucesso!")
+            
+            # Sincronização automática com GitHub
+            sync_github_async(resumo="Atualização de config.json")
+            
             return {"status": "success"}
         except Exception as e:
             print(f"[Backend Python] Erro ao salvar config.json: {e}")
@@ -82,7 +87,7 @@ class AppAPI:
         return []
 
     def save_regras(self, regras_data: list) -> dict:
-        """Salva as regras atualizadas e registra o histórico de alterações no banco de dados MySQL."""
+        """Salva as regras atualizadas, registra histórico no MySQL e sincroniza com o GitHub."""
         try:
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()
@@ -96,6 +101,9 @@ class AppAPI:
                 json.dump(regras_data, f, ensure_ascii=False, indent=2)
             with open(FRONTEND_REGRAS_FILE, "w", encoding="utf-8") as f:
                 json.dump(regras_data, f, ensure_ascii=False, indent=2)
+
+            # 4. Sincronização automática com GitHub em segundo plano
+            sync_github_async(resumo=f"Atualização de regras ({total_logs} alteração/ões)")
 
             print("[Backend Python] Regras salvas em regras.json com sucesso!")
             return {"status": "success", "logs_registrados": total_logs}
