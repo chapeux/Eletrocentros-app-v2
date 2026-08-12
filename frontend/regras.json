@@ -1252,7 +1252,8 @@
                     "t": "var",
                     "v": "bas_mb"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "m2",
@@ -1334,7 +1335,8 @@
                     "t": "var",
                     "v": "bas_mb"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "m0",
@@ -1434,7 +1436,8 @@
                     "t": "var",
                     "v": "bas_mb"
                   }
-                ]
+                ],
+                "collapsed": true
               }
             ],
             "ajuste_final": [
