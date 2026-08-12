@@ -1584,9 +1584,65 @@
         "nome": "PRB",
         "H": {
           "base": {
-            "forma": "constante",
-            "valor_base": 10,
-            "valor": 10
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "m_n1", "nome": "Sem Trafo, Comp ≤ 10", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Não", "j": "E" }, { "c": "comp", "o": "≤", "val": "10", "j": "E" }],
+                "it": [{"t":"num","v":2.5},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":1},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_n2", "nome": "Sem Trafo, Comp 10-12", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Não", "j": "E" }, { "c": "comp", "o": ">", "val": "10", "j": "E" }, { "c": "comp", "o": "≤", "val": "12", "j": "E" }],
+                "it": [{"t":"num","v":2.5},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.95},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_n3", "nome": "Sem Trafo, Comp 12-14", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Não", "j": "E" }, { "c": "comp", "o": ">", "val": "12", "j": "E" }, { "c": "comp", "o": "≤", "val": "14", "j": "E" }],
+                "it": [{"t":"num","v":2.5},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_n4", "nome": "Sem Trafo, Comp 14-16", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Não", "j": "E" }, { "c": "comp", "o": ">", "val": "14", "j": "E" }, { "c": "comp", "o": "≤", "val": "16", "j": "E" }],
+                "it": [{"t":"num","v":2.5},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.85},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_n5", "nome": "Sem Trafo, Comp > 16", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Não", "j": "E" }, { "c": "comp", "o": ">", "val": "16", "j": "E" }],
+                "it": [{"t":"num","v":2.5},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.8},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_s1", "nome": "Com Trafo, Comp ≤ 10", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Sim", "j": "E" }, { "c": "comp", "o": "≤", "val": "10", "j": "E" }],
+                "it": [{"t":"num","v":3.33},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":1},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_s2", "nome": "Com Trafo, Comp 10-12", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Sim", "j": "E" }, { "c": "comp", "o": ">", "val": "10", "j": "E" }, { "c": "comp", "o": "≤", "val": "12", "j": "E" }],
+                "it": [{"t":"num","v":3.33},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.95},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_s3", "nome": "Com Trafo, Comp 12-14", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Sim", "j": "E" }, { "c": "comp", "o": ">", "val": "12", "j": "E" }, { "c": "comp", "o": "≤", "val": "14", "j": "E" }],
+                "it": [{"t":"num","v":3.33},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_s4", "nome": "Com Trafo, Comp 14-16", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Sim", "j": "E" }, { "c": "comp", "o": ">", "val": "14", "j": "E" }, { "c": "comp", "o": "≤", "val": "16", "j": "E" }],
+                "it": [{"t":"num","v":3.33},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.85},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m_s5", "nome": "Com Trafo, Comp > 16", "collapsed": true,
+                "cond": [{ "c": "trafo_oleo", "o": "=", "val": "Sim", "j": "E" }, { "c": "comp", "o": ">", "val": "16", "j": "E" }],
+                "it": [{"t":"num","v":3.33},{"t":"op","v":"×"},{"t":"var","v":"comp"},{"t":"op","v":"×"},{"t":"num","v":2},{"t":"op","v":"×"},{"t":"num","v":0.8},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":0.9},{"t":"op","v":"×"},{"t":"num","v":1.1},{"t":"op","v":"×"},{"t":"num","v":1.05},{"t":"op","v":"×"},{"t":"num","v":1.49}]
+              },
+              {
+                "id": "m0", "nome": "Padrão (0)", "padrao": true, "collapsed": true,
+                "cond": [],
+                "it": [{"t":"num","v":0}]
+              }
+            ]
           },
           "condicoes": []
         },
@@ -1594,14 +1650,8 @@
           "base": {
             "forma": "derivado_h",
             "etapas": [
-              {
-                "tipo": "dividir",
-                "valor": 7.92
-              },
-              {
-                "tipo": "arredondar",
-                "modo": "cima"
-              }
+              { "tipo": "dividir", "valor": 7.92 },
+              { "tipo": "arredondar", "modo": "cima" }
             ]
           },
           "condicoes": []
