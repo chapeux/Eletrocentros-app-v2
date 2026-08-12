@@ -1178,6 +1178,29 @@
     function handleBlocoClick(t, curBase) {
       if (!t || !curBase) return false;
 
+      // Toggle montagem collapse/expand
+      var toggleBtn = t.closest('[data-toggle-mcard]') || (t.dataset && t.dataset.toggleMcard ? t : null);
+      if (toggleBtn && toggleBtn.dataset && toggleBtn.dataset.toggleMcard) {
+        var toggleId = toggleBtn.dataset.toggleMcard;
+        var mToggle = (curBase.montagens || []).filter(function (x) { return x.id === toggleId; })[0];
+        if (mToggle) {
+          mToggle.collapsed = !mToggle.collapsed;
+          renderEditor();
+        }
+        return true;
+      }
+
+      var mheadEl = t.closest('.mhead2');
+      if (mheadEl && !t.closest('input, select, button')) {
+        var headId = mheadEl.dataset.m;
+        var mHead = (curBase.montagens || []).filter(function (x) { return x.id === headId; })[0];
+        if (mHead) {
+          mHead.collapsed = !mHead.collapsed;
+          renderEditor();
+        }
+        return true;
+      }
+
       // Open Modal "Ver / criar blocos"
       if (t.closest('#openBlk')) {
         renderBlocosModal(state.dirtySubTabRule);
@@ -1590,17 +1613,42 @@
         '<div id="montagensListContainer">';
 
       var hitM = matchedMontagem(base.montagens, SIM_CTX);
+      var hitM = matchedMontagem(base.montagens, SIM_CTX);
       base.montagens.forEach(function (m, mi) {
         var isHit = hitM && hitM.id === m.id;
         var rVal = ev(m.it.concat(base.ajuste_final), SIM_CTX, base.blocos);
-        html += '<div class="mcard' + (isHit ? ' hit' : '') + (m.padrao ? ' pad' : '') + '">' +
-          '<div class="mhead2"><span class="ord">' + (mi + 1) + '</span>' +
+        if (m.collapsed === undefined) {
+          m.collapsed = hitM ? !isHit : (mi !== 0);
+        }
+        var isCollapsed = m.collapsed;
+
+        var condSummary = '';
+        if (m.padrao) {
+          condSummary = 'senão';
+        } else if (m.cond && m.cond.length) {
+          condSummary = m.cond.map(function (c, ci) {
+            var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === c.c; })[0];
+            var cName = fObj ? fObj.n.toLowerCase() : c.c;
+            var prefix = ci > 0 ? (c.j === 'OU' ? ' ou ' : ' e ') : 'se ';
+            return prefix + cName + ' ' + c.o + ' ' + c.val;
+          }).join('');
+        }
+
+        html += '<div class="mcard' + (isHit ? ' hit' : '') + (m.padrao ? ' pad' : '') + (isCollapsed ? ' collapsed' : '') + '">' +
+          '<div class="mhead2" data-m="' + m.id + '">' +
+          '<button type="button" class="btn-toggle-mcard" data-toggle-mcard="' + m.id + '" title="' + (isCollapsed ? 'Expandir montagem' : 'Recolher montagem') + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>' +
+          '</button>' +
+          '<span class="ord">' + (mi + 1) + '</span>' +
           '<input class="mname" data-mn="' + m.id + '" value="' + escapeHtml(m.nome) + '">' +
+          '<span class="mhead-cond-summary">' + escapeHtml(condSummary) + '</span>' +
+          '<div style="margin-left:auto; display:flex; align-items:center; gap:8px;">' +
           (isHit ? '<span class="hitbadge">APLICADA</span>' : '') +
           '<span class="mres">= ' + (isFinite(rVal) ? rVal.toFixed(1).replace('.', ',') : '—') + ' h</span>' +
           (mi > 0 && !m.padrao ? '<button type="button" class="arrbtn" data-mv="up" data-m="' + m.id + '">▲</button>' : '') +
           (mi < base.montagens.length - 2 ? '<button type="button" class="arrbtn" data-mv="dn" data-m="' + m.id + '">▼</button>' : '') +
-          (m.padrao ? '' : '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>') + '</div>';
+          (m.padrao ? '' : '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>') + '</div></div>' +
+          '<div class="mcard-body">';
 
         if (m.padrao) {
           html += '<div class="padtxt">Senão — usada quando nenhuma condição acima é atendida</div>';
@@ -1628,7 +1676,7 @@
         }
 
         html += '<div class="chain">' + (m.it || []).map(function (it, i) { return chipHtml(it, i, m.id, null, base.blocos); }).join('') + addBtnsHtml(m.id, true) + '</div>' +
-          '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + ' <span style="color:var(--text-dim)">→ ajuste final ' + chainExpr(base.ajuste_final, false, SIM_CTX, base.blocos) + '</span></div></div>';
+          '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + ' <span style="color:var(--text-dim)">→ ajuste final ' + chainExpr(base.ajuste_final, false, SIM_CTX, base.blocos) + '</span></div></div></div>';
       });
 
       html += '</div>' +
