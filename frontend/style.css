@@ -1681,10 +1681,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 .chain { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 11px; }
 .chip { display: inline-flex; align-items: center; gap: 3px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--panel); padding: 2px 3px 2px 4px; transition: all 0.15s ease; }
-.chip.blk { border-color: #a855f7; background: var(--panel); }
+.chip.blk { border-color: #10b981; background: var(--panel); }
 .chip.var { border-color: #3b82f6; background: var(--panel); }
-.chip.num { border-color: #f59e0b; background: var(--panel); }
-.chip.op { border-color: #10b981; background: var(--panel); }
+.chip.num { border-color: var(--border); background: var(--panel); }
+.chip.op { border-color: var(--border); background: var(--panel); }
 .chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
 .chip select, .chip input { background: transparent; border: none; outline: none; color: var(--text); font-family: "IBM Plex Mono"; font-size: 12px; font-weight: 600; padding: 5px 4px; cursor: pointer; max-width: 180px; }
 select option, select optgroup { background-color: var(--panel-2, #191D21) !important; color: var(--text, #EAEDF0) !important; font-family: inherit; padding: 6px 10px; }
@@ -1695,21 +1695,21 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 .chip .x:hover { color: var(--red); background: var(--red-dim); opacity: 1; }
 
 .addbtn { border: 1px dashed var(--border-strong); background: transparent; color: var(--text-dim); border-radius: 8px; font-size: 11px; font-weight: 600; padding: 6px 11px; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
-.addbtn[data-add="blk"] { border-color: #a855f7; }
+.addbtn[data-add="blk"] { border-color: #10b981; }
 .addbtn[data-add="blk"]:hover { background: var(--panel-3); color: var(--text); }
 .addbtn[data-add="var"] { border-color: #3b82f6; }
 .addbtn[data-add="var"]:hover { background: var(--panel-3); color: var(--text); }
-.addbtn[data-add="num"] { border-color: #f59e0b; }
+.addbtn[data-add="num"] { border-color: var(--border-strong); }
 .addbtn[data-add="num"]:hover { background: var(--panel-3); color: var(--text); }
-.addbtn[data-add="op"] { border-color: #10b981; }
+.addbtn[data-add="op"] { border-color: var(--border-strong); }
 .addbtn[data-add="op"]:hover { background: var(--panel-3); color: var(--text); }
 
 .chip-legend-bar { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 12px; }
-.leg-item { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1.5px solid transparent; display: inline-flex; align-items: center; gap: 4px; background: var(--panel); color: var(--text); }
-.leg-item.leg-blk { border-color: #a855f7; }
+.leg-item { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; border: 1.5px solid var(--border); display: inline-flex; align-items: center; gap: 4px; background: var(--panel); color: var(--text); }
+.leg-item.leg-blk { border-color: #10b981; }
 .leg-item.leg-var { border-color: #3b82f6; }
-.leg-item.leg-num { border-color: #f59e0b; }
-.leg-item.leg-op { border-color: #10b981; }
+.leg-item.leg-num { border-color: var(--border); }
+.leg-item.leg-op { border-color: var(--border); }
 .newblock { width: 100%; border: 1px dashed var(--border-strong); background: transparent; color: var(--text-dim); border-radius: 11px; padding: 11px; cursor: pointer; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .newblock:hover { color: var(--text); border-color: var(--border-strong); background: var(--panel-2); }
 .newblock svg { width: 14px; height: 14px; }
