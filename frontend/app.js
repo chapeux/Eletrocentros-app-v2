@@ -1201,6 +1201,29 @@
         return true;
       }
 
+      // Toggle block collapse/expand inside modal
+      var toggleBBtn = t.closest('[data-toggle-bcard]') || (t.dataset && t.dataset.toggleBcard ? t : null);
+      if (toggleBBtn && toggleBBtn.dataset && toggleBBtn.dataset.toggleBcard) {
+        var bIdToggle = toggleBBtn.dataset.toggleBcard;
+        var bToggle = (curBase.blocos || []).filter(function (x) { return x.id === bIdToggle; })[0];
+        if (bToggle) {
+          bToggle.collapsed = !bToggle.collapsed;
+          renderBlocosModal(state.dirtySubTabRule);
+        }
+        return true;
+      }
+
+      var bheadEl = t.closest('.bhead');
+      if (bheadEl && !t.closest('input, select, button, .bdel')) {
+        var headBId = bheadEl.dataset.toggleBcard || (bheadEl.querySelector('[data-bn]') ? bheadEl.querySelector('[data-bn]').dataset.bn : null);
+        var bHead = (curBase.blocos || []).filter(function (x) { return x.id === headBId; })[0];
+        if (bHead) {
+          bHead.collapsed = !bHead.collapsed;
+          renderBlocosModal(state.dirtySubTabRule);
+        }
+        return true;
+      }
+
       // Open Modal "Ver / criar blocos"
       if (t.closest('#openBlk')) {
         renderBlocosModal(state.dirtySubTabRule);
@@ -1466,13 +1489,26 @@
       }).map(function (m) { return m.nome; });
 
       var bVal = ev(bo.it, SIM_CTX, base.blocos);
+      if (bo.collapsed === undefined) {
+        bo.collapsed = (bi !== 0);
+      }
+      var isCollapsed = bo.collapsed;
+      var bExpr = chainExpr(bo.it, false, SIM_CTX, base.blocos);
 
-      return '<div class="bcard"><div class="bhead"><span class="tag">B' + (bi + 1) + '</span>' +
+      return '<div class="bcard' + (isCollapsed ? ' collapsed' : '') + '">' +
+        '<div class="bhead" data-toggle-bcard="' + bo.id + '">' +
+        '<button type="button" class="btn-toggle-bcard" data-toggle-bcard="' + bo.id + '" title="' + (isCollapsed ? 'Expandir bloco' : 'Recolher bloco') + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>' +
+        '</button>' +
+        '<span class="tag">B' + (bi + 1) + '</span>' +
         '<input class="bname" data-bn="' + bo.id + '" value="' + escapeHtml(bo.nome) + '">' +
+        '<span class="bhead-expr-summary">' + escapeHtml(bExpr) + '</span>' +
+        '<div style="margin-left:auto; display:flex; align-items:center; gap:8px;">' +
         '<span class="bres">= ' + (isFinite(bVal) ? bVal.toFixed(2).replace('.', ',') : '—') + '</span>' +
-        '<button type="button" class="bdel" data-bdel="' + bo.id + '">✕</button></div>' +
+        '<button type="button" class="bdel" data-bdel="' + bo.id + '">✕</button></div></div>' +
+        '<div class="bcard-body">' +
         '<div class="chain">' + (bo.it || []).map(function (it, i) { return chipHtml(it, i, bo.id, bo.id, base.blocos); }).join('') + addBtnsHtml(bo.id, true) + '</div>' +
-        '<div class="usedby">' + (uso.length ? 'usado em: ' + uso.join(', ') : 'não usado em nenhuma montagem') + '</div></div>';
+        '<div class="usedby">' + (uso.length ? 'usado em: ' + uso.join(', ') : 'não usado em nenhuma montagem') + '</div></div></div>';
     }).join('');
 
     if (!container._wired) {
