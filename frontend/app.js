@@ -856,7 +856,7 @@
     if (forma === 'blocos') {
       var simCtx = Object.assign({}, SIM_CTX, { nmod: mod });
       var hitM = matchedMontagem(base.montagens, simCtx);
-      var bVal = hitM ? evalChain(hitM.it.concat(base.ajuste_final || []), simCtx, base.blocos) : 0;
+      var bVal = hitM ? evalChain(hitM.it, simCtx, base.blocos) : 0;
       return isFinite(bVal) ? bVal : 0;
     }
     if (forma === 'constante') return parseFloat(base.valor !== undefined ? base.valor : base.valor_base) || 0;
@@ -1628,12 +1628,15 @@
           { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
         ];
       }
-      if (!base.ajuste_final) {
-        base.ajuste_final = [
-          { t: 'op', v: '/' }, { t: 'num', v: 60 },
-          { t: 'op', v: '*' }, { t: 'num', v: 0.9 },
-          { t: 'op', v: '*' }, { t: 'num', v: 1.1 }
-        ];
+      if (base.ajuste_final && base.ajuste_final.length) {
+        (base.montagens || []).forEach(function (m) {
+          if (!m.it) m.it = [];
+          var hasAjuste = (m.it.length >= base.ajuste_final.length) && (m.it[m.it.length - base.ajuste_final.length].v === base.ajuste_final[0].v);
+          if (!hasAjuste) {
+            m.it = m.it.concat(JSON.parse(JSON.stringify(base.ajuste_final)));
+          }
+        });
+        delete base.ajuste_final;
       }
 
       // 1. Barra de Blocos
@@ -1649,10 +1652,9 @@
         '<div id="montagensListContainer">';
 
       var hitM = matchedMontagem(base.montagens, SIM_CTX);
-      var hitM = matchedMontagem(base.montagens, SIM_CTX);
       base.montagens.forEach(function (m, mi) {
         var isHit = hitM && hitM.id === m.id;
-        var rVal = ev(m.it.concat(base.ajuste_final), SIM_CTX, base.blocos);
+        var rVal = ev(m.it, SIM_CTX, base.blocos);
         if (m.collapsed === undefined) {
           m.collapsed = hitM ? !isHit : (mi !== 0);
         }
@@ -1712,7 +1714,7 @@
         }
 
         html += '<div class="chain">' + (m.it || []).map(function (it, i) { return chipHtml(it, i, m.id, null, base.blocos); }).join('') + addBtnsHtml(m.id, true) + '</div>' +
-          '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + ' <span style="color:var(--text-dim)">→ ajuste final ' + chainExpr(base.ajuste_final, false, SIM_CTX, base.blocos) + '</span></div></div></div>';
+          '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + '</div></div></div>';
       });
 
       html += '</div>' +
@@ -1740,7 +1742,7 @@
 
       html += '</div>';
 
-      var totVal = hitM ? ev(hitM.it.concat(base.ajuste_final), SIM_CTX, base.blocos) : NaN;
+      var totVal = hitM ? ev(hitM.it, SIM_CTX, base.blocos) : NaN;
       if (!hitM) {
         html += '<div class="err">Nenhuma montagem atende ao cenário e não há montagem padrão.</div>';
       } else if (isNaN(totVal)) {
@@ -1984,13 +1986,6 @@
               { id: 'm1', nome: 'Móvel', cond: [{ c: 'tipoestrutura', o: '=', val: 'Móvel', j: 'E' }], it: [{ t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
               { id: 'm2', nome: 'Embarcado', cond: [{ c: 'tipoestrutura', o: '=', val: 'Embarcado', j: 'E' }], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
               { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
-            ];
-          }
-          if (!base.ajuste_final) {
-            base.ajuste_final = [
-              { t: 'op', v: '/' }, { t: 'num', v: 60 },
-              { t: 'op', v: '*' }, { t: 'num', v: 0.9 },
-              { t: 'op', v: '*' }, { t: 'num', v: 1.1 }
             ];
           }
         }
