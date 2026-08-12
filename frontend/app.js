@@ -1628,16 +1628,32 @@
           { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
         ];
       }
-      if (base.ajuste_final && base.ajuste_final.length) {
-        (base.montagens || []).forEach(function (m) {
-          if (!m.it) m.it = [];
-          var hasAjuste = (m.it.length >= base.ajuste_final.length) && (m.it[m.it.length - base.ajuste_final.length].v === base.ajuste_final[0].v);
-          if (!hasAjuste) {
-            m.it = m.it.concat(JSON.parse(JSON.stringify(base.ajuste_final)));
-          }
-        });
+      if (base.ajuste_final) {
         delete base.ajuste_final;
       }
+      (base.montagens || []).forEach(function (m) {
+        if (!m.it) return;
+        for (var i = 0; i < m.it.length - 5; i++) {
+          if (m.it[i].t === 'op' && m.it[i].v === '/' &&
+              m.it[i+1].t === 'num' && (+m.it[i+1].v) === 60 &&
+              m.it[i+2].t === 'op' && m.it[i+2].v === '*' &&
+              m.it[i+3].t === 'num' && (+m.it[i+3].v) === 0.9 &&
+              m.it[i+4].t === 'op' && m.it[i+4].v === '*' &&
+              m.it[i+5].t === 'num' && (+m.it[i+5].v) === 1.1) {
+            for (var j = i + 6; j < m.it.length - 5; j++) {
+              if (m.it[j].t === 'op' && m.it[j].v === '/' &&
+                  m.it[j+1].t === 'num' && (+m.it[j+1].v) === 60 &&
+                  m.it[j+2].t === 'op' && m.it[j+2].v === '*' &&
+                  m.it[j+3].t === 'num' && (+m.it[j+3].v) === 0.9 &&
+                  m.it[j+4].t === 'op' && m.it[j+4].v === '*' &&
+                  m.it[j+5].t === 'num' && (+m.it[j+5].v) === 1.1) {
+                m.it.splice(j, 6);
+                break;
+              }
+            }
+          }
+        }
+      });
 
       // 1. Barra de Blocos
       html += '<div class="blocbar" style="margin-top:12px;">' +
