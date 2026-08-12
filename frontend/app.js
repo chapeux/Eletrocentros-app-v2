@@ -1180,19 +1180,28 @@
       (blk ? '<button type="button" class="addbtn b" data-add="blk" data-sc="' + sc + '">+ bloco</button>' : '');
   }
 
+  function getCurrentBase() {
+    var r = state.dirtySubTabRule;
+    return (r && r.base) ? r.base : null;
+  }
+
   function wireBlocosEvents(subTabRule) {
-    var base = subTabRule.base;
+    var base = getCurrentBase();
     if (!base || base.forma !== 'blocos') return;
 
     var scopeArr = function (sc) {
-      var bo = (base.blocos || []).filter(function (x) { return x.id === sc; })[0];
+      var b = getCurrentBase();
+      if (!b) return null;
+      var bo = (b.blocos || []).filter(function (x) { return x.id === sc; })[0];
       if (bo) return bo.it;
-      var m = (base.montagens || []).filter(function (x) { return x.id === sc; })[0];
+      var m = (b.montagens || []).filter(function (x) { return x.id === sc; })[0];
       return m ? m.it : null;
     };
 
     var byM = function (id) {
-      return (base.montagens || []).filter(function (x) { return x.id === id; })[0];
+      var b = getCurrentBase();
+      if (!b) return null;
+      return (b.montagens || []).filter(function (x) { return x.id === id; })[0];
     };
 
     // Modal overlay handlers
@@ -1202,14 +1211,16 @@
       ovl.addEventListener('click', function (e) {
         var t = e.target;
         if (!t) return;
+        var curBase = getCurrentBase();
+        if (!curBase) return;
         if (t === ovl || t.closest('#btnCloseBlk')) {
           ovl.classList.remove('open');
           return;
         }
         if (t.closest('#newBlk')) {
-          if (!base.blocos) base.blocos = [];
-          base.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (base.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
-          renderBlocosModal(subTabRule);
+          if (!curBase.blocos) curBase.blocos = [];
+          curBase.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (curBase.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
+          renderBlocosModal(state.dirtySubTabRule);
           markDirty();
           renderEditor();
           return;
@@ -1224,19 +1235,21 @@
       colEd.addEventListener('click', function (e) {
         var t = e.target;
         if (!t) return;
+        var curBase = getCurrentBase();
+        if (!curBase || curBase.forma !== 'blocos') return;
 
         // Open Modal "Ver / criar blocos"
         if (t.closest('#openBlk')) {
-          renderBlocosModal(subTabRule);
+          renderBlocosModal(state.dirtySubTabRule);
           if ($('ovlBlk')) $('ovlBlk').classList.add('open');
           return;
         }
 
         // New montagem button
         if (t.closest('#newMont')) {
-          if (!base.montagens) base.montagens = [];
-          var firstBlkId = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
-          base.montagens.splice(base.montagens.length - 1, 0, {
+          if (!curBase.montagens) curBase.montagens = [];
+          var firstBlkId = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
+          curBase.montagens.splice(curBase.montagens.length - 1, 0, {
             id: 'm' + (Date.now() % 900000),
             nome: 'Nova montagem',
             cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
@@ -1261,7 +1274,7 @@
           var a = scopeArr(t.dataset.sc);
           if (a) {
             var firstVar = getVARS()[0] ? (getVARS()[0].chave || getVARS()[0].k) : 'comp';
-            var firstBlk = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
+            var firstBlk = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
             a.push(t.dataset.add === 'var' ? { t: 'var', v: firstVar }
               : t.dataset.add === 'op' ? { t: 'op', v: '*' }
                 : t.dataset.add === 'num' ? { t: 'num', v: 1 }
@@ -1273,12 +1286,12 @@
         }
 
         if (t.dataset && t.dataset.mv) {
-          var idx = (base.montagens || []).findIndex(function (x) { return x.id === t.dataset.m; });
+          var idx = (curBase.montagens || []).findIndex(function (x) { return x.id === t.dataset.m; });
           var targetIdx = t.dataset.mv === 'up' ? idx - 1 : idx + 1;
-          if (idx >= 0 && targetIdx >= 0 && targetIdx < (base.montagens.length - 1)) {
-            var tmp = base.montagens[idx];
-            base.montagens[idx] = base.montagens[targetIdx];
-            base.montagens[targetIdx] = tmp;
+          if (idx >= 0 && targetIdx >= 0 && targetIdx < (curBase.montagens.length - 1)) {
+            var tmp = curBase.montagens[idx];
+            curBase.montagens[idx] = curBase.montagens[targetIdx];
+            curBase.montagens[targetIdx] = tmp;
             markDirty();
             renderEditor();
           }
@@ -1286,7 +1299,7 @@
         }
 
         if (t.dataset && t.dataset.mdel) {
-          base.montagens = base.montagens.filter(function (x) { return x.id !== t.dataset.mdel; });
+          curBase.montagens = curBase.montagens.filter(function (x) { return x.id !== t.dataset.mdel; });
           markDirty();
           renderEditor();
           return;
