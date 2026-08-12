@@ -818,6 +818,8 @@
     var wrap = $('colList');
     if (!wrap) return;
     var areaObj = state.regrasData[state.selectedAreaIdx];
+    var isMecanica = areaObj && (areaObj.area === 'MECÂNICA' || areaObj.area === 'Mecanica' || (areaObj.area && areaObj.area.toUpperCase().indexOf('MEC') >= 0));
+    if ($('chipLegendBar')) $('chipLegendBar').style.display = isMecanica ? 'flex' : 'none';
     if (!areaObj) {
       wrap.innerHTML = '<div class="list-head"><h2>Campos</h2><span>Nenhum campo</span></div>';
       return;
