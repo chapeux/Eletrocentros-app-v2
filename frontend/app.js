@@ -1028,7 +1028,412 @@
       return;
     }
 
-    var campoObj = areaObj.campos[state.selectedCampoKey];
+  /* ==========================================================================
+     CONSTRUTOR DE BLOCOS CONDICIONAIS (MECÂNICA) ENGINE & UI
+     ========================================================================== */
+  var VARS_DEFAULT = [
+    { grupo: 'Dimensões', nome: 'Comprimento', chave: 'comp', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões', nome: 'Largura', chave: 'larg', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões', nome: 'Altura', chave: 'alt', tipo: 'entrada', valor: 2.6 },
+    { grupo: 'Sistema', nome: 'Nº de módulos', chave: 'nmod', tipo: 'entrada', valor: 1 },
+    { grupo: 'Tempos de Corte', nome: 'Lateral-Fator1', chave: 'lat_f1', tipo: 'constante', valor: 1.14 },
+    { grupo: 'Tempos de Corte', nome: 'Lateral-MinB', chave: 'lat_mb', tipo: 'constante', valor: 2.815 },
+    { grupo: 'Tempos de Corte', nome: 'FrenFund-Fator1', chave: 'ffd_f1', tipo: 'constante', valor: 1.31 },
+    { grupo: 'Tempos de Corte', nome: 'FrenFund-MinB', chave: 'ffd_mb', tipo: 'constante', valor: 1.472 },
+    { grupo: 'Tempos de Corte', nome: 'Teto-Fator1', chave: 'tet_f1', tipo: 'constante', valor: 1.29 },
+    { grupo: 'Tempos de Corte', nome: 'Teto-Fator2', chave: 'tet_f2', tipo: 'constante', valor: 1.19 },
+    { grupo: 'Tempos de Corte', nome: 'Teto-MinB', chave: 'tet_mb', tipo: 'constante', valor: 4.785 },
+    { grupo: 'Tempos de Corte', nome: 'Telhado-Fator1', chave: 'tlh_f1', tipo: 'constante', valor: 1.38 },
+    { grupo: 'Tempos de Corte', nome: 'Telhado-Fator2', chave: 'tlh_f2', tipo: 'constante', valor: 1.025 },
+    { grupo: 'Tempos de Corte', nome: 'Telhado-MinB', chave: 'tlh_mb', tipo: 'constante', valor: 1.36 },
+    { grupo: 'Tempos de Corte', nome: 'Base-Fator1', chave: 'bas_f1', tipo: 'constante', valor: 1.4 },
+    { grupo: 'Tempos de Corte', nome: 'Base-Fator2', chave: 'bas_f2', tipo: 'constante', valor: 1.405 },
+    { grupo: 'Tempos de Corte', nome: 'Base-MinB', chave: 'bas_mb', tipo: 'constante', valor: 14.17 }
+  ];
+
+  var CAMPOS_COND_BLOCO = [
+    { k: 'tipoestrutura', n: 'Tipo de estrutura', opts: ['Móvel', 'Semimóvel', 'Modular', 'Fixo', 'Embarcado', 'Container Solar'] },
+    { k: 'nmod', n: 'Nº de módulos', num: true },
+    { k: 'tipomaq', n: 'Tipo de máquina', opts: ['Split', 'Wall Mounted', 'Roof Top', 'Não possui', 'Não aplicável'] },
+    { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] }
+  ];
+
+  var SIM_CTX = { comp: 12, larg: 2.4, alt: 2.6, nmod: 1, tipoestrutura: 'Embarcado', tipomaq: 'Split', incendio: 'Não aplicável' };
+
+  var OPS = ['+', '−', '×', '÷', '%', '^'];
+  var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '%': '%', '^': '**' };
+  var OPINV = { '+': '+', '-': '−', '*': '×', '/': '÷', '%': '%', '**': '^' };
+  var CONDOPS = ['=', '≠', '>', '<', '≥', '≤'];
+
+  function getVARS() {
+    return (CONFIG && CONFIG.variaveis && Array.isArray(CONFIG.variaveis)) ? CONFIG.variaveis : VARS_DEFAULT;
+  }
+
+  function getVarName(k) {
+    var list = getVARS();
+    var f = list.filter(function (x) { return x.chave === k || x.k === k; })[0];
+    return f ? (f.nome || f.n) : k;
+  }
+
+  function getVarVal(k, simCtx) {
+    var list = getVARS();
+    var f = list.filter(function (x) { return x.chave === k || x.k === k; })[0];
+    if (!f) return (simCtx && simCtx[k] !== undefined) ? simCtx[k] : 0;
+    if (f.tipo === 'entrada' || f.t === 'entrada') return (simCtx && simCtx[k] !== undefined) ? simCtx[k] : (f.valor !== undefined ? f.valor : f.v);
+    return f.valor !== undefined ? f.valor : (f.v !== undefined ? f.v : 0);
+  }
+
+  function chainExpr(items, num, simCtx, blocosList) {
+    if (!items || !Array.isArray(items)) return '';
+    return items.map(function (it) {
+      if (it.t === 'op') return OPMAP[it.v] || it.v;
+      if (it.t === 'num') return it.v;
+      if (it.t === 'var') return num ? getVarVal(it.v, simCtx) : ('[' + getVarName(it.v) + ']');
+      if (it.t === 'blk') {
+        var bo = (blocosList || []).filter(function (x) { return x.id === it.v; })[0];
+        return bo ? (num ? '(' + chainExpr(bo.it, true, simCtx, blocosList) + ')' : '«' + bo.nome + '»') : '0';
+      }
+      return '';
+    }).join(' ');
+  }
+
+  function evalChain(items, simCtx, blocosList) {
+    try {
+      var expr = chainExpr(items, true, simCtx, blocosList);
+      if (!expr || !expr.trim()) return NaN;
+      var r = Function('"use strict";return (' + expr + ')')();
+      return isFinite(r) ? r : NaN;
+    } catch (e) {
+      return NaN;
+    }
+  }
+
+  var ev = evalChain;
+
+  function condOkBloco(m, simCtx) {
+    if (m.padrao || !m.cond || !m.cond.length) return true;
+    var res = null;
+    m.cond.forEach(function (c, i) {
+      var a = simCtx[c.c];
+      var bv = c.val;
+      var fn = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === c.c; })[0];
+      if (fn && fn.num) {
+        a = parseFloat(a) || 0;
+        bv = parseFloat(String(bv).replace(',', '.')) || 0;
+      }
+      var ok = c.o === '=' ? a === bv : c.o === '≠' ? a !== bv : c.o === '>' ? a > bv : c.o === '<' ? a < bv : c.o === '≥' ? a >= bv : a <= bv;
+      res = i === 0 ? ok : (c.j === 'OU' ? (res || ok) : (res && ok));
+    });
+    return res;
+  }
+
+  function matchedMontagem(montagens, simCtx) {
+    if (!montagens || !Array.isArray(montagens)) return null;
+    for (var i = 0; i < montagens.length; i++) {
+      if (condOkBloco(montagens[i], simCtx)) return montagens[i];
+    }
+    return null;
+  }
+
+  function varSelectHtml(sel) {
+    var list = getVARS();
+    var gs = [];
+    list.forEach(function (x) { var g = x.grupo || x.g || 'Geral'; if (gs.indexOf(g) < 0) gs.push(g); });
+    var h = '<select data-role="var">';
+    gs.forEach(function (g) {
+      h += '<optgroup label="' + g + '">';
+      list.filter(function (x) { return (x.grupo || x.g || 'Geral') === g; }).forEach(function (x) {
+        var k = x.chave || x.k;
+        var n = x.nome || x.n;
+        h += '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + n + '</option>';
+      });
+      h += '</optgroup>';
+    });
+    return h + '</select>';
+  }
+
+  function opSelectHtml(sel) {
+    return '<select data-role="op">' + OPS.map(function (o) {
+      return '<option' + (o === (OPINV[sel] || sel) ? ' selected' : '') + '>' + o + '</option>';
+    }).join('') + '</select>';
+  }
+
+  function blkSelectHtml(sel, skip, blocosList) {
+    return '<select data-role="blk">' + (blocosList || []).filter(function (x) { return x.id !== skip; }).map(function (x) {
+      return '<option value="' + x.id + '"' + (x.id === sel ? ' selected' : '') + '>' + x.nome + '</option>';
+    }).join('') + '</select>';
+  }
+
+  function chipHtml(it, i, sc, skip, blocosList) {
+    var d = ' data-sc="' + sc + '" data-i="' + i + '"';
+    if (it.t === 'var') return '<span class="chip var"' + d + '>' + varSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'op') return '<span class="chip op"' + d + '>' + opSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'num') return '<span class="chip num"' + d + '><input value="' + String(it.v).replace('.', ',') + '"><button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'blk') return '<span class="chip blk"' + d + '>' + blkSelectHtml(it.v, skip, blocosList) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    return '';
+  }
+
+  function addBtnsHtml(sc, blk) {
+    return '<button type="button" class="addbtn" data-add="var" data-sc="' + sc + '">+ variável</button>' +
+      '<button type="button" class="addbtn" data-add="op" data-sc="' + sc + '">+ operação</button>' +
+      '<button type="button" class="addbtn n" data-add="num" data-sc="' + sc + '">+ valor fixo</button>' +
+      (blk ? '<button type="button" class="addbtn b" data-add="blk" data-sc="' + sc + '">+ bloco</button>' : '');
+  }
+
+  function wireBlocosEvents(subTabRule) {
+    var base = subTabRule.base;
+    if (!base || base.forma !== 'blocos') return;
+
+    if ($('openBlk')) {
+      $('openBlk').addEventListener('click', function () {
+        renderBlocosModal(subTabRule);
+        if ($('ovlBlk')) $('ovlBlk').classList.add('open');
+      });
+    }
+    if ($('btnCloseBlk')) {
+      $('btnCloseBlk').addEventListener('click', function () {
+        if ($('ovlBlk')) $('ovlBlk').classList.remove('open');
+      });
+    }
+    if ($('newBlk')) {
+      $('newBlk').addEventListener('click', function () {
+        if (!base.blocos) base.blocos = [];
+        base.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (base.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
+        renderBlocosModal(subTabRule);
+        markDirty();
+        renderEditor();
+      });
+    }
+    if ($('newMont')) {
+      $('newMont').addEventListener('click', function () {
+        if (!base.montagens) base.montagens = [];
+        var firstBlkId = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
+        base.montagens.splice(base.montagens.length - 1, 0, {
+          id: 'm' + (Date.now() % 900000),
+          nome: 'Nova montagem',
+          cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
+          it: [{ t: 'blk', v: firstBlkId }]
+        });
+        markDirty();
+        renderEditor();
+      });
+    }
+
+    var scopeArr = function (sc) {
+      var bo = (base.blocos || []).filter(function (x) { return x.id === sc; })[0];
+      if (bo) return bo.it;
+      var m = (base.montagens || []).filter(function (x) { return x.id === sc; })[0];
+      return m ? m.it : null;
+    };
+
+    var byM = function (id) {
+      return (base.montagens || []).filter(function (x) { return x.id === id; })[0];
+    };
+
+    var colEd = $('colEditor');
+    if (colEd && !colEd._blocosWired) {
+      colEd._blocosWired = true;
+
+      colEd.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+
+        if (t.dataset && t.dataset.del !== undefined && t.dataset.sc) {
+          var arr = scopeArr(t.dataset.sc);
+          if (arr) {
+            arr.splice(+t.dataset.i, 1);
+            markDirty();
+            renderEditor();
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.add) {
+          var a = scopeArr(t.dataset.sc);
+          if (a) {
+            var firstVar = getVARS()[0] ? (getVARS()[0].chave || getVARS()[0].k) : 'comp';
+            var firstBlk = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
+            a.push(t.dataset.add === 'var' ? { t: 'var', v: firstVar }
+              : t.dataset.add === 'op' ? { t: 'op', v: '*' }
+                : t.dataset.add === 'num' ? { t: 'num', v: 1 }
+                  : { t: 'blk', v: firstBlk });
+            markDirty();
+            renderEditor();
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.mv) {
+          var idx = (base.montagens || []).findIndex(function (x) { return x.id === t.dataset.m; });
+          var targetIdx = t.dataset.mv === 'up' ? idx - 1 : idx + 1;
+          if (idx >= 0 && targetIdx >= 0 && targetIdx < (base.montagens.length - 1)) {
+            var tmp = base.montagens[idx];
+            base.montagens[idx] = base.montagens[targetIdx];
+            base.montagens[targetIdx] = tmp;
+            markDirty();
+            renderEditor();
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.mdel) {
+          base.montagens = base.montagens.filter(function (x) { return x.id !== t.dataset.mdel; });
+          markDirty();
+          renderEditor();
+          return;
+        }
+
+        if (t.dataset && t.dataset.addcond) {
+          var mObj = byM(t.dataset.addcond);
+          if (mObj) {
+            if (!mObj.cond) mObj.cond = [];
+            mObj.cond.push({ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' });
+            markDirty();
+            renderEditor();
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.cdel) {
+          var mObj2 = byM(t.dataset.m);
+          if (mObj2 && mObj2.cond) {
+            mObj2.cond.splice(+t.dataset.ci, 1);
+            markDirty();
+            renderEditor();
+          }
+          return;
+        }
+      });
+
+      colEd.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t) return;
+
+        if (t.dataset && t.dataset.role) {
+          var ch = t.closest('.chip');
+          if (ch && ch.dataset) {
+            var a = scopeArr(ch.dataset.sc);
+            if (a && a[+ch.dataset.i]) {
+              a[+ch.dataset.i].v = t.value;
+              markDirty();
+              renderEditor();
+            }
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.cf) {
+          var row = t.closest('.condrow');
+          if (row && row.dataset) {
+            var m = byM(row.dataset.m);
+            if (m && m.cond && m.cond[+row.dataset.ci]) {
+              var cd = m.cond[+row.dataset.ci];
+              if (t.dataset.cf === 'campo') {
+                cd.c = t.value;
+                var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === t.value; })[0];
+                cd.val = fObj && fObj.opts ? fObj.opts[0] : 1;
+              } else if (t.dataset.cf === 'op') {
+                cd.o = t.value;
+              } else if (t.dataset.cf === 'join') {
+                cd.j = t.value;
+              } else {
+                cd.val = t.value;
+              }
+              markDirty();
+              renderEditor();
+            }
+          }
+          return;
+        }
+
+        if (t.dataset && t.dataset.sim) {
+          var simK = t.dataset.sim;
+          var parsedNum = parseFloat(t.value.replace(',', '.'));
+          var isOptField = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === simK && x.opts; })[0];
+          SIM_CTX[simK] = (isNaN(parsedNum) || isOptField) ? t.value : parsedNum;
+          renderEditor();
+          return;
+        }
+      });
+
+      colEd.addEventListener('input', function (e) {
+        var t = e.target;
+        if (!t) return;
+
+        if (t.dataset && t.dataset.mn) {
+          var m = byM(t.dataset.mn);
+          if (m) {
+            m.nome = t.value;
+            markDirty();
+          }
+          return;
+        }
+
+        var chipNum = t.closest('.chip.num');
+        if (chipNum && chipNum.dataset) {
+          var a = scopeArr(chipNum.dataset.sc);
+          if (a && a[+chipNum.dataset.i]) {
+            a[+chipNum.dataset.i].v = parseFloat(t.value.replace(',', '.')) || 0;
+            markDirty();
+          }
+          return;
+        }
+      });
+    }
+  }
+
+  function renderBlocosModal(subTabRule) {
+    var base = subTabRule.base;
+    var container = $('blocos');
+    if (!container || !base || !base.blocos) return;
+
+    container.innerHTML = base.blocos.map(function (bo, bi) {
+      var uso = (base.montagens || []).filter(function (m) {
+        return (m.it || []).some(function (it) { return it.t === 'blk' && it.v === bo.id; });
+      }).map(function (m) { return m.nome; });
+
+      var bVal = ev(bo.it, SIM_CTX, base.blocos);
+
+      return '<div class="bcard"><div class="bhead"><span class="tag">B' + (bi + 1) + '</span>' +
+        '<input class="bname" data-bn="' + bo.id + '" value="' + escapeHtml(bo.nome) + '">' +
+        '<span class="bres">= ' + (isFinite(bVal) ? bVal.toFixed(2).replace('.', ',') : '—') + '</span>' +
+        '<button type="button" class="bdel" data-bdel="' + bo.id + '">✕</button></div>' +
+        '<div class="chain">' + (bo.it || []).map(function (it, i) { return chipHtml(it, i, bo.id, bo.id, base.blocos); }).join('') + addBtnsHtml(bo.id, true) + '</div>' +
+        '<div class="usedby">' + (uso.length ? 'usado em: ' + uso.join(', ') : 'não usado em nenhuma montagem') + '</div></div>';
+    }).join('');
+
+    if (!container._wired) {
+      container._wired = true;
+      container.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (t.dataset && t.dataset.bdel) {
+          var bId = t.dataset.bdel;
+          base.blocos = base.blocos.filter(function (x) { return x.id !== bId; });
+          (base.montagens || []).forEach(function (m) {
+            m.it = (m.it || []).filter(function (it) { return !(it.t === 'blk' && it.v === bId); });
+          });
+          renderBlocosModal(subTabRule);
+          markDirty();
+          renderEditor();
+        }
+      });
+      container.addEventListener('input', function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (t.dataset && t.dataset.bn) {
+          var bo = (base.blocos || []).filter(function (x) { return x.id === t.dataset.bn; })[0];
+          if (bo) {
+            bo.nome = t.value;
+            markDirty();
+            renderEditor();
+          }
+        }
+      });
+    }
+  }
+
+  var campoObj = areaObj.campos[state.selectedCampoKey];
     var subTabRule = state.dirtySubTabRule;
     if (!subTabRule) return;
 
@@ -1389,6 +1794,32 @@
             { tipo: 'subtrair', valor: 1.0 }
           ];
         }
+        if (base.forma === 'blocos') {
+          if (!base.blocos) {
+            base.blocos = [
+              { id: 'b1', nome: 'Lateral', it: [{ t: 'var', v: 'lat_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'num', v: 4 }] },
+              { id: 'b2', nome: 'Frente/Fundo', it: [{ t: 'var', v: 'ffd_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'num', v: 4 }] },
+              { id: 'b3', nome: 'Teto', it: [{ t: 'var', v: 'tet_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'tet_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] },
+              { id: 'b4', nome: 'Telhado', it: [{ t: 'var', v: 'tlh_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'tlh_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] },
+              { id: 'b5', nome: 'Base', it: [{ t: 'var', v: 'bas_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'bas_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] }
+            ];
+          }
+          if (!base.montagens) {
+            base.montagens = [
+              { id: 'm1', nome: 'Móvel', cond: [{ c: 'tipoestrutura', o: '=', val: 'Móvel', j: 'E' }], it: [{ t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
+              { id: 'm2', nome: 'Embarcado', cond: [{ c: 'tipoestrutura', o: '=', val: 'Embarcado', j: 'E' }], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
+              { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
+            ];
+          }
+          if (!base.ajuste_final) {
+            base.ajuste_final = [
+              { t: 'op', v: '/' }, { t: 'num', v: 60 },
+              { t: 'op', v: '*' }, { t: 'num', v: 0.9 },
+              { t: 'op', v: '*' }, { t: 'num', v: 1.1 }
+            ];
+          }
+        }
+        markDirty();
         renderEditor();
       });
     }
@@ -1457,6 +1888,7 @@
       });
     }
     wireCondRows(originalSubTab, subTabRule);
+    wireBlocosEvents(subTabRule);
 
     if ($('btnCancel')) $('btnCancel').addEventListener('click', function () { prepararDirtySubTab(); renderEditor(); });
     if ($('btnSave')) $('btnSave').addEventListener('click', function () { saveRegrasCampo(); });
