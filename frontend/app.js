@@ -851,6 +851,12 @@
   function valorBase(base, mod, campoObj, flagsAtivos, vH) {
     if (!base) return 0;
     var forma = base.forma;
+    if (forma === 'blocos') {
+      var simCtx = Object.assign({}, SIM_CTX, { nmod: mod });
+      var hitM = matchedMontagem(base.montagens, simCtx);
+      var bVal = hitM ? evalChain(hitM.it.concat(base.ajuste_final || []), simCtx, base.blocos) : 0;
+      return isFinite(bVal) ? bVal : 0;
+    }
     if (forma === 'constante') return parseFloat(base.valor !== undefined ? base.valor : base.valor_base) || 0;
     if (forma === 'multiplicativa') {
       var vBase = parseFloat(base.valor_base !== undefined ? base.valor_base : base.valor) || 0;
@@ -989,44 +995,6 @@
     });
     return v;
   }
-
-  function stepRowHtml(step, idx, totalSteps) {
-    var isArred = step.tipo === 'arredondar';
-    return '<div class="step-row" data-step-idx="' + idx + '" style="display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px; padding:8px 10px; margin-top:6px;">' +
-      '<span class="mono" style="font-size:11px; color:var(--text-faint); min-width:50px;">Passo ' + (idx + 1) + '</span>' +
-      '<select class="ipt step-tipo" style="padding:5px 8px; font-size:12px; width:130px; font-weight:500;">' +
-      '<option value="dividir"' + (step.tipo === 'dividir' ? ' selected' : '') + '>Dividir (÷)</option>' +
-      '<option value="multiplicar"' + (step.tipo === 'multiplicar' ? ' selected' : '') + '>Multiplicar (×)</option>' +
-      '<option value="somar"' + (step.tipo === 'somar' ? ' selected' : '') + '>Somar (+)</option>' +
-      '<option value="subtrair"' + (step.tipo === 'subtrair' ? ' selected' : '') + '>Subtrair (-)</option>' +
-      '<option value="arredondar"' + (step.tipo === 'arredondar' ? ' selected' : '') + '>Arredondar</option>' +
-      '</select>' +
-      (isArred ?
-        '<select class="ipt step-modo" style="padding:5px 8px; font-size:12px; flex:1;">' +
-        '<option value="cima"' + (step.modo === 'cima' || !step.modo ? ' selected' : '') + '>Arredondar p/ cima (Ceil)</option>' +
-        '<option value="baixo"' + (step.modo === 'baixo' ? ' selected' : '') + '>Arredondar p/ baixo (Floor)</option>' +
-        '<option value="padrao"' + (step.modo === 'padrao' ? ' selected' : '') + '>Mais próximo (Round)</option>' +
-        '</select>'
-        :
-        '<input type="number" step="0.01" class="ipt mono step-valor" value="' + (step.valor !== undefined ? step.valor : 1) + '" style="padding:5px 8px; font-size:12.5px; flex:1; text-align:right;">'
-      ) +
-      '<button type="button" class="icon-btn step-up" title="Mover para cima" style="width:24px; height:24px; font-size:11px;" ' + (idx === 0 ? 'disabled' : '') + '>↑</button>' +
-      '<button type="button" class="icon-btn step-down" title="Mover para baixo" style="width:24px; height:24px; font-size:11px;" ' + (idx === totalSteps - 1 ? 'disabled' : '') + '>↓</button>' +
-      '<button type="button" class="icon-btn step-del" title="Remover etapa" style="width:24px; height:24px; color:var(--red); border-color:color-mix(in srgb, var(--red) 30%, transparent);">✕</button>' +
-      '</div>';
-  }
-
-  function renderEditor() {
-    var wrap = $('colEditor');
-    if (!wrap) return;
-    var areaObj = state.regrasData[state.selectedAreaIdx];
-    if (!areaObj || !state.selectedCampoKey) {
-      wrap.innerHTML = '<div class="pane"><div class="empty-state">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3v4M15 3v4M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/></svg>' +
-        '<div>Selecione um campo à esquerda para editar</div></div></div>';
-      if ($('maintFooterMeta')) $('maintFooterMeta').textContent = 'Selecione um campo para editar';
-      return;
-    }
 
   /* ==========================================================================
      CONSTRUTOR DE BLOCOS CONDICIONAIS (MECÂNICA) ENGINE & UI
@@ -1405,7 +1373,7 @@
   }
 
   function renderBlocosModal(subTabRule) {
-    var base = subTabRule.base;
+    var base = (subTabRule && subTabRule.base) ? subTabRule.base : getCurrentBase();
     var container = $('blocos');
     if (!container || !base || !base.blocos) return;
 
@@ -1455,7 +1423,45 @@
     }
   }
 
-  var campoObj = areaObj.campos[state.selectedCampoKey];
+  function stepRowHtml(step, idx, totalSteps) {
+    var isArred = step.tipo === 'arredondar';
+    return '<div class="step-row" data-step-idx="' + idx + '" style="display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px; padding:8px 10px; margin-top:6px;">' +
+      '<span class="mono" style="font-size:11px; color:var(--text-faint); min-width:50px;">Passo ' + (idx + 1) + '</span>' +
+      '<select class="ipt step-tipo" style="padding:5px 8px; font-size:12px; width:130px; font-weight:500;">' +
+      '<option value="dividir"' + (step.tipo === 'dividir' ? ' selected' : '') + '>Dividir (÷)</option>' +
+      '<option value="multiplicar"' + (step.tipo === 'multiplicar' ? ' selected' : '') + '>Multiplicar (×)</option>' +
+      '<option value="somar"' + (step.tipo === 'somar' ? ' selected' : '') + '>Somar (+)</option>' +
+      '<option value="subtrair"' + (step.tipo === 'subtrair' ? ' selected' : '') + '>Subtrair (-)</option>' +
+      '<option value="arredondar"' + (step.tipo === 'arredondar' ? ' selected' : '') + '>Arredondar</option>' +
+      '</select>' +
+      (isArred ?
+        '<select class="ipt step-modo" style="padding:5px 8px; font-size:12px; flex:1;">' +
+        '<option value="cima"' + (step.modo === 'cima' || !step.modo ? ' selected' : '') + '>Arredondar p/ cima (Ceil)</option>' +
+        '<option value="baixo"' + (step.modo === 'baixo' ? ' selected' : '') + '>Arredondar p/ baixo (Floor)</option>' +
+        '<option value="padrao"' + (step.modo === 'padrao' ? ' selected' : '') + '>Mais próximo (Round)</option>' +
+        '</select>'
+        :
+        '<input type="number" step="0.01" class="ipt mono step-valor" value="' + (step.valor !== undefined ? step.valor : 1) + '" style="padding:5px 8px; font-size:12.5px; flex:1; text-align:right;">'
+      ) +
+      '<button type="button" class="icon-btn step-up" title="Mover para cima" style="width:24px; height:24px; font-size:11px;" ' + (idx === 0 ? 'disabled' : '') + '>↑</button>' +
+      '<button type="button" class="icon-btn step-down" title="Mover para baixo" style="width:24px; height:24px; font-size:11px;" ' + (idx === totalSteps - 1 ? 'disabled' : '') + '>↓</button>' +
+      '<button type="button" class="icon-btn step-del" title="Remover etapa" style="width:24px; height:24px; color:var(--red); border-color:color-mix(in srgb, var(--red) 30%, transparent);">✕</button>' +
+      '</div>';
+  }
+
+  function renderEditor() {
+    var wrap = $('colEditor');
+    if (!wrap) return;
+    var areaObj = state.regrasData[state.selectedAreaIdx];
+    if (!areaObj || !state.selectedCampoKey) {
+      wrap.innerHTML = '<div class="pane"><div class="empty-state">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3v4M15 3v4M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/></svg>' +
+        '<div>Selecione um campo à esquerda para editar</div></div></div>';
+      if ($('maintFooterMeta')) $('maintFooterMeta').textContent = 'Selecione um campo para editar';
+      return;
+    }
+
+    var campoObj = areaObj.campos[state.selectedCampoKey];
     var subTabRule = state.dirtySubTabRule;
     if (!subTabRule) return;
 
