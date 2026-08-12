@@ -1096,7 +1096,8 @@
                     "t": "num",
                     "v": 4
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b2",
@@ -1122,7 +1123,8 @@
                     "t": "num",
                     "v": 4
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b3",
@@ -1156,7 +1158,8 @@
                     "t": "var",
                     "v": "larg"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b4",
@@ -1190,7 +1193,8 @@
                     "t": "var",
                     "v": "larg"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b5",
@@ -1224,7 +1228,8 @@
                     "t": "var",
                     "v": "larg"
                   }
-                ]
+                ],
+                "collapsed": false
               }
             ],
             "montagens": [
