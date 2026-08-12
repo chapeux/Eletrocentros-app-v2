@@ -1055,10 +1055,126 @@
       '<option value="degrau_fixo"' + (base.forma === 'degrau_fixo' ? ' selected' : '') + '>Fator Fixo 2m+ (1m Base / 2m+ Base × Fator)</option>' +
       '<option value="tabela"' + (base.forma === 'tabela' ? ' selected' : '') + '>Valores Personalizados por Módulo (Tabela 1m a 8m)</option>' +
       '<option value="derivado_h"' + (base.forma === 'derivado_h' ? ' selected' : '') + '>Derivado de Horas H (Fórmula Operacional)</option>' +
+      '<option value="blocos"' + (base.forma === 'blocos' ? ' selected' : '') + '>Blocos Condicionais (SE / Variáveis / Fórmulas)</option>' +
       '</select>' +
       '</div>';
 
-    if (base.forma === 'derivado_h') {
+    if (base.forma === 'blocos') {
+      if (!base.blocos) {
+        base.blocos = [
+          { id: 'b1', nome: 'Lateral', it: [{ t: 'var', v: 'lat_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'num', v: 4 }] },
+          { id: 'b2', nome: 'Frente/Fundo', it: [{ t: 'var', v: 'ffd_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'num', v: 4 }] },
+          { id: 'b3', nome: 'Teto', it: [{ t: 'var', v: 'tet_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'tet_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] },
+          { id: 'b4', nome: 'Telhado', it: [{ t: 'var', v: 'tlh_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'tlh_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] },
+          { id: 'b5', nome: 'Base', it: [{ t: 'var', v: 'bas_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'var', v: 'bas_f2' }, { t: 'op', v: '*' }, { t: 'var', v: 'larg' }] }
+        ];
+      }
+      if (!base.montagens) {
+        base.montagens = [
+          { id: 'm1', nome: 'Móvel', cond: [{ c: 'tipoestrutura', o: '=', val: 'Móvel', j: 'E' }], it: [{ t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
+          { id: 'm2', nome: 'Embarcado', cond: [{ c: 'tipoestrutura', o: '=', val: 'Embarcado', j: 'E' }], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
+          { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
+        ];
+      }
+      if (!base.ajuste_final) {
+        base.ajuste_final = [
+          { t: 'op', v: '/' }, { t: 'num', v: 60 },
+          { t: 'op', v: '*' }, { t: 'num', v: 0.9 },
+          { t: 'op', v: '*' }, { t: 'num', v: 1.1 }
+        ];
+      }
+
+      // 1. Barra de Blocos
+      html += '<div class="blocbar" style="margin-top:12px;">' +
+        '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="3" width="8" height="8" rx="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.6"/></svg></span>' +
+        '<span class="tt"><b>' + base.blocos.length + ' blocos definidos</b><span>' + base.blocos.map(function (x) { return x.nome; }).join(' · ') + '</span></span>' +
+        '<button type="button" class="btn-vio" id="openBlk">Ver / criar blocos</button>' +
+        '</div>';
+
+      // 2. Container de Montagens Condicionais
+      html += '<div class="block" style="margin-top:13px">' +
+        '<div class="bl">Montagens <span class="hint">avaliadas de cima para baixo — vale a primeira que atender a condição</span></div>' +
+        '<div id="montagensListContainer">';
+
+      var hitM = matchedMontagem(base.montagens, SIM_CTX);
+      base.montagens.forEach(function (m, mi) {
+        var isHit = hitM && hitM.id === m.id;
+        var rVal = ev(m.it.concat(base.ajuste_final), SIM_CTX, base.blocos);
+        html += '<div class="mcard' + (isHit ? ' hit' : '') + (m.padrao ? ' pad' : '') + '">' +
+          '<div class="mhead2"><span class="ord">' + (mi + 1) + '</span>' +
+          '<input class="mname" data-mn="' + m.id + '" value="' + escapeHtml(m.nome) + '">' +
+          (isHit ? '<span class="hitbadge">APLICADA</span>' : '') +
+          '<span class="mres">= ' + (isFinite(rVal) ? rVal.toFixed(1).replace('.', ',') : '—') + ' h</span>' +
+          (mi > 0 && !m.padrao ? '<button type="button" class="arrbtn" data-mv="up" data-m="' + m.id + '">▲</button>' : '') +
+          (mi < base.montagens.length - 2 ? '<button type="button" class="arrbtn" data-mv="dn" data-m="' + m.id + '">▼</button>' : '') +
+          (m.padrao ? '' : '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>') + '</div>';
+
+        if (m.padrao) {
+          html += '<div class="padtxt">Senão — usada quando nenhuma condição acima é atendida</div>';
+        } else {
+          (m.cond || []).forEach(function (c, ci) {
+            html += '<div class="condrow" data-m="' + m.id + '" data-ci="' + ci + '">' +
+              (ci === 0 ? '<span class="kw">SE</span>' : '<select data-cf="join" style="width:64px"><option' + (c.j === 'E' ? ' selected' : '') + '>E</option><option' + (c.j === 'OU' ? ' selected' : '') + '>OU</option></select>') +
+              '<select data-cf="campo">' + CAMPOS_COND_BLOCO.map(function (fn) { return '<option value="' + fn.k + '"' + (fn.k === c.c ? ' selected' : '') + '>' + fn.n + '</option>'; }).join('') + '</select>' +
+              '<select data-cf="op" style="width:56px">' + CONDOPS.map(function (o) { return '<option' + (o === c.o ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+
+            var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === c.c; })[0];
+            if (fObj && fObj.opts) {
+              html += '<select data-cf="val">' + fObj.opts.map(function (o) { return '<option' + (o === c.val ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+            } else {
+              html += '<input data-cf="val" value="' + escapeHtml(c.val) + '">';
+            }
+
+            html += '<button type="button" class="bdel" data-cdel="1" data-m="' + m.id + '" data-ci="' + ci + '">✕</button>' +
+              (ci === (m.cond.length - 1) ? '<button type="button" class="addbtn c" data-addcond="' + m.id + '">+ condição</button>' : '') +
+              '</div>';
+          });
+          if (!m.cond || !m.cond.length) {
+            html += '<div class="condrow"><span class="kw">SE</span><button type="button" class="addbtn c" data-addcond="' + m.id + '">+ condição</button></div>';
+          }
+        }
+
+        html += '<div class="chain">' + (m.it || []).map(function (it, i) { return chipHtml(it, i, m.id, null, base.blocos); }).join('') + addBtnsHtml(m.id, true) + '</div>' +
+          '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + ' <span style="color:var(--text-dim)">→ ajuste final ' + chainExpr(base.ajuste_final, false, SIM_CTX, base.blocos) + '</span></div></div>';
+      });
+
+      html += '</div>' +
+        '<button type="button" class="newblock" id="newMont"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Adicionar montagem condicional</button>' +
+        '</div>';
+
+      // 3. Painel de Simulação
+      html += '<div class="block" style="margin-bottom:0">' +
+        '<div class="bl">Simular <span class="hint">escolha o cenário e confira qual montagem é aplicada</span></div>' +
+        '<div class="simbar">';
+
+      ['tipoestrutura', 'comp', 'larg'].forEach(function (k) {
+        var cObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === k; })[0];
+        if (cObj) {
+          html += '<span class="siminp"><label>' + cObj.n + '</label>' + (cObj.opts
+            ? '<select data-sim="' + cObj.k + '">' + cObj.opts.map(function (o) { return '<option' + (o === SIM_CTX[cObj.k] ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>'
+            : '<input data-sim="' + cObj.k + '" value="' + SIM_CTX[cObj.k] + '">') + '</span>';
+        } else {
+          var vObj = getVARS().filter(function (y) { return y.chave === k || y.k === k; })[0];
+          if (vObj) {
+            html += '<span class="siminp"><label>' + (vObj.nome || vObj.n) + '</label><input data-sim="' + k + '" value="' + String(SIM_CTX[k]).replace('.', ',') + '"></span>';
+          }
+        }
+      });
+
+      html += '</div>';
+
+      var totVal = hitM ? ev(hitM.it.concat(base.ajuste_final), SIM_CTX, base.blocos) : NaN;
+      if (!hitM) {
+        html += '<div class="err">Nenhuma montagem atende ao cenário e não há montagem padrão.</div>';
+      } else if (isNaN(totVal)) {
+        html += '<div class="err">Expressão inválida — verifique se falta uma operação entre os itens.</div>';
+      } else {
+        html += '<div class="simtot"><span class="lb">Montagem aplicada: <b>' + escapeHtml(hitM.nome) + '</b> · resultado de <b>' + state.selectedCampoKey + ' · ' + state.selectedSubTab + '</b></span>' +
+          '<span class="vv">' + totVal.toFixed(1).replace('.', ',') + '</span><span class="un">horas</span></div>';
+      }
+
+      html += '</div>';
+    } else if (base.forma === 'derivado_h') {
       if (!base.etapas || !base.etapas.length) {
         base.etapas = [];
         if (base.divisao) base.etapas.push({ tipo: 'dividir', valor: base.divisao });

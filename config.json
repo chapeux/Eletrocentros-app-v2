@@ -71,5 +71,126 @@
       "Pilotis",
       "Skid (mecânica)"
     ]
-  }
+  },
+  "variaveis": [
+    {
+      "grupo": "Dimensões",
+      "nome": "Comprimento",
+      "chave": "comp",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões",
+      "nome": "Largura",
+      "chave": "larg",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões",
+      "nome": "Altura",
+      "chave": "alt",
+      "tipo": "entrada",
+      "valor": 2.6
+    },
+    {
+      "grupo": "Sistema",
+      "nome": "Nº de módulos",
+      "chave": "nmod",
+      "tipo": "entrada",
+      "valor": 1
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Lateral-Fator1",
+      "chave": "lat_f1",
+      "tipo": "constante",
+      "valor": 1.14
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Lateral-MinB",
+      "chave": "lat_mb",
+      "tipo": "constante",
+      "valor": 2.815
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "FrenFund-Fator1",
+      "chave": "ffd_f1",
+      "tipo": "constante",
+      "valor": 1.31
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "FrenFund-MinB",
+      "chave": "ffd_mb",
+      "tipo": "constante",
+      "valor": 1.472
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Teto-Fator1",
+      "chave": "tet_f1",
+      "tipo": "constante",
+      "valor": 1.29
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Teto-Fator2",
+      "chave": "tet_f2",
+      "tipo": "constante",
+      "valor": 1.19
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Teto-MinB",
+      "chave": "tet_mb",
+      "tipo": "constante",
+      "valor": 4.785
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Telhado-Fator1",
+      "chave": "tlh_f1",
+      "tipo": "constante",
+      "valor": 1.38
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Telhado-Fator2",
+      "chave": "tlh_f2",
+      "tipo": "constante",
+      "valor": 1.025
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Telhado-MinB",
+      "chave": "tlh_mb",
+      "tipo": "constante",
+      "valor": 1.36
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Base-Fator1",
+      "chave": "bas_f1",
+      "tipo": "constante",
+      "valor": 1.4
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Base-Fator2",
+      "chave": "bas_f2",
+      "tipo": "constante",
+      "valor": 1.405
+    },
+    {
+      "grupo": "Tempos de Corte",
+      "nome": "Base-MinB",
+      "chave": "bas_mb",
+      "tipo": "constante",
+      "valor": 14.17
+    }
+  ]
 }

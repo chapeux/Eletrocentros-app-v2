@@ -1066,19 +1066,400 @@
     "area": "MECÂNICA",
     "usa_dimensoes": true,
     "campos": {
-      "COR/FPC": {
+      "MEC1": {
+        "nome": "Corte",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
+            "forma": "blocos",
+            "blocos": [
+              {
+                "id": "b1",
+                "nome": "Lateral",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "lat_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ]
+              },
+              {
+                "id": "b2",
+                "nome": "Frente/Fundo",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "ffd_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ]
+              },
+              {
+                "id": "b3",
+                "nome": "Teto",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tet_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tet_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ]
+              },
+              {
+                "id": "b4",
+                "nome": "Telhado",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tlh_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tlh_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ]
+              },
+              {
+                "id": "b5",
+                "nome": "Base",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "bas_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ]
+              }
+            ],
+            "montagens": [
+              {
+                "id": "m1",
+                "nome": "Móvel",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Móvel",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  }
+                ]
+              },
+              {
+                "id": "m2",
+                "nome": "Embarcado",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Embarcado",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "lat_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "ffd_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b3"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "tet_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  }
+                ]
+              },
+              {
+                "id": "m0",
+                "nome": "Demais estruturas",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "lat_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "ffd_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b3"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "tet_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b4"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tlh_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  }
+                ]
+              }
+            ],
+            "ajuste_final": [
+              {
+                "t": "op",
+                "v": "/"
+              },
+              {
+                "t": "num",
+                "v": 60
+              },
+              {
+                "t": "op",
+                "v": "*"
+              },
+              {
+                "t": "num",
+                "v": 0.9
+              },
+              {
+                "t": "op",
+                "v": "*"
+              },
+              {
+                "t": "num",
+                "v": 1.1
+              }
             ]
           },
           "condicoes": []
@@ -1100,20 +1481,13 @@
           "condicoes": []
         }
       },
-      "FCH": {
+      "MEC2": {
+        "nome": "Dobra",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1134,20 +1508,13 @@
           "condicoes": []
         }
       },
-      "PRB": {
+      "MEC3": {
+        "nome": "Solda",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1168,20 +1535,13 @@
           "condicoes": []
         }
       },
-      "SBA": {
+      "MEC4": {
+        "nome": "Mont. base",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1202,20 +1562,13 @@
           "condicoes": []
         }
       },
-      "PRE": {
+      "MEC5": {
+        "nome": "Mont. lateral",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1236,20 +1589,13 @@
           "condicoes": []
         }
       },
-      "SES": {
+      "MEC6": {
+        "nome": "Fechamento",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1270,20 +1616,13 @@
           "condicoes": []
         }
       },
-      "EDF": {
+      "MEC7": {
+        "nome": "Acabamento",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
@@ -1304,88 +1643,13 @@
           "condicoes": []
         }
       },
-      "PIN": {
+      "MEC8": {
+        "nome": "Inspeção",
         "H": {
           "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          "condicoes": []
-        },
-        "DUR": {
-          "base": {
-            "forma": "derivado_h",
-            "etapas": [
-              {
-                "tipo": "dividir",
-                "valor": 7.92
-              },
-              {
-                "tipo": "arredondar",
-                "modo": "cima"
-              }
-            ]
-          },
-          "condicoes": []
-        }
-      },
-      "CHI/MEI": {
-        "H": {
-          "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          "condicoes": []
-        },
-        "DUR": {
-          "base": {
-            "forma": "derivado_h",
-            "etapas": [
-              {
-                "tipo": "dividir",
-                "valor": 7.92
-              },
-              {
-                "tipo": "arredondar",
-                "modo": "cima"
-              }
-            ]
-          },
-          "condicoes": []
-        }
-      },
-      "CHE/CSC": {
-        "H": {
-          "base": {
-            "forma": "tabela",
-            "valores": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            "forma": "constante",
+            "valor_base": 10,
+            "valor": 10
           },
           "condicoes": []
         },
