@@ -1184,41 +1184,6 @@
     var base = subTabRule.base;
     if (!base || base.forma !== 'blocos') return;
 
-    if ($('openBlk')) {
-      $('openBlk').addEventListener('click', function () {
-        renderBlocosModal(subTabRule);
-        if ($('ovlBlk')) $('ovlBlk').classList.add('open');
-      });
-    }
-    if ($('btnCloseBlk')) {
-      $('btnCloseBlk').addEventListener('click', function () {
-        if ($('ovlBlk')) $('ovlBlk').classList.remove('open');
-      });
-    }
-    if ($('newBlk')) {
-      $('newBlk').addEventListener('click', function () {
-        if (!base.blocos) base.blocos = [];
-        base.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (base.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
-        renderBlocosModal(subTabRule);
-        markDirty();
-        renderEditor();
-      });
-    }
-    if ($('newMont')) {
-      $('newMont').addEventListener('click', function () {
-        if (!base.montagens) base.montagens = [];
-        var firstBlkId = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
-        base.montagens.splice(base.montagens.length - 1, 0, {
-          id: 'm' + (Date.now() % 900000),
-          nome: 'Nova montagem',
-          cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
-          it: [{ t: 'blk', v: firstBlkId }]
-        });
-        markDirty();
-        renderEditor();
-      });
-    }
-
     var scopeArr = function (sc) {
       var bo = (base.blocos || []).filter(function (x) { return x.id === sc; })[0];
       if (bo) return bo.it;
@@ -1230,6 +1195,28 @@
       return (base.montagens || []).filter(function (x) { return x.id === id; })[0];
     };
 
+    // Modal overlay handlers
+    var ovl = $('ovlBlk');
+    if (ovl && !ovl._wired) {
+      ovl._wired = true;
+      ovl.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        if (t === ovl || t.closest('#btnCloseBlk')) {
+          ovl.classList.remove('open');
+          return;
+        }
+        if (t.closest('#newBlk')) {
+          if (!base.blocos) base.blocos = [];
+          base.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (base.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
+          renderBlocosModal(subTabRule);
+          markDirty();
+          renderEditor();
+          return;
+        }
+      });
+    }
+
     var colEd = $('colEditor');
     if (colEd && !colEd._blocosWired) {
       colEd._blocosWired = true;
@@ -1237,6 +1224,28 @@
       colEd.addEventListener('click', function (e) {
         var t = e.target;
         if (!t) return;
+
+        // Open Modal "Ver / criar blocos"
+        if (t.closest('#openBlk')) {
+          renderBlocosModal(subTabRule);
+          if ($('ovlBlk')) $('ovlBlk').classList.add('open');
+          return;
+        }
+
+        // New montagem button
+        if (t.closest('#newMont')) {
+          if (!base.montagens) base.montagens = [];
+          var firstBlkId = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
+          base.montagens.splice(base.montagens.length - 1, 0, {
+            id: 'm' + (Date.now() % 900000),
+            nome: 'Nova montagem',
+            cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
+            it: [{ t: 'blk', v: firstBlkId }]
+          });
+          markDirty();
+          renderEditor();
+          return;
+        }
 
         if (t.dataset && t.dataset.del !== undefined && t.dataset.sc) {
           var arr = scopeArr(t.dataset.sc);
