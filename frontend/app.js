@@ -1030,9 +1030,9 @@
 
   var SIM_CTX = { comp: 12, larg: 2.4, alt: 2.6, nmod: 1, tipoestrutura: 'Embarcado', tipomaq: 'Split', incendio: 'Não aplicável' };
 
-  var OPS = ['+', '−', '×', '÷', '%', '^'];
-  var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '%': '%', '^': '**' };
-  var OPINV = { '+': '+', '-': '−', '*': '×', '/': '÷', '%': '%', '**': '^' };
+  var OPS = ['+', '−', '×', '÷', '(', ')', '%', '^'];
+  var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '(': '(', ')': ')', '%': '%', '^': '**' };
+  var OPINV = { '+': '+', '-': '−', '*': '×', '/': '÷', '(': '(', ')': ')', '%': '%', '**': '^' };
   var CONDOPS = ['=', '≠', '>', '<', '≥', '≤'];
 
   function getVARS() {
@@ -1632,26 +1632,15 @@
         delete base.ajuste_final;
       }
       (base.montagens || []).forEach(function (m) {
-        if (!m.it) return;
-        for (var i = 0; i < m.it.length - 5; i++) {
-          if (m.it[i].t === 'op' && m.it[i].v === '/' &&
-              m.it[i+1].t === 'num' && (+m.it[i+1].v) === 60 &&
-              m.it[i+2].t === 'op' && m.it[i+2].v === '*' &&
-              m.it[i+3].t === 'num' && (+m.it[i+3].v) === 0.9 &&
-              m.it[i+4].t === 'op' && m.it[i+4].v === '*' &&
-              m.it[i+5].t === 'num' && (+m.it[i+5].v) === 1.1) {
-            for (var j = i + 6; j < m.it.length - 5; j++) {
-              if (m.it[j].t === 'op' && m.it[j].v === '/' &&
-                  m.it[j+1].t === 'num' && (+m.it[j+1].v) === 60 &&
-                  m.it[j+2].t === 'op' && m.it[j+2].v === '*' &&
-                  m.it[j+3].t === 'num' && (+m.it[j+3].v) === 0.9 &&
-                  m.it[j+4].t === 'op' && m.it[j+4].v === '*' &&
-                  m.it[j+5].t === 'num' && (+m.it[j+5].v) === 1.1) {
-                m.it.splice(j, 6);
-                break;
-              }
-            }
-          }
+        if (!m.it || !m.it.length) return;
+        var hasPlus = m.it.some(function (x) { return x.t === 'op' && (x.v === '+' || x.v === '−'); });
+        var divIdx = -1;
+        for (var d = 0; d < m.it.length; d++) {
+          if (m.it[d].t === 'op' && m.it[d].v === '/') { divIdx = d; break; }
+        }
+        if (hasPlus && divIdx > 0 && m.it[0].v !== '(') {
+          m.it.unshift({ t: 'op', v: '(' });
+          m.it.splice(divIdx + 1, 0, { t: 'op', v: ')' });
         }
       });
 
