@@ -1023,12 +1023,16 @@
 
   var CAMPOS_COND_BLOCO = [
     { k: 'tipoestrutura', n: 'Tipo de estrutura', opts: ['Móvel', 'Semimóvel', 'Modular', 'Fixo', 'Embarcado', 'Container Solar'] },
+    { k: 'trafo_oleo', n: 'Trafo a óleo', opts: ['Sim', 'Não'] },
     { k: 'nmod', n: 'Nº de módulos', num: true },
+    { k: 'comp', n: 'Comprimento (m)', num: true },
+    { k: 'larg', n: 'Largura (m)', num: true },
+    { k: 'alt', n: 'Altura (m)', num: true },
     { k: 'tipomaq', n: 'Tipo de máquina', opts: ['Split', 'Wall Mounted', 'Roof Top', 'Não possui', 'Não aplicável'] },
     { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] }
   ];
 
-  var SIM_CTX = { comp: 12, larg: 2.4, alt: 2.6, nmod: 1, tipoestrutura: 'Embarcado', tipomaq: 'Split', incendio: 'Não aplicável' };
+  var SIM_CTX = { comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel', trafo_oleo: 'Não', tipomaq: 'Split', incendio: 'Não aplicável' };
 
   var OPS = ['+', '−', '×', '÷', '(', ')', '%', '^'];
   var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '(': '(', ')': ')', '%': '%', '^': '**' };
@@ -1731,7 +1735,7 @@
         '<div class="bl">Simular <span class="hint">escolha o cenário e confira qual montagem é aplicada</span></div>' +
         '<div class="simbar">';
 
-      ['tipoestrutura', 'comp', 'larg'].forEach(function (k) {
+      ['tipoestrutura', 'trafo_oleo', 'comp', 'larg'].forEach(function (k) {
         var cObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === k; })[0];
         if (cObj) {
           html += '<span class="siminp"><label>' + cObj.n + '</label>' + (cObj.opts
