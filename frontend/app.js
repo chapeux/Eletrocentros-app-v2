@@ -1173,201 +1173,259 @@
     };
 
     // Modal overlay handlers
+    function handleBlocoClick(t, curBase) {
+      if (!t || !curBase) return false;
+
+      // Open Modal "Ver / criar blocos"
+      if (t.closest('#openBlk')) {
+        renderBlocosModal(state.dirtySubTabRule);
+        if ($('ovlBlk')) $('ovlBlk').classList.add('open');
+        return true;
+      }
+
+      // Close Modal button or overlay backdrop
+      if (t === $('ovlBlk') || t.closest('#btnCloseBlk')) {
+        if ($('ovlBlk')) $('ovlBlk').classList.remove('open');
+        return true;
+      }
+
+      // New block button
+      if (t.closest('#newBlk')) {
+        if (!curBase.blocos) curBase.blocos = [];
+        curBase.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (curBase.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
+        renderBlocosModal(state.dirtySubTabRule);
+        markDirty();
+        renderEditor();
+        return true;
+      }
+
+      // New montagem button
+      if (t.closest('#newMont')) {
+        if (!curBase.montagens) curBase.montagens = [];
+        var firstBlkId = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
+        curBase.montagens.splice(curBase.montagens.length - 1, 0, {
+          id: 'm' + (Date.now() % 900000),
+          nome: 'Nova montagem',
+          cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
+          it: [{ t: 'blk', v: firstBlkId }]
+        });
+        markDirty();
+        renderEditor();
+        return true;
+      }
+
+      // Delete chip
+      var delBtn = t.closest('[data-del]') || (t.dataset && t.dataset.del !== undefined ? t : null);
+      if (delBtn && delBtn.dataset && delBtn.dataset.sc) {
+        var arr = scopeArr(delBtn.dataset.sc);
+        if (arr) {
+          arr.splice(+delBtn.dataset.i, 1);
+          renderBlocosModal(state.dirtySubTabRule);
+          markDirty();
+          renderEditor();
+        }
+        return true;
+      }
+
+      // Add item (+ variável, + operação, + valor fixo, + bloco)
+      var addBtn = t.closest('[data-add]') || (t.dataset && t.dataset.add ? t : null);
+      if (addBtn && addBtn.dataset && addBtn.dataset.sc) {
+        var a = scopeArr(addBtn.dataset.sc);
+        if (a) {
+          var firstVar = getVARS()[0] ? (getVARS()[0].chave || getVARS()[0].k) : 'comp';
+          var firstBlk = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
+          a.push(addBtn.dataset.add === 'var' ? { t: 'var', v: firstVar }
+            : addBtn.dataset.add === 'op' ? { t: 'op', v: '*' }
+              : addBtn.dataset.add === 'num' ? { t: 'num', v: 1 }
+                : { t: 'blk', v: firstBlk });
+          renderBlocosModal(state.dirtySubTabRule);
+          markDirty();
+          renderEditor();
+        }
+        return true;
+      }
+
+      // Move montagem
+      var mvBtn = t.closest('[data-mv]') || (t.dataset && t.dataset.mv ? t : null);
+      if (mvBtn && mvBtn.dataset && mvBtn.dataset.m) {
+        var idx = (curBase.montagens || []).findIndex(function (x) { return x.id === mvBtn.dataset.m; });
+        var targetIdx = mvBtn.dataset.mv === 'up' ? idx - 1 : idx + 1;
+        if (idx >= 0 && targetIdx >= 0 && targetIdx < (curBase.montagens.length - 1)) {
+          var tmp = curBase.montagens[idx];
+          curBase.montagens[idx] = curBase.montagens[targetIdx];
+          curBase.montagens[targetIdx] = tmp;
+          markDirty();
+          renderEditor();
+        }
+        return true;
+      }
+
+      // Delete montagem
+      var mdelBtn = t.closest('[data-mdel]') || (t.dataset && t.dataset.mdel ? t : null);
+      if (mdelBtn && mdelBtn.dataset) {
+        curBase.montagens = curBase.montagens.filter(function (x) { return x.id !== mdelBtn.dataset.mdel; });
+        markDirty();
+        renderEditor();
+        return true;
+      }
+
+      // Delete block
+      var bdelBtn = t.closest('[data-bdel]') || (t.dataset && t.dataset.bdel ? t : null);
+      if (bdelBtn && bdelBtn.dataset) {
+        var bId = bdelBtn.dataset.bdel;
+        curBase.blocos = (curBase.blocos || []).filter(function (x) { return x.id !== bId; });
+        (curBase.montagens || []).forEach(function (m) {
+          m.it = (m.it || []).filter(function (it) { return !(it.t === 'blk' && it.v === bId); });
+        });
+        renderBlocosModal(state.dirtySubTabRule);
+        markDirty();
+        renderEditor();
+        return true;
+      }
+
+      // Add condition
+      var addCondBtn = t.closest('[data-addcond]') || (t.dataset && t.dataset.addcond ? t : null);
+      if (addCondBtn && addCondBtn.dataset) {
+        var mObj = byM(addCondBtn.dataset.addcond);
+        if (mObj) {
+          if (!mObj.cond) mObj.cond = [];
+          mObj.cond.push({ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' });
+          markDirty();
+          renderEditor();
+        }
+        return true;
+      }
+
+      // Delete condition
+      var cdelBtn = t.closest('[data-cdel]') || (t.dataset && t.dataset.cdel ? t : null);
+      if (cdelBtn && cdelBtn.dataset && cdelBtn.dataset.m) {
+        var mObj2 = byM(cdelBtn.dataset.m);
+        if (mObj2 && mObj2.cond) {
+          mObj2.cond.splice(+cdelBtn.dataset.ci, 1);
+          markDirty();
+          renderEditor();
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    function handleBlocoChange(t, curBase) {
+      if (!t || !curBase) return false;
+
+      if (t.dataset && t.dataset.role) {
+        var ch = t.closest('.chip');
+        if (ch && ch.dataset) {
+          var a = scopeArr(ch.dataset.sc);
+          if (a && a[+ch.dataset.i]) {
+            a[+ch.dataset.i].v = t.value;
+            renderBlocosModal(state.dirtySubTabRule);
+            markDirty();
+            renderEditor();
+          }
+        }
+        return true;
+      }
+
+      if (t.dataset && t.dataset.cf) {
+        var row = t.closest('.condrow');
+        if (row && row.dataset) {
+          var m = byM(row.dataset.m);
+          if (m && m.cond && m.cond[+row.dataset.ci]) {
+            var cd = m.cond[+row.dataset.ci];
+            if (t.dataset.cf === 'campo') {
+              cd.c = t.value;
+              var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === t.value; })[0];
+              cd.val = fObj && fObj.opts ? fObj.opts[0] : 1;
+            } else if (t.dataset.cf === 'op') {
+              cd.o = t.value;
+            } else if (t.dataset.cf === 'join') {
+              cd.j = t.value;
+            } else {
+              cd.val = t.value;
+            }
+            markDirty();
+            renderEditor();
+          }
+        }
+        return true;
+      }
+
+      if (t.dataset && t.dataset.sim) {
+        var simK = t.dataset.sim;
+        var parsedNum = parseFloat(t.value.replace(',', '.'));
+        var isOptField = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === simK && x.opts; })[0];
+        SIM_CTX[simK] = (isNaN(parsedNum) || isOptField) ? t.value : parsedNum;
+        renderBlocosModal(state.dirtySubTabRule);
+        renderEditor();
+        return true;
+      }
+
+      return false;
+    }
+
+    function handleBlocoInput(t, curBase) {
+      if (!t || !curBase) return false;
+
+      if (t.dataset && t.dataset.mn) {
+        var m = byM(t.dataset.mn);
+        if (m) {
+          m.nome = t.value;
+          markDirty();
+        }
+        return true;
+      }
+
+      if (t.dataset && t.dataset.bn) {
+        var bo = (curBase.blocos || []).filter(function (x) { return x.id === t.dataset.bn; })[0];
+        if (bo) {
+          bo.nome = t.value;
+          markDirty();
+        }
+        return true;
+      }
+
+      var chipNum = t.closest('.chip.num');
+      if (chipNum && chipNum.dataset) {
+        var a = scopeArr(chipNum.dataset.sc);
+        if (a && a[+chipNum.dataset.i]) {
+          a[+chipNum.dataset.i].v = parseFloat(t.value.replace(',', '.')) || 0;
+          renderBlocosModal(state.dirtySubTabRule);
+          markDirty();
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    // Modal overlay handlers
     var ovl = $('ovlBlk');
     if (ovl && !ovl._wired) {
       ovl._wired = true;
       ovl.addEventListener('click', function (e) {
-        var t = e.target;
-        if (!t) return;
-        var curBase = getCurrentBase();
-        if (!curBase) return;
-        if (t === ovl || t.closest('#btnCloseBlk')) {
-          ovl.classList.remove('open');
-          return;
-        }
-        if (t.closest('#newBlk')) {
-          if (!curBase.blocos) curBase.blocos = [];
-          curBase.blocos.push({ id: 'b' + (Date.now() % 900000), nome: 'Bloco ' + (curBase.blocos.length + 1), it: [{ t: 'var', v: 'comp' }] });
-          renderBlocosModal(state.dirtySubTabRule);
-          markDirty();
-          renderEditor();
-          return;
-        }
+        handleBlocoClick(e.target, getCurrentBase());
+      });
+      ovl.addEventListener('change', function (e) {
+        handleBlocoChange(e.target, getCurrentBase());
+      });
+      ovl.addEventListener('input', function (e) {
+        handleBlocoInput(e.target, getCurrentBase());
       });
     }
 
     var colEd = $('colEditor');
     if (colEd && !colEd._blocosWired) {
       colEd._blocosWired = true;
-
       colEd.addEventListener('click', function (e) {
-        var t = e.target;
-        if (!t) return;
-        var curBase = getCurrentBase();
-        if (!curBase || curBase.forma !== 'blocos') return;
-
-        // Open Modal "Ver / criar blocos"
-        if (t.closest('#openBlk')) {
-          renderBlocosModal(state.dirtySubTabRule);
-          if ($('ovlBlk')) $('ovlBlk').classList.add('open');
-          return;
-        }
-
-        // New montagem button
-        if (t.closest('#newMont')) {
-          if (!curBase.montagens) curBase.montagens = [];
-          var firstBlkId = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
-          curBase.montagens.splice(curBase.montagens.length - 1, 0, {
-            id: 'm' + (Date.now() % 900000),
-            nome: 'Nova montagem',
-            cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
-            it: [{ t: 'blk', v: firstBlkId }]
-          });
-          markDirty();
-          renderEditor();
-          return;
-        }
-
-        if (t.dataset && t.dataset.del !== undefined && t.dataset.sc) {
-          var arr = scopeArr(t.dataset.sc);
-          if (arr) {
-            arr.splice(+t.dataset.i, 1);
-            markDirty();
-            renderEditor();
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.add) {
-          var a = scopeArr(t.dataset.sc);
-          if (a) {
-            var firstVar = getVARS()[0] ? (getVARS()[0].chave || getVARS()[0].k) : 'comp';
-            var firstBlk = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
-            a.push(t.dataset.add === 'var' ? { t: 'var', v: firstVar }
-              : t.dataset.add === 'op' ? { t: 'op', v: '*' }
-                : t.dataset.add === 'num' ? { t: 'num', v: 1 }
-                  : { t: 'blk', v: firstBlk });
-            markDirty();
-            renderEditor();
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.mv) {
-          var idx = (curBase.montagens || []).findIndex(function (x) { return x.id === t.dataset.m; });
-          var targetIdx = t.dataset.mv === 'up' ? idx - 1 : idx + 1;
-          if (idx >= 0 && targetIdx >= 0 && targetIdx < (curBase.montagens.length - 1)) {
-            var tmp = curBase.montagens[idx];
-            curBase.montagens[idx] = curBase.montagens[targetIdx];
-            curBase.montagens[targetIdx] = tmp;
-            markDirty();
-            renderEditor();
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.mdel) {
-          curBase.montagens = curBase.montagens.filter(function (x) { return x.id !== t.dataset.mdel; });
-          markDirty();
-          renderEditor();
-          return;
-        }
-
-        if (t.dataset && t.dataset.addcond) {
-          var mObj = byM(t.dataset.addcond);
-          if (mObj) {
-            if (!mObj.cond) mObj.cond = [];
-            mObj.cond.push({ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' });
-            markDirty();
-            renderEditor();
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.cdel) {
-          var mObj2 = byM(t.dataset.m);
-          if (mObj2 && mObj2.cond) {
-            mObj2.cond.splice(+t.dataset.ci, 1);
-            markDirty();
-            renderEditor();
-          }
-          return;
-        }
+        handleBlocoClick(e.target, getCurrentBase());
       });
-
       colEd.addEventListener('change', function (e) {
-        var t = e.target;
-        if (!t) return;
-
-        if (t.dataset && t.dataset.role) {
-          var ch = t.closest('.chip');
-          if (ch && ch.dataset) {
-            var a = scopeArr(ch.dataset.sc);
-            if (a && a[+ch.dataset.i]) {
-              a[+ch.dataset.i].v = t.value;
-              markDirty();
-              renderEditor();
-            }
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.cf) {
-          var row = t.closest('.condrow');
-          if (row && row.dataset) {
-            var m = byM(row.dataset.m);
-            if (m && m.cond && m.cond[+row.dataset.ci]) {
-              var cd = m.cond[+row.dataset.ci];
-              if (t.dataset.cf === 'campo') {
-                cd.c = t.value;
-                var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === t.value; })[0];
-                cd.val = fObj && fObj.opts ? fObj.opts[0] : 1;
-              } else if (t.dataset.cf === 'op') {
-                cd.o = t.value;
-              } else if (t.dataset.cf === 'join') {
-                cd.j = t.value;
-              } else {
-                cd.val = t.value;
-              }
-              markDirty();
-              renderEditor();
-            }
-          }
-          return;
-        }
-
-        if (t.dataset && t.dataset.sim) {
-          var simK = t.dataset.sim;
-          var parsedNum = parseFloat(t.value.replace(',', '.'));
-          var isOptField = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === simK && x.opts; })[0];
-          SIM_CTX[simK] = (isNaN(parsedNum) || isOptField) ? t.value : parsedNum;
-          renderEditor();
-          return;
-        }
+        handleBlocoChange(e.target, getCurrentBase());
       });
-
       colEd.addEventListener('input', function (e) {
-        var t = e.target;
-        if (!t) return;
-
-        if (t.dataset && t.dataset.mn) {
-          var m = byM(t.dataset.mn);
-          if (m) {
-            m.nome = t.value;
-            markDirty();
-          }
-          return;
-        }
-
-        var chipNum = t.closest('.chip.num');
-        if (chipNum && chipNum.dataset) {
-          var a = scopeArr(chipNum.dataset.sc);
-          if (a && a[+chipNum.dataset.i]) {
-            a[+chipNum.dataset.i].v = parseFloat(t.value.replace(',', '.')) || 0;
-            markDirty();
-          }
-          return;
-        }
+        handleBlocoInput(e.target, getCurrentBase());
       });
     }
   }
