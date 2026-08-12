@@ -1684,6 +1684,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .chip.var, .chip.blk, .chip.num, .chip.op { border-color: var(--border); background: var(--panel); }
 .chip:hover { border-color: var(--border-strong); }
 .chip select, .chip input { background: transparent; border: none; outline: none; color: var(--text); font-family: "IBM Plex Mono"; font-size: 12px; font-weight: 600; padding: 5px 4px; cursor: pointer; max-width: 180px; }
+select option, select optgroup { background-color: var(--panel-2, #191D21) !important; color: var(--text, #EAEDF0) !important; font-family: inherit; padding: 6px 10px; }
+select optgroup { background-color: var(--panel-3, #20252A) !important; color: var(--accent, #6C8EFF) !important; font-weight: 700; font-style: normal; padding: 8px 10px 4px; }
 .chip.num input { width: 56px; text-align: center; cursor: text; }
 .chip.op select { font-size: 14px; text-align: center; width: 34px; padding: 5px 0; }
 .chip .x { border: none; background: transparent; color: var(--text-faint); cursor: pointer; font-size: 12px; line-height: 1; padding: 3px 4px; border-radius: 5px; opacity: .55; }
