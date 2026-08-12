@@ -819,7 +819,7 @@
     if (!wrap) return;
     var areaObj = state.regrasData[state.selectedAreaIdx];
     var isMecanica = areaObj && (areaObj.area === 'MECÂNICA' || areaObj.area === 'Mecanica' || (areaObj.area && areaObj.area.toUpperCase().indexOf('MEC') >= 0));
-    if ($('chipLegendBar')) $('chipLegendBar').style.display = isMecanica ? 'flex' : 'none';
+    if ($('legendWrapper')) $('legendWrapper').style.display = isMecanica ? 'flex' : 'none';
     if (!areaObj) {
       wrap.innerHTML = '<div class="list-head"><h2>Campos</h2><span>Nenhum campo</span></div>';
       return;
@@ -1825,6 +1825,7 @@
     renderPreview(campoObj[state.selectedSubTab], subTabRule);
     markDirty();
     if ($('maintFooterMeta')) $('maintFooterMeta').textContent = areaObj.area + ' · ' + state.selectedCampoKey + ' (' + state.selectedSubTab + ')';
+    if ($('btnSaveFooter')) $('btnSaveFooter').textContent = 'Salvar regras de ' + state.selectedCampoKey;
   }
 
   function condRowHtml(c, i) {
@@ -1898,8 +1899,10 @@
     if (!areaObj || !state.selectedCampoKey) return;
     var origSubTab = areaObj.campos[state.selectedCampoKey][state.selectedSubTab];
     var changed = JSON.stringify(state.dirtySubTabRule) !== JSON.stringify(origSubTab);
-    var btn = $('btnSave');
-    if (btn) btn.disabled = !changed;
+    ['btnSave', 'btnSaveFooter'].forEach(function (id) {
+      var btn = $(id);
+      if (btn) btn.disabled = !changed;
+    });
   }
 
   function wireEditorEvents(originalSubTab, subTabRule) {
@@ -2208,8 +2211,10 @@
   }
 
   function saveRegrasCampo() {
-    var btn = $('btnSave');
-    if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+    ['btnSave', 'btnSaveFooter'].forEach(function (id) {
+      var btn = $(id);
+      if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+    });
 
     var areaObj = state.regrasData[state.selectedAreaIdx];
     areaObj.campos[state.selectedCampoKey][state.selectedSubTab] = JSON.parse(JSON.stringify(state.dirtySubTabRule));
@@ -2224,12 +2229,34 @@
         }
       }).catch(function (err) {
         showToast('Erro ao salvar em regras.json: ' + err.message, true);
-        if (btn) { btn.disabled = false; btn.textContent = 'Salvar Regras de ' + state.selectedCampoKey; }
+        ['btnSave', 'btnSaveFooter'].forEach(function (id) {
+          var btn = $(id);
+          if (btn) { btn.disabled = false; btn.textContent = 'Salvar regras de ' + state.selectedCampoKey; }
+        });
       });
     } else {
       showToast('Regras salvas na sessão!');
       onRegrasSaveSuccess();
     }
+  }
+
+  if ($('btnSaveFooter')) {
+    $('btnSaveFooter').addEventListener('click', saveRegrasCampo);
+  }
+
+  if ($('btnToggleLegend')) {
+    $('btnToggleLegend').addEventListener('click', function () {
+      var bar = $('chipLegendBar');
+      if (!bar) return;
+      var isHidden = bar.classList.contains('hidden');
+      if (isHidden) {
+        bar.classList.remove('hidden');
+        this.querySelector('span').textContent = 'Ocultar legenda';
+      } else {
+        bar.classList.add('hidden');
+        this.querySelector('span').textContent = 'Mostrar legenda';
+      }
+    });
   }
 
   function onRegrasSaveSuccess() {
