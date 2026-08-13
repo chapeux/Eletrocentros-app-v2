@@ -5339,7 +5339,8 @@
                     "t": "num",
                     "v": 1.1
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "fac_medio",
@@ -5397,7 +5398,8 @@
                     "t": "num",
                     "v": 1.1
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "fac_alta",
@@ -5449,7 +5451,8 @@
                     "t": "num",
                     "v": 1.1
                   }
-                ]
+                ],
+                "collapsed": true
               }
             ]
           },
