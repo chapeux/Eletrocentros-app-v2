@@ -151,7 +151,7 @@ class AppAPI:
         return [
             {"disciplina": "Mecânica — Estrutura", "total_campos": 14},
             {"disciplina": "Elétrica & Equipamentos", "total_campos": 18},
-            {"disciplina": "Acessórios & Adicionais", "total_campos": 9},
+            {"disciplina": "Acessórios & Adicionais", "total_campos": 5},
             {"disciplina": "SAP & Automação", "total_campos": 6}
         ]
 

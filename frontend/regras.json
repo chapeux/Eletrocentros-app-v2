@@ -5273,5 +5273,701 @@
         }
       }
     }
+  },
+  {
+    "area": "ACESSÓRIOS",
+    "campos": {
+      "FAC": {
+        "H": {
+          "base": {
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "fac_simples",
+                "nome": "Simples",
+                "cond": [
+                  {
+                    "c": "complexidade",
+                    "o": "=",
+                    "val": "Simples",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 1.5
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  }
+                ]
+              },
+              {
+                "id": "fac_medio",
+                "nome": "Médio",
+                "cond": [
+                  {
+                    "c": "complexidade",
+                    "o": "=",
+                    "val": "Médio",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  }
+                ]
+              },
+              {
+                "id": "fac_alta",
+                "nome": "Alta / Outros (Padrão)",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 5
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  }
+                ]
+              }
+            ]
+          },
+          "condicoes": []
+        },
+        "DUR": {
+          "base": {
+            "forma": "derivado_h",
+            "etapas": [
+              {
+                "tipo": "dividir",
+                "valor": 7.92
+              },
+              {
+                "tipo": "arredondar",
+                "modo": "cima"
+              }
+            ]
+          },
+          "condicoes": []
+        }
+      },
+      "SAC": {
+        "H": {
+          "base": {
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "sac_simples",
+                "nome": "Simples",
+                "cond": [
+                  {
+                    "c": "complexidade",
+                    "o": "=",
+                    "val": "Simples",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0
+                  }
+                ]
+              },
+              {
+                "id": "sac_medio",
+                "nome": "Médio",
+                "cond": [
+                  {
+                    "c": "complexidade",
+                    "o": "=",
+                    "val": "Médio",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 4
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0
+                  }
+                ]
+              },
+              {
+                "id": "sac_alta",
+                "nome": "Alta / Outros (Padrão)",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 5
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "condicoes": []
+        },
+        "DUR": {
+          "base": {
+            "forma": "derivado_h",
+            "etapas": [
+              {
+                "tipo": "dividir",
+                "valor": 7.92
+              },
+              {
+                "tipo": "arredondar",
+                "modo": "cima"
+              }
+            ]
+          },
+          "condicoes": []
+        }
+      },
+      "FCA": {
+        "H": {
+          "base": {
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "fca_padr",
+                "nome": "Padrão",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 1.5
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.6
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.6
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.95
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2.92
+                  }
+                ]
+              }
+            ]
+          },
+          "condicoes": []
+        },
+        "DUR": {
+          "base": {
+            "forma": "derivado_h",
+            "etapas": [
+              {
+                "tipo": "dividir",
+                "valor": 7.92
+              },
+              {
+                "tipo": "arredondar",
+                "modo": "cima"
+              }
+            ]
+          },
+          "condicoes": []
+        }
+      },
+      "MAM/MFE": {
+        "H": {
+          "base": {
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "mam_padr",
+                "nome": "Padrão",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 0.3333333
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.05
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.35
+                  }
+                ]
+              }
+            ]
+          },
+          "condicoes": []
+        },
+        "DUR": {
+          "base": {
+            "forma": "derivado_h",
+            "etapas": [
+              {
+                "tipo": "dividir",
+                "valor": 7.92
+              },
+              {
+                "tipo": "arredondar",
+                "modo": "cima"
+              }
+            ]
+          },
+          "condicoes": []
+        }
+      },
+      "MAA": {
+        "H": {
+          "base": {
+            "forma": "blocos",
+            "blocos": [],
+            "montagens": [
+              {
+                "id": "maa_padr",
+                "nome": "Padrão",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 0.3333333
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 3
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.8
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0.9
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 1.05
+                  }
+                ]
+              }
+            ]
+          },
+          "condicoes": []
+        },
+        "DUR": {
+          "base": {
+            "forma": "derivado_h",
+            "etapas": [
+              {
+                "tipo": "dividir",
+                "valor": 7.92
+              },
+              {
+                "tipo": "arredondar",
+                "modo": "cima"
+              }
+            ]
+          },
+          "condicoes": []
+        }
+      }
+    }
   }
 ]

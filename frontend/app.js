@@ -1024,6 +1024,7 @@
   var CAMPOS_COND_BLOCO = [
     { k: 'tipoestrutura', n: 'Tipo de estrutura', opts: ['Móvel', 'Semimóvel', 'Modular', 'Fixo', 'Embarcado', 'Container Solar'] },
     { k: 'trafo_oleo', n: 'Trafo a óleo', opts: ['Sim', 'Não'] },
+    { k: 'complexidade', n: 'Complexidade', opts: ['Simples', 'Médio', 'Alta', 'Outros'] },
     { k: 'nmod', n: 'Nº de módulos', num: true },
     { k: 'comp', n: 'Comprimento (m)', num: true },
     { k: 'larg', n: 'Largura (m)', num: true },
@@ -1032,7 +1033,7 @@
     { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] }
   ];
 
-  var SIM_CTX = { comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel', trafo_oleo: 'Não', tipomaq: 'Split', incendio: 'Não aplicável' };
+  var SIM_CTX = { comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel', trafo_oleo: 'Não', complexidade: 'Simples', tipomaq: 'Split', incendio: 'Não aplicável' };
 
   var OPS = ['+', '−', '×', '÷', '(', ')', '%', '^'];
   var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '(': '(', ')': ')', '%': '%', '^': '**' };
