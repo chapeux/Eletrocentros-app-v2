@@ -1141,18 +1141,181 @@
 
   function chipHtml(it, i, sc, skip, blocosList) {
     var d = ' data-sc="' + sc + '" data-i="' + i + '"';
-    if (it.t === 'var') return '<span class="chip var"' + d + '>' + varSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
-    if (it.t === 'op') return '<span class="chip op"' + d + '>' + opSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
-    if (it.t === 'num') return '<span class="chip num"' + d + '><input value="' + String(it.v).replace('.', ',') + '"><button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
-    if (it.t === 'blk') return '<span class="chip blk"' + d + '>' + blkSelectHtml(it.v, skip, blocosList) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    var dragAttr = ' draggable="true"';
+    var handle = '<span class="chip-handle" title="Arrastar para reordenar">⋮⋮</span>';
+
+    if (it.t === 'var') return '<span class="chip var"' + d + dragAttr + '>' + handle + varSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'op') return '<span class="chip op"' + d + dragAttr + '>' + handle + opSelectHtml(it.v) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'num') return '<span class="chip num"' + d + dragAttr + '>' + handle + '<input value="' + String(it.v).replace('.', ',') + '"><button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
+    if (it.t === 'blk') return '<span class="chip blk"' + d + dragAttr + '>' + handle + blkSelectHtml(it.v, skip, blocosList) + '<button type="button" class="x" data-del="1"' + d + '>✕</button></span>';
     return '';
   }
 
   function addBtnsHtml(sc, blk) {
-    return '<button type="button" class="addbtn" data-add="var" data-sc="' + sc + '">+ variável</button>' +
-      '<button type="button" class="addbtn" data-add="op" data-sc="' + sc + '">+ operação</button>' +
-      '<button type="button" class="addbtn n" data-add="num" data-sc="' + sc + '">+ valor fixo</button>' +
-      (blk ? '<button type="button" class="addbtn b" data-add="blk" data-sc="' + sc + '">+ bloco</button>' : '');
+    return '<button type="button" class="addbtn" draggable="true" data-add="var" data-sc="' + sc + '" title="Clique para adicionar ou arraste para posicionar">+ variável</button>' +
+      '<button type="button" class="addbtn" draggable="true" data-add="op" data-sc="' + sc + '" title="Clique para adicionar ou arraste para posicionar">+ operação</button>' +
+      '<button type="button" class="addbtn n" draggable="true" data-add="num" data-sc="' + sc + '" title="Clique para adicionar ou arraste para posicionar">+ valor fixo</button>' +
+      (blk ? '<button type="button" class="addbtn b" draggable="true" data-add="blk" data-sc="' + sc + '" title="Clique para adicionar ou arraste para posicionar">+ bloco</button>' : '');
+  }
+
+  var dragSession = null;
+
+  function wireChipDragAndDrop() {
+    if (window._chipDragWired) return;
+    window._chipDragWired = true;
+
+    document.addEventListener('dragstart', function (e) {
+      var chip = e.target.closest('.chip[draggable="true"]');
+      var addbtn = e.target.closest('.addbtn[draggable="true"]');
+
+      if (chip && chip.dataset && chip.dataset.sc) {
+        dragSession = {
+          type: 'reorder',
+          sc: chip.dataset.sc,
+          i: parseInt(chip.dataset.i, 10)
+        };
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) {}
+        chip.classList.add('dragging');
+        return;
+      }
+
+      if (addbtn && addbtn.dataset && addbtn.dataset.add) {
+        dragSession = {
+          type: 'add',
+          addType: addbtn.dataset.add,
+          sc: addbtn.dataset.sc
+        };
+        e.dataTransfer.effectAllowed = 'copyMove';
+        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) {}
+        addbtn.classList.add('dragging');
+        return;
+      }
+    });
+
+    document.addEventListener('dragend', function () {
+      dragSession = null;
+      document.querySelectorAll('.chip, .addbtn').forEach(function (el) {
+        el.classList.remove('dragging', 'drop-target-left', 'drop-target-right');
+      });
+      document.querySelectorAll('.chain').forEach(function (el) {
+        el.classList.remove('drop-target-empty');
+      });
+    });
+
+    document.addEventListener('dragover', function (e) {
+      if (!dragSession) return;
+
+      var chain = e.target.closest('.chain');
+      if (!chain) return;
+
+      e.preventDefault();
+      e.dataTransfer.dropEffect = dragSession.type === 'reorder' ? 'move' : 'copy';
+
+      document.querySelectorAll('.chip').forEach(function (el) {
+        el.classList.remove('drop-target-left', 'drop-target-right');
+      });
+      document.querySelectorAll('.chain').forEach(function (el) {
+        el.classList.remove('drop-target-empty');
+      });
+
+      var chip = e.target.closest('.chip');
+      if (chip && chain.contains(chip)) {
+        var rect = chip.getBoundingClientRect();
+        var midX = rect.left + rect.width / 2;
+        if (e.clientX < midX) {
+          chip.classList.add('drop-target-left');
+        } else {
+          chip.classList.add('drop-target-right');
+        }
+      } else {
+        chain.classList.add('drop-target-empty');
+      }
+    });
+
+    document.addEventListener('drop', function (e) {
+      if (!dragSession) return;
+      var chain = e.target.closest('.chain');
+      if (!chain) return;
+
+      e.preventDefault();
+
+      var base = getCurrentBase();
+      if (!base) return;
+
+      var scopeArr = function (sc) {
+        var bo = (base.blocos || []).filter(function (x) { return x.id === sc; })[0];
+        if (bo) return bo.it;
+        var mo = (base.montagens || []).filter(function (x) { return x.id === sc; })[0];
+        if (mo) return mo.it;
+        return null;
+      };
+
+      var chip = e.target.closest('.chip');
+      var targetSc = chain.dataset.sc || (chip ? chip.dataset.sc : null);
+      var insertIdx = 0;
+
+      if (chip && chip.dataset && chip.dataset.i !== undefined) {
+        targetSc = chip.dataset.sc || targetSc;
+        var chipIdx = parseInt(chip.dataset.i, 10);
+        var rect = chip.getBoundingClientRect();
+        var midX = rect.left + rect.width / 2;
+        insertIdx = (e.clientX < midX) ? chipIdx : chipIdx + 1;
+      } else {
+        var chipsInChain = chain.querySelectorAll('.chip');
+        if (chipsInChain.length > 0) {
+          var lastChip = chipsInChain[chipsInChain.length - 1];
+          targetSc = lastChip.dataset.sc || targetSc;
+          insertIdx = parseInt(lastChip.dataset.i, 10) + 1;
+        } else {
+          insertIdx = 0;
+        }
+      }
+
+      if (!targetSc) return;
+
+      var targetArr = scopeArr(targetSc);
+      if (!targetArr) return;
+
+      if (dragSession.type === 'reorder') {
+        var sourceArr = scopeArr(dragSession.sc);
+        if (!sourceArr || dragSession.i < 0 || dragSession.i >= sourceArr.length) return;
+
+        var movedItem = sourceArr.splice(dragSession.i, 1)[0];
+
+        if (sourceArr === targetArr && dragSession.i < insertIdx) {
+          insertIdx--;
+        }
+        targetArr.splice(insertIdx, 0, movedItem);
+
+      } else if (dragSession.type === 'add') {
+        var newItem = null;
+        var vars = getVARS();
+        var firstVarKey = (vars && vars[0]) ? (vars[0].chave || vars[0].k) : 'comp';
+        var firstBlkId = (base.blocos && base.blocos[0]) ? base.blocos[0].id : 'b1';
+
+        if (dragSession.addType === 'var') newItem = { t: 'var', v: firstVarKey };
+        else if (dragSession.addType === 'op') newItem = { t: 'op', v: '+' };
+        else if (dragSession.addType === 'num') newItem = { t: 'num', v: 1 };
+        else if (dragSession.addType === 'blk') newItem = { t: 'blk', v: firstBlkId };
+
+        if (newItem) {
+          targetArr.splice(insertIdx, 0, newItem);
+        }
+      }
+
+      dragSession = null;
+      document.querySelectorAll('.chip, .addbtn').forEach(function (el) {
+        el.classList.remove('dragging', 'drop-target-left', 'drop-target-right');
+      });
+      document.querySelectorAll('.chain').forEach(function (el) {
+        el.classList.remove('drop-target-empty');
+      });
+
+      markDirty();
+      renderBlocosModal(state.dirtySubTabRule);
+      renderEditor();
+    });
   }
 
   function getCurrentBase() {
@@ -1163,6 +1326,8 @@
   function wireBlocosEvents(subTabRule) {
     var base = getCurrentBase();
     if (!base || base.forma !== 'blocos') return;
+
+    wireChipDragAndDrop();
 
     var scopeArr = function (sc) {
       var b = getCurrentBase();
@@ -1530,7 +1695,7 @@
         '<span class="bres">= ' + (isFinite(bVal) ? bVal.toFixed(2).replace('.', ',') : '—') + '</span>' +
         '<button type="button" class="bdel" data-bdel="' + bo.id + '">✕</button></div></div>' +
         '<div class="bcard-body">' +
-        '<div class="chain">' + (bo.it || []).map(function (it, i) { return chipHtml(it, i, bo.id, bo.id, base.blocos); }).join('') + addBtnsHtml(bo.id, true) + '</div>' +
+        '<div class="chain" data-sc="' + bo.id + '">' + (bo.it || []).map(function (it, i) { return chipHtml(it, i, bo.id, bo.id, base.blocos); }).join('') + addBtnsHtml(bo.id, true) + '</div>' +
         '<div class="usedby">' + (uso.length ? 'usado em: ' + uso.join(', ') : 'não usado em nenhuma montagem') + '</div></div></div>';
     }).join('');
 
@@ -1745,7 +1910,7 @@
           }
         }
 
-        html += '<div class="chain">' + (m.it || []).map(function (it, i) { return chipHtml(it, i, m.id, null, base.blocos); }).join('') + addBtnsHtml(m.id, true) + '</div>' +
+        html += '<div class="chain" data-sc="' + m.id + '">' + (m.it || []).map(function (it, i) { return chipHtml(it, i, m.id, null, base.blocos); }).join('') + addBtnsHtml(m.id, true) + '</div>' +
           '<div class="expr-out">' + chainExpr(m.it, false, SIM_CTX, base.blocos) + '</div></div></div>';
       });
 

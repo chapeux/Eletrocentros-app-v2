@@ -1788,4 +1788,20 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 .hmotivo-box { margin-bottom: 10px; padding: 9px 13px; background: color-mix(in srgb, var(--accent) 12%, transparent); border-left: 3px solid var(--accent); border-radius: 7px; font-size: 12.5px; color: var(--text); line-height: 1.5; word-break: break-word; }
 .hmotivo-box strong { color: var(--accent); margin-right: 4px; font-weight: 700; }
 
+/* Drag & Drop Formula Chips & Add Buttons */
+.chip[draggable="true"] { cursor: grab; user-select: none; }
+.chip[draggable="true"]:active { cursor: grabbing; }
+.chip-handle { font-size: 11px; color: var(--text-faint); margin: 0 1px 0 2px; cursor: grab; opacity: 0.5; transition: opacity 0.15s ease, color 0.15s ease; user-select: none; line-height: 1; font-family: "IBM Plex Mono", monospace; }
+.chip:hover .chip-handle { opacity: 1; color: var(--accent); }
+.chip.dragging, .addbtn.dragging { opacity: 0.35 !important; transform: scale(0.95); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important; }
+
+.chip.drop-target-left { border-left: 3.5px solid var(--accent) !important; padding-left: 7px !important; box-shadow: -4px 0 12px color-mix(in srgb, var(--accent) 30%, transparent) !important; }
+.chip.drop-target-right { border-right: 3.5px solid var(--accent) !important; padding-right: 7px !important; box-shadow: 4px 0 12px color-mix(in srgb, var(--accent) 30%, transparent) !important; }
+
+.chain.drop-target-empty { outline: 2px dashed var(--accent) !important; outline-offset: 3px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+.addbtn[draggable="true"] { cursor: grab; }
+.addbtn[draggable="true"]:active { cursor: grabbing; }
+
+
 
