@@ -109,6 +109,10 @@ class AppAPI:
             if not regras_data:
                 return {"status": "error", "message": "Nenhum dado de regras fornecido."}
 
+            motivo_str = (motivo or "").strip()
+            if len(motivo_str) < 20:
+                return {"status": "error", "message": "O motivo da alteração é obrigatório e deve ter no mínimo 20 caracteres detalhando a mudança."}
+
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()
 

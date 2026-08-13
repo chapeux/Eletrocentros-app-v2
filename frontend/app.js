@@ -2322,16 +2322,52 @@
     }
   }
 
+  function updateMotivoCharCounter() {
+    var input = $('inputMotivoSave');
+    var counter = $('motivoCharCount');
+    var btn = $('btnConfirmSaveMotivo');
+    if (!input) return;
+    var len = input.value.trim().length;
+    if (counter) {
+      if (len >= 20) {
+        counter.textContent = len + ' / 20 caracteres (OK)';
+        counter.style.color = 'var(--green)';
+      } else {
+        counter.textContent = len + ' / 20 mín.';
+        counter.style.color = 'var(--red)';
+      }
+    }
+    if (btn) {
+      btn.disabled = len < 20;
+    }
+  }
+
   function promptMotivoESalvar() {
     var modal = $('modalMotivo');
     var input = $('inputMotivoSave');
     if (modal && input) {
       input.value = '';
+      updateMotivoCharCounter();
       modal.classList.add('open');
       setTimeout(function () { input.focus(); }, 100);
     } else {
       saveRegrasCampo('');
     }
+  }
+
+  if ($('inputMotivoSave')) {
+    $('inputMotivoSave').addEventListener('input', updateMotivoCharCounter);
+    $('inputMotivoSave').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        var len = this.value.trim().length;
+        if (len >= 20 && $('btnConfirmSaveMotivo')) {
+          $('btnConfirmSaveMotivo').click();
+        } else if (len < 20) {
+          showToast('O motivo da alteração deve conter pelo menos 20 caracteres.', true);
+        }
+      }
+    });
   }
 
   if ($('btnSaveFooter')) {
@@ -2341,6 +2377,10 @@
   if ($('btnConfirmSaveMotivo')) {
     $('btnConfirmSaveMotivo').addEventListener('click', function () {
       var motivo = ($('inputMotivoSave') ? $('inputMotivoSave').value : '').trim();
+      if (motivo.length < 20) {
+        showToast('O motivo da alteração precisa ter no mínimo 20 caracteres.', true);
+        return;
+      }
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
       saveRegrasCampo(motivo);
     });

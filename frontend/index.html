@@ -614,14 +614,15 @@
         </button>
       </div>
       <div class="mbody" style="padding:18px 20px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:8px; display:block;">
-          Motivo / Justificativa da mudança:
+        <label style="font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Motivo / Justificativa da mudança:</span>
+          <span id="motivoCharCount" style="font-size:11.5px; font-weight:600; color:var(--red);">0 / 20 mín.</span>
         </label>
         <textarea id="inputMotivoSave" rows="3" placeholder="Ex: Ajuste no fator de segurança do trafo a óleo conforme nova especificação técnica..." style="width:100%; font-family:inherit; font-size:13px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2); color:var(--text); outline:none; resize:vertical; box-sizing:border-box;"></textarea>
       </div>
       <div class="mhead" style="border-top:1px solid var(--hairline); border-bottom:none; justify-content:flex-end; gap:10px; background:var(--panel-2);">
         <button type="button" class="btn" id="btnCancelMotivo">Cancelar</button>
-        <button type="button" class="btn primary" id="btnConfirmSaveMotivo">Salvar e Registrar</button>
+        <button type="button" class="btn primary" id="btnConfirmSaveMotivo" disabled>Salvar e Registrar</button>
       </div>
     </div>
   </div>
