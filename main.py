@@ -86,13 +86,28 @@ class AppAPI:
                 print(f"[Backend Python] Erro ao ler regras.json: {e}")
         return []
 
-    def save_regras(self, regras_data: Any, motivo: Optional[str] = None) -> dict:
+    def save_regras(self, *args, **kwargs) -> dict:
         """Salva as regras atualizadas, registra histórico no MySQL e sincroniza com o GitHub."""
         try:
-            # Suporte para payload envelopado {"regras": [...], "motivo": "..."}
-            if isinstance(regras_data, dict):
-                motivo = regras_data.get("motivo", motivo)
-                regras_data = regras_data.get("regras", regras_data)
+            regras_data = None
+            motivo = None
+
+            if len(args) >= 1:
+                if isinstance(args[0], dict) and "regras" in args[0]:
+                    regras_data = args[0].get("regras")
+                    motivo = args[0].get("motivo")
+                else:
+                    regras_data = args[0]
+            elif "regras_data" in kwargs:
+                regras_data = kwargs.get("regras_data")
+
+            if len(args) >= 2 and motivo is None:
+                motivo = args[1]
+            elif "motivo" in kwargs and motivo is None:
+                motivo = kwargs.get("motivo")
+
+            if not regras_data:
+                return {"status": "error", "message": "Nenhum dado de regras fornecido."}
 
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()

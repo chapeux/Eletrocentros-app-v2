@@ -2280,29 +2280,41 @@
     var areaObj = state.regrasData[state.selectedAreaIdx];
     areaObj.campos[state.selectedCampoKey][state.selectedSubTab] = JSON.parse(JSON.stringify(state.dirtySubTabRule));
 
+    function resetSaveButtons() {
+      ['btnSave', 'btnSaveFooter'].forEach(function (id) {
+        var btn = $(id);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Salvar regras de ' + state.selectedCampoKey;
+        }
+      });
+    }
+
     if (isPyWebviewAvailable()) {
-      window.pywebview.api.save_regras(state.regrasData, motivo).then(function (res) {
-        if (res && res.status === 'success') {
-          onRegrasSaveSuccess();
+      window.pywebview.api.save_regras({ regras: state.regrasData, motivo: motivo || '' }).then(function (res) {
+        if (res && res.status === 'error') {
+          showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
+          resetSaveButtons();
         } else {
-          showToast('Regras salvas na sessão.');
           onRegrasSaveSuccess();
         }
       }).catch(function (err) {
-        showToast('Erro ao salvar em regras.json: ' + err.message, true);
-        ['btnSave', 'btnSaveFooter'].forEach(function (id) {
-          var btn = $(id);
-          if (btn) { btn.disabled = false; btn.textContent = 'Salvar regras de ' + state.selectedCampoKey; }
-        });
+        showToast('Erro ao salvar em regras.json: ' + (err ? (err.message || err) : 'Erro'), true);
+        resetSaveButtons();
       });
     } else {
       fetch('/api/save_regras', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ regras: state.regrasData, motivo: motivo })
-      }).then(function () {
-        showToast('Regras salvas na sessão!');
-        onRegrasSaveSuccess();
+        body: JSON.stringify({ regras: state.regrasData, motivo: motivo || '' })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.status === 'error') {
+          showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
+          resetSaveButtons();
+        } else {
+          showToast('Regras salvas na sessão!');
+          onRegrasSaveSuccess();
+        }
       }).catch(function () {
         showToast('Regras salvas localmente!');
         onRegrasSaveSuccess();
