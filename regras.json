@@ -5194,7 +5194,7 @@
                 "id": "che0",
                 "nome": "Padrão",
                 "padrao": true,
-                "collapsed": false,
+                "collapsed": true,
                 "cond": [],
                 "it": [
                   {
