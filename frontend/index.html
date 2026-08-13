@@ -601,6 +601,31 @@
     </div>
   </div>
 
+  <!-- ================= MOTIVO DE ALTERACAO MODAL ================= -->
+  <div class="ovl" id="modalMotivo">
+    <div class="modal blk-modal" style="max-width:500px;">
+      <div class="mhead">
+        <div class="mhead-title">
+          <h3>Motivo da Alteração</h3>
+          <span class="footer-meta">Descreva a justificativa para registrar no histórico de auditoria</span>
+        </div>
+        <button type="button" class="icon-btn modal-close" id="btnCloseMotivoModal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="mbody" style="padding:18px 20px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:8px; display:block;">
+          Motivo / Justificativa da mudança:
+        </label>
+        <textarea id="inputMotivoSave" rows="3" placeholder="Ex: Ajuste no fator de segurança do trafo a óleo conforme nova especificação técnica..." style="width:100%; font-family:inherit; font-size:13px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2); color:var(--text); outline:none; resize:vertical; box-sizing:border-box;"></textarea>
+      </div>
+      <div class="mhead" style="border-top:1px solid var(--hairline); border-bottom:none; justify-content:flex-end; gap:10px; background:var(--panel-2);">
+        <button type="button" class="btn" id="btnCancelMotivo">Cancelar</button>
+        <button type="button" class="btn primary" id="btnConfirmSaveMotivo">Salvar e Registrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= CREDENTIALS AUTH MODAL ================= -->
   <div class="modal-overlay" id="authModalOverlay">
     <div class="modal sm">

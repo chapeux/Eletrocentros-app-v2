@@ -2271,7 +2271,7 @@
     body.innerHTML = html;
   }
 
-  function saveRegrasCampo() {
+  function saveRegrasCampo(motivo) {
     ['btnSave', 'btnSaveFooter'].forEach(function (id) {
       var btn = $(id);
       if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
@@ -2281,7 +2281,7 @@
     areaObj.campos[state.selectedCampoKey][state.selectedSubTab] = JSON.parse(JSON.stringify(state.dirtySubTabRule));
 
     if (isPyWebviewAvailable()) {
-      window.pywebview.api.save_regras(state.regrasData).then(function (res) {
+      window.pywebview.api.save_regras(state.regrasData, motivo).then(function (res) {
         if (res && res.status === 'success') {
           onRegrasSaveSuccess();
         } else {
@@ -2296,13 +2296,63 @@
         });
       });
     } else {
-      showToast('Regras salvas na sessão!');
-      onRegrasSaveSuccess();
+      fetch('/api/save_regras', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ regras: state.regrasData, motivo: motivo })
+      }).then(function () {
+        showToast('Regras salvas na sessão!');
+        onRegrasSaveSuccess();
+      }).catch(function () {
+        showToast('Regras salvas localmente!');
+        onRegrasSaveSuccess();
+      });
+    }
+  }
+
+  function promptMotivoESalvar() {
+    var modal = $('modalMotivo');
+    var input = $('inputMotivoSave');
+    if (modal && input) {
+      input.value = '';
+      modal.classList.add('open');
+      setTimeout(function () { input.focus(); }, 100);
+    } else {
+      saveRegrasCampo('');
     }
   }
 
   if ($('btnSaveFooter')) {
-    $('btnSaveFooter').addEventListener('click', saveRegrasCampo);
+    $('btnSaveFooter').addEventListener('click', promptMotivoESalvar);
+  }
+
+  if ($('btnConfirmSaveMotivo')) {
+    $('btnConfirmSaveMotivo').addEventListener('click', function () {
+      var motivo = ($('inputMotivoSave') ? $('inputMotivoSave').value : '').trim();
+      if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
+      saveRegrasCampo(motivo);
+    });
+  }
+
+  if ($('btnCancelMotivo')) {
+    $('btnCancelMotivo').addEventListener('click', function () {
+      if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
+    });
+  }
+
+  if ($('btnCloseMotivoModal')) {
+    $('btnCloseMotivoModal').addEventListener('click', function () {
+      if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
+    });
+  }
+
+  if ($('inputMotivoSave')) {
+    $('inputMotivoSave').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if ($('btnConfirmSaveMotivo')) $('btnConfirmSaveMotivo').click();
+      }
+    });
   }
 
   if ($('btnToggleLegend')) {
@@ -2471,6 +2521,7 @@
         '</div>' +
 
         '<div class="hdetail">' +
+          (log.motivo ? '<div class="hmotivo-box"><strong>Motivo:</strong> ' + escapeHtml(log.motivo) + '</div>' : '') +
           '<div class="hdetail-label">O que mudou</div>' +
           '<div class="diff">' +
             '<div class="diff-col before">' +

@@ -86,15 +86,20 @@ class AppAPI:
                 print(f"[Backend Python] Erro ao ler regras.json: {e}")
         return []
 
-    def save_regras(self, regras_data: list) -> dict:
+    def save_regras(self, regras_data: Any, motivo: Optional[str] = None) -> dict:
         """Salva as regras atualizadas, registra histórico no MySQL e sincroniza com o GitHub."""
         try:
+            # Suporte para payload envelopado {"regras": [...], "motivo": "..."}
+            if isinstance(regras_data, dict):
+                motivo = regras_data.get("motivo", motivo)
+                regras_data = regras_data.get("regras", regras_data)
+
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()
 
             # 2. Compara e registra as alterações na tabela 'logs_modificacoes' no MySQL
-            total_logs = comparar_e_registrar_alteracoes(regras_antigas, regras_data)
-            print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados.")
+            total_logs = comparar_e_registrar_alteracoes(regras_antigas, regras_data, motivo=motivo)
+            print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados. (Motivo: {motivo})")
 
             # 3. Salva a nova versão em regras.json
             with open(REGRAS_FILE, "w", encoding="utf-8") as f:
@@ -103,7 +108,10 @@ class AppAPI:
                 json.dump(regras_data, f, ensure_ascii=False, indent=2)
 
             # 4. Sincronização automática com GitHub em segundo plano
-            sync_github_async(resumo=f"Atualização de regras ({total_logs} alteração/ões)")
+            resumo_git = f"Atualização de regras ({total_logs} alteração/ões)"
+            if motivo:
+                resumo_git += f" - Motivo: {motivo}"
+            sync_github_async(resumo=resumo_git)
 
             print("[Backend Python] Regras salvas em regras.json com sucesso!")
             return {"status": "success", "logs_registrados": total_logs}
