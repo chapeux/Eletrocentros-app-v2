@@ -1876,8 +1876,7 @@
     html += '<div class="field-block"><div class="field-label">Prévia de cálculo por nº de módulos (' + state.selectedSubTab + ')</div>' +
       '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '</tr></thead><tbody id="previewBody"></tbody></table></div>';
 
-    html += '<div class="editor-foot"><button type="button" class="btn" id="btnCancel">Cancelar</button>' +
-      '<button type="button" class="btn primary" id="btnSave" disabled>Salvar Regras de ' + state.selectedCampoKey + '</button></div></div>';
+    html += '</div>';
 
     wrap.innerHTML = html;
 
