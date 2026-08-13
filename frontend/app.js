@@ -1945,34 +1945,70 @@
         '</div>';
 
       // 3. Painel de Simulação
+      var areaObj = state.regrasData[state.selectedAreaIdx];
+      var isAcessorios = (areaObj && areaObj.area === 'ACESSÓRIOS');
+
       html += '<div class="block" style="margin-bottom:0">' +
-        '<div class="bl">Simular <span class="hint">escolha o cenário e confira qual montagem é aplicada</span></div>' +
+        '<div class="bl">Simular <span class="hint">' + (isAcessorios ? 'escolha o número de módulos (1 a 8) e complexidade para conferir o resultado' : 'escolha o cenário e confira qual montagem é aplicada') + '</span></div>' +
         '<div class="simbar">';
 
-      ['tipoestrutura', 'trafo_oleo', 'comp', 'larg'].forEach(function (k) {
+      var simFields = isAcessorios
+        ? ['nmod', 'complexidade', 'comp', 'comp_m1', 'comp_m2', 'comp_m3', 'comp_m4', 'comp_m5', 'comp_m6', 'comp_m7', 'comp_m8']
+        : ['tipoestrutura', 'trafo_oleo', 'comp', 'larg'];
+
+      simFields.forEach(function (k) {
         var cObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === k; })[0];
         if (cObj) {
           html += '<span class="siminp"><label>' + cObj.n + '</label>' + (cObj.opts
-            ? '<select data-sim="' + cObj.k + '">' + cObj.opts.map(function (o) { return '<option' + (o === SIM_CTX[cObj.k] ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>'
-            : '<input data-sim="' + cObj.k + '" value="' + SIM_CTX[cObj.k] + '">') + '</span>';
+            ? '<select data-sim="' + cObj.k + '">' + cObj.opts.map(function (o) { return '<option' + (String(o) === String(SIM_CTX[cObj.k]) ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>'
+            : '<input data-sim="' + cObj.k + '" value="' + (SIM_CTX[cObj.k] !== undefined ? SIM_CTX[cObj.k] : '') + '">') + '</span>';
         } else {
           var vObj = getVARS().filter(function (y) { return y.chave === k || y.k === k; })[0];
           if (vObj) {
-            html += '<span class="siminp"><label>' + (vObj.nome || vObj.n) + '</label><input data-sim="' + k + '" value="' + String(SIM_CTX[k]).replace('.', ',') + '"></span>';
+            var valDisp = SIM_CTX[k] !== undefined ? SIM_CTX[k] : (vObj.valor !== undefined ? vObj.valor : (vObj.v !== undefined ? vObj.v : ''));
+            html += '<span class="siminp"><label>' + (vObj.nome || vObj.n) + '</label><input data-sim="' + k + '" value="' + String(valDisp).replace('.', ',') + '"></span>';
           }
         }
       });
 
       html += '</div>';
 
+      var curNmod = parseInt(SIM_CTX.nmod, 10) || 1;
       var totVal = hitM ? ev(hitM.it, SIM_CTX, base.blocos) : NaN;
       if (!hitM) {
         html += '<div class="err">Nenhuma montagem atende ao cenário e não há montagem padrão.</div>';
       } else if (isNaN(totVal)) {
         html += '<div class="err">Expressão inválida — verifique se falta uma operação entre os itens.</div>';
       } else {
-        html += '<div class="simtot"><span class="lb">Montagem aplicada: <b>' + escapeHtml(hitM.nome) + '</b> · resultado de <b>' + state.selectedCampoKey + ' · ' + state.selectedSubTab + '</b></span>' +
+        html += '<div class="simtot"><span class="lb">Montagem aplicada para ' + curNmod + ' módulo' + (curNmod > 1 ? 's' : '') + ': <b>' + escapeHtml(hitM.nome) + '</b> · resultado de <b>' + state.selectedCampoKey + ' · ' + state.selectedSubTab + '</b></span>' +
           '<span class="vv">' + totVal.toFixed(1).replace('.', ',') + '</span><span class="un">horas</span></div>';
+      }
+
+      if (isAcessorios) {
+        html += '<div class="sim-table-wrap" style="margin-top:14px; background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:8px; padding:12px 14px;">' +
+          '<div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">' +
+          '<span>Simulação de Resultado (1 a 8 Módulos)</span>' +
+          '<span style="font-weight:400; font-size:11px; color:var(--text-faint);">Complexidade: <b>' + escapeHtml(SIM_CTX.complexidade || 'Simples') + '</b></span>' +
+          '</div>' +
+          '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:8px;">';
+
+        for (var m = 1; m <= 8; m++) {
+          var simCtxM = Object.assign({}, SIM_CTX, { nmod: m });
+          var hitM_m = matchedMontagem(base.montagens, simCtxM);
+          var val_m = hitM_m ? ev(hitM_m.it, simCtxM, base.blocos) : NaN;
+          var isCurrent = (curNmod === m);
+
+          html += '<div class="sim-mod-card' + (isCurrent ? ' active' : '') + '" style="padding:8px 10px; background:' + (isCurrent ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--bg-body)') + '; border:1px solid ' + (isCurrent ? 'var(--accent)' : 'var(--border-subtle)') + '; border-radius:6px; transition:all 0.15s ease;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+            '<span style="font-weight:700; font-size:12px; color:var(--accent);">' + m + ' Módulo' + (m > 1 ? 's' : '') + '</span>' +
+            (isCurrent ? '<span style="font-size:9.5px; font-weight:700; background:var(--accent); color:#fff; padding:1px 5px; border-radius:10px;">SELECIONADO</span>' : '') +
+            '</div>' +
+            '<div style="font-size:10.5px; color:var(--text-faint); margin:3px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + escapeHtml(hitM_m ? hitM_m.nome : '—') + '">' + escapeHtml(hitM_m ? hitM_m.nome : 'Nenhuma') + '</div>' +
+            '<div style="font-weight:700; font-size:13.5px; color:var(--text);">' + (isFinite(val_m) ? val_m.toFixed(1).replace('.', ',') + ' h' : '—') + '</div>' +
+            '</div>';
+        }
+
+        html += '</div></div>';
       }
 
       html += '</div>';
