@@ -1304,7 +1304,7 @@
       if (mvBtn && mvBtn.dataset && mvBtn.dataset.m) {
         var idx = (curBase.montagens || []).findIndex(function (x) { return x.id === mvBtn.dataset.m; });
         var targetIdx = mvBtn.dataset.mv === 'up' ? idx - 1 : idx + 1;
-        if (idx >= 0 && targetIdx >= 0 && targetIdx < (curBase.montagens.length - 1)) {
+        if (idx >= 0 && targetIdx >= 0 && targetIdx < curBase.montagens.length) {
           var tmp = curBase.montagens[idx];
           curBase.montagens[idx] = curBase.montagens[targetIdx];
           curBase.montagens[targetIdx] = tmp;
@@ -1376,8 +1376,24 @@
             a[+ch.dataset.i].v = t.value;
             renderBlocosModal(state.dirtySubTabRule);
             markDirty();
-            renderEditor();
           }
+        }
+        return true;
+      }
+
+      if (t.dataset && t.dataset.mtype) {
+        var mObj = byM(t.dataset.mtype);
+        if (mObj) {
+          if (t.value === 'padrao') {
+            mObj.padrao = true;
+          } else {
+            delete mObj.padrao;
+            if (!mObj.cond || !mObj.cond.length) {
+              mObj.cond = [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }];
+            }
+          }
+          markDirty();
+          renderEditor();
         }
         return true;
       }
@@ -1690,12 +1706,16 @@
           '</button>' +
           '<span class="ord">' + (mi + 1) + '</span>' +
           '<input class="mname" data-mn="' + m.id + '" value="' + escapeHtml(m.nome) + '">' +
+          '<select class="mtype-sel" data-mtype="' + m.id + '">' +
+            '<option value="cond"' + (!m.padrao ? ' selected' : '') + '>Condicional (SE)</option>' +
+            '<option value="padrao"' + (m.padrao ? ' selected' : '') + '>Padrão (Senão)</option>' +
+          '</select>' +
           '<span class="mhead-cond-summary">' + escapeHtml(condSummary) + '</span>' +
           '<div style="margin-left:auto; display:flex; align-items:center; gap:8px;">' +
           (isHit ? '<span class="hitbadge">APLICADA</span>' : '') +
           '<span class="mres">= ' + (isFinite(rVal) ? rVal.toFixed(1).replace('.', ',') : '—') + ' h</span>' +
-          (mi > 0 && !m.padrao ? '<button type="button" class="arrbtn" data-mv="up" data-m="' + m.id + '">▲</button>' : '') +
-          (mi < base.montagens.length - 2 ? '<button type="button" class="arrbtn" data-mv="dn" data-m="' + m.id + '">▼</button>' : '') +
+          (mi > 0 ? '<button type="button" class="arrbtn" data-mv="up" data-m="' + m.id + '">▲</button>' : '') +
+          (mi < base.montagens.length - 1 ? '<button type="button" class="arrbtn" data-mv="dn" data-m="' + m.id + '">▼</button>' : '') +
           '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>' + '</div></div>' +
           '<div class="mcard-body">';
 
