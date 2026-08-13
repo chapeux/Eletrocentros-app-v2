@@ -2494,6 +2494,18 @@
     });
   }
 
+  function formatCondSummary(m) {
+    if (!m) return '';
+    if (m.padrao) return 'Senão';
+    if (!m.cond || !m.cond.length) return 'Sem condição';
+    return m.cond.map(function (c, ci) {
+      var fObj = CAMPOS_COND_BLOCO.filter(function (x) { return x.k === c.c; })[0];
+      var cName = fObj ? fObj.n : c.c;
+      var prefix = ci > 0 ? (c.j === 'OU' ? ' OU ' : ' E ') : 'SE ';
+      return prefix + cName + ' ' + (c.o || '=') + ' ' + c.val;
+    }).join('');
+  }
+
   function gerarDiffListasHtml(antes, depois) {
     var aBase = (antes && antes.base) ? antes.base : {};
     var dBase = (depois && depois.base) ? depois.base : {};
@@ -2521,13 +2533,15 @@
       depoisLis.push('<li>Forma base: <b>' + escapeHtml(dForma) + '</b></li>');
     }
 
-    // 2. Valor base
-    if (chVal) {
-      antesLis.push('<li class="changed">Valor base: <b class="num-diff num-diff-before">' + escapeHtml(aVal) + '</b></li>');
-      depoisLis.push('<li class="changed">Valor base: <b class="num-diff num-diff-after">' + escapeHtml(dVal) + '</b></li>');
-    } else {
-      antesLis.push('<li>Valor base: <b>' + escapeHtml(aVal) + '</b></li>');
-      depoisLis.push('<li>Valor base: <b>' + escapeHtml(dVal) + '</b></li>');
+    // 2. Valor base (se não for blocos)
+    if (aBase.forma !== 'blocos' && dBase.forma !== 'blocos') {
+      if (chVal) {
+        antesLis.push('<li class="changed">Valor base: <b class="num-diff num-diff-before">' + escapeHtml(aVal) + '</b></li>');
+        depoisLis.push('<li class="changed">Valor base: <b class="num-diff num-diff-after">' + escapeHtml(dVal) + '</b></li>');
+      } else {
+        antesLis.push('<li>Valor base: <b>' + escapeHtml(aVal) + '</b></li>');
+        depoisLis.push('<li>Valor base: <b>' + escapeHtml(dVal) + '</b></li>');
+      }
     }
 
     // 3. Passo (se aditiva)
@@ -2586,7 +2600,61 @@
       }
     }
 
-    // 6. Condições
+    // 6. Blocos & Montagens
+    var aBlocos = (aBase.blocos && Array.isArray(aBase.blocos)) ? aBase.blocos : [];
+    var dBlocos = (dBase.blocos && Array.isArray(dBase.blocos)) ? dBase.blocos : [];
+    var aMont = (aBase.montagens && Array.isArray(aBase.montagens)) ? aBase.montagens : [];
+    var dMont = (dBase.montagens && Array.isArray(dBase.montagens)) ? dBase.montagens : [];
+
+    if (aBase.forma === 'blocos' || dBase.forma === 'blocos' || aBlocos.length || dBlocos.length || aMont.length || dMont.length) {
+      if (aBlocos.length > 0 || dBlocos.length > 0) {
+        var maxB = Math.max(aBlocos.length, dBlocos.length);
+        for (var bi = 0; bi < maxB; bi++) {
+          var bA = aBlocos[bi];
+          var bD = dBlocos[bi];
+          var nameA = bA ? bA.nome : (bD ? bD.nome : 'Bloco ' + (bi + 1));
+          var exprA = bA ? chainExpr(bA.it, false, null, aBlocos) : '—';
+          var exprD = bD ? chainExpr(bD.it, false, null, dBlocos) : '—';
+
+          var chB = exprA !== exprD || (bA && bD && bA.nome !== bD.nome);
+          if (chB) {
+            antesLis.push('<li class="changed">Bloco "' + escapeHtml(nameA) + '": <b class="num-diff num-diff-before">' + escapeHtml(exprA) + '</b></li>');
+            depoisLis.push('<li class="changed">Bloco "' + escapeHtml(nameA) + '": <b class="num-diff num-diff-after">' + escapeHtml(exprD) + '</b></li>');
+          } else {
+            antesLis.push('<li>Bloco "' + escapeHtml(nameA) + '": <b>' + escapeHtml(exprA) + '</b></li>');
+            depoisLis.push('<li>Bloco "' + escapeHtml(nameA) + '": <b>' + escapeHtml(exprD) + '</b></li>');
+          }
+        }
+      }
+
+      if (aMont.length > 0 || dMont.length > 0) {
+        var maxM = Math.max(aMont.length, dMont.length);
+        for (var mi = 0; mi < maxM; mi++) {
+          var mA = aMont[mi];
+          var mD = dMont[mi];
+
+          var mNameA = mA ? mA.nome : (mD ? mD.nome : 'Montagem ' + (mi + 1));
+          var cA = mA ? formatCondSummary(mA) : '';
+          var cD = mD ? formatCondSummary(mD) : '';
+          var eA = mA ? chainExpr(mA.it, false, null, aBlocos) : '';
+          var eD = mD ? chainExpr(mD.it, false, null, dBlocos) : '';
+
+          var fullA = mA ? (mNameA + ' [' + cA + '] = ' + eA) : '—';
+          var fullD = mD ? (mNameA + ' [' + cD + '] = ' + eD) : '—';
+
+          var chM = fullA !== fullD;
+          if (chM) {
+            antesLis.push('<li class="changed">Montagem "' + escapeHtml(mNameA) + '": <b class="num-diff num-diff-before">' + escapeHtml(fullA) + '</b></li>');
+            depoisLis.push('<li class="changed">Montagem "' + escapeHtml(mNameA) + '": <b class="num-diff num-diff-after">' + escapeHtml(fullD) + '</b></li>');
+          } else {
+            antesLis.push('<li>Montagem "' + escapeHtml(mNameA) + '": <b>' + escapeHtml(fullA) + '</b></li>');
+            depoisLis.push('<li>Montagem "' + escapeHtml(mNameA) + '": <b>' + escapeHtml(fullD) + '</b></li>');
+          }
+        }
+      }
+    }
+
+    // 7. Condições Adicionais
     var aCondsArr = (antes && antes.condicoes) ? antes.condicoes : [];
     var dCondsArr = (depois && depois.condicoes) ? depois.condicoes : [];
 
@@ -2626,9 +2694,9 @@
       var aCondStr = aCondParts.length ? aCondParts.join('; ') : 'Nenhuma';
       var dCondStr = dCondParts.length ? dCondParts.join('; ') : 'Nenhuma';
 
-      antesLis.push('<li class="' + (chConds ? 'changed' : '') + '">Condições: ' + aCondStr + '</li>');
-      depoisLis.push('<li class="' + (chConds ? 'changed' : '') + '">Condições: ' + dCondStr + '</li>');
-    } else {
+      antesLis.push('<li class="' + (chConds ? 'changed' : '') + '">Condições adicionais: ' + aCondStr + '</li>');
+      depoisLis.push('<li class="' + (chConds ? 'changed' : '') + '">Condições adicionais: ' + dCondStr + '</li>');
+    } else if (aBase.forma !== 'blocos' && dBase.forma !== 'blocos') {
       antesLis.push('<li>Condições: <b>Nenhuma</b></li>');
       depoisLis.push('<li>Condições: <b>Nenhuma</b></li>');
     }
@@ -2649,7 +2717,7 @@
       var formaNome = base.forma.toUpperCase().replace('_', ' ');
       items.push('<b>Forma Base:</b> ' + formaNome);
     }
-    if (base.valor_base !== undefined || base.valor !== undefined) {
+    if (base.forma !== 'blocos' && (base.valor_base !== undefined || base.valor !== undefined)) {
       var v = base.valor_base !== undefined ? base.valor_base : base.valor;
       items.push('<b>Valor Base:</b> <code style="font-family:IBM Plex Mono; font-weight:700;">' + v + '</code>');
     }
@@ -2675,6 +2743,21 @@
       items.push('<b>Valores Tabela (1m a 8m):</b> [' + base.valores.join(', ') + ']');
     }
 
+    if (base.forma === 'blocos') {
+      if (base.blocos && Array.isArray(base.blocos) && base.blocos.length > 0) {
+        var blocosStr = base.blocos.map(function (b) {
+          return '<li><b>' + escapeHtml(b.nome) + ':</b> ' + escapeHtml(chainExpr(b.it, false, null, base.blocos)) + '</li>';
+        }).join('');
+        items.push('<b>Blocos (' + base.blocos.length + '):</b><ul style="margin:4px 0 0 0;">' + blocosStr + '</ul>');
+      }
+      if (base.montagens && Array.isArray(base.montagens) && base.montagens.length > 0) {
+        var montStr = base.montagens.map(function (m) {
+          return '<li><b>' + escapeHtml(m.nome) + '</b> <i>(' + escapeHtml(formatCondSummary(m)) + ')</i>: <code>' + escapeHtml(chainExpr(m.it, false, null, base.blocos)) + '</code></li>';
+        }).join('');
+        items.push('<b>Montagens (' + base.montagens.length + '):</b><ul style="margin:4px 0 0 0;">' + montStr + '</ul>');
+      }
+    }
+
     var conds = rule.condicoes || [];
     if (conds.length > 0) {
       var condsStr = conds.map(function (c) {
@@ -2683,7 +2766,7 @@
         return '<li>' + escapeHtml(rot) + ' (' + c.forma + '): <b>' + val + '</b></li>';
       }).join('');
       items.push('<b>Condições Adicionais (' + conds.length + '):</b><ul style="margin:4px 0 0 0;">' + condsStr + '</ul>');
-    } else {
+    } else if (base.forma !== 'blocos') {
       items.push('<b>Condições:</b> <em>Nenhuma condição adicional</em>');
     }
 
