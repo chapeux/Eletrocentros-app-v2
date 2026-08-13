@@ -5545,7 +5545,8 @@
                     "t": "num",
                     "v": 0
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "sac_medio",
@@ -5611,7 +5612,8 @@
                     "t": "num",
                     "v": 0
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "sac_alta",
@@ -5671,7 +5673,8 @@
                     "t": "num",
                     "v": 0
                   }
-                ]
+                ],
+                "collapsed": true
               }
             ]
           },
