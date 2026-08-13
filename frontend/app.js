@@ -1255,7 +1255,9 @@
       if (t.closest('#newMont')) {
         if (!curBase.montagens) curBase.montagens = [];
         var firstBlkId = (curBase.blocos && curBase.blocos[0]) ? curBase.blocos[0].id : 'b1';
-        curBase.montagens.splice(curBase.montagens.length - 1, 0, {
+        var hasPadrao = curBase.montagens.some(function (x) { return x.padrao; });
+        var insertIdx = hasPadrao ? curBase.montagens.length - 1 : curBase.montagens.length;
+        curBase.montagens.splice(insertIdx, 0, {
           id: 'm' + (Date.now() % 900000),
           nome: 'Nova montagem',
           cond: [{ c: 'tipoestrutura', o: '=', val: CAMPOS_COND_BLOCO[0].opts[0], j: 'E' }],
@@ -1694,7 +1696,7 @@
           '<span class="mres">= ' + (isFinite(rVal) ? rVal.toFixed(1).replace('.', ',') : '—') + ' h</span>' +
           (mi > 0 && !m.padrao ? '<button type="button" class="arrbtn" data-mv="up" data-m="' + m.id + '">▲</button>' : '') +
           (mi < base.montagens.length - 2 ? '<button type="button" class="arrbtn" data-mv="dn" data-m="' + m.id + '">▼</button>' : '') +
-          (m.padrao ? '' : '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>') + '</div></div>' +
+          '<button type="button" class="bdel" data-mdel="' + m.id + '">✕</button>' + '</div></div>' +
           '<div class="mcard-body">';
 
         if (m.padrao) {
