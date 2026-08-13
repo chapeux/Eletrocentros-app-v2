@@ -7092,7 +7092,8 @@
                     "t": "var",
                     "v": "comp_m1"
                   }
-                ]
+                ],
+                "collapsed": false
               },
               {
                 "id": "b2",
@@ -7110,7 +7111,8 @@
                     "t": "var",
                     "v": "comp_m2"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b3",
@@ -7136,7 +7138,8 @@
                     "t": "var",
                     "v": "comp_m3"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b4",
@@ -7170,7 +7173,8 @@
                     "t": "var",
                     "v": "comp_m4"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b5",
@@ -7212,7 +7216,8 @@
                     "t": "var",
                     "v": "comp_m5"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b6",
@@ -7262,7 +7267,8 @@
                     "t": "var",
                     "v": "comp_m6"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b7",
@@ -7320,7 +7326,8 @@
                     "t": "var",
                     "v": "comp_m7"
                   }
-                ]
+                ],
+                "collapsed": true
               },
               {
                 "id": "b8",
@@ -7386,7 +7393,8 @@
                     "t": "var",
                     "v": "comp_m8"
                   }
-                ]
+                ],
+                "collapsed": true
               }
             ],
             "montagens": [
@@ -7451,9 +7459,17 @@
                   {
                     "t": "num",
                     "v": 1.1
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "num",
+                    "v": 0
                   }
                 ],
-                "collapsed": true
+                "collapsed": false
               },
               {
                 "id": "m1_m",
