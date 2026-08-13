@@ -5191,6 +5191,25 @@
             "blocos": [],
             "montagens": [
               {
+                "id": "m604793",
+                "nome": "Nova montagem",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Móvel",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b1"
+                  }
+                ],
+                "collapsed": false
+              },
+              {
                 "id": "che0",
                 "nome": "Padrão",
                 "padrao": true,
