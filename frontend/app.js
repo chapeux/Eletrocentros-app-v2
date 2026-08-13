@@ -1005,6 +1005,22 @@
     { grupo: 'Dimensões', nome: 'Comprimento', chave: 'comp', tipo: 'entrada', valor: 12 },
     { grupo: 'Dimensões', nome: 'Largura', chave: 'larg', tipo: 'entrada', valor: 2.4 },
     { grupo: 'Dimensões', nome: 'Altura', chave: 'alt', tipo: 'entrada', valor: 2.6 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 1', chave: 'comp_m1', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 2', chave: 'comp_m2', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 3', chave: 'comp_m3', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 4', chave: 'comp_m4', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 5', chave: 'comp_m5', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 6', chave: 'comp_m6', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 7', chave: 'comp_m7', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Comprimento Módulo 8', chave: 'comp_m8', tipo: 'entrada', valor: 12 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 1', chave: 'larg_m1', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 2', chave: 'larg_m2', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 3', chave: 'larg_m3', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 4', chave: 'larg_m4', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 5', chave: 'larg_m5', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 6', chave: 'larg_m6', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 7', chave: 'larg_m7', tipo: 'entrada', valor: 2.4 },
+    { grupo: 'Dimensões por Módulo', nome: 'Largura Módulo 8', chave: 'larg_m8', tipo: 'entrada', valor: 2.4 },
     { grupo: 'Sistema', nome: 'Nº de módulos', chave: 'nmod', tipo: 'entrada', valor: 1 },
     { grupo: 'Tempos de Corte', nome: 'Lateral-Fator1', chave: 'lat_f1', tipo: 'constante', valor: 1.14 },
     { grupo: 'Tempos de Corte', nome: 'Lateral-MinB', chave: 'lat_mb', tipo: 'constante', valor: 2.815 },
@@ -1051,11 +1067,21 @@
   }
 
   function getVarVal(k, simCtx) {
+    if (simCtx && simCtx[k] !== undefined && simCtx[k] !== '') return simCtx[k];
     var list = getVARS();
     var f = list.filter(function (x) { return x.chave === k || x.k === k; })[0];
-    if (!f) return (simCtx && simCtx[k] !== undefined) ? simCtx[k] : 0;
-    if (f.tipo === 'entrada' || f.t === 'entrada') return (simCtx && simCtx[k] !== undefined) ? simCtx[k] : (f.valor !== undefined ? f.valor : f.v);
-    return f.valor !== undefined ? f.valor : (f.v !== undefined ? f.v : 0);
+    if (f) {
+      if (f.tipo === 'entrada' || f.t === 'entrada') {
+        if (simCtx && simCtx[k] !== undefined && simCtx[k] !== '') return simCtx[k];
+        if (k.indexOf('comp_m') === 0 && simCtx && simCtx.comp !== undefined) return simCtx.comp;
+        if (k.indexOf('larg_m') === 0 && simCtx && simCtx.larg !== undefined) return simCtx.larg;
+        return (f.valor !== undefined ? f.valor : f.v);
+      }
+      return f.valor !== undefined ? f.valor : (f.v !== undefined ? f.v : 0);
+    }
+    if (k.indexOf('comp_m') === 0 && simCtx && simCtx.comp !== undefined) return simCtx.comp;
+    if (k.indexOf('larg_m') === 0 && simCtx && simCtx.larg !== undefined) return simCtx.larg;
+    return 0;
   }
 
   function chainExpr(items, num, simCtx, blocosList) {

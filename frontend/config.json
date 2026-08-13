@@ -191,6 +191,118 @@
       "chave": "bas_mb",
       "tipo": "constante",
       "valor": 14.17
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 1",
+      "chave": "comp_m1",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 2",
+      "chave": "comp_m2",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 3",
+      "chave": "comp_m3",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 4",
+      "chave": "comp_m4",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 5",
+      "chave": "comp_m5",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 6",
+      "chave": "comp_m6",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 7",
+      "chave": "comp_m7",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Comprimento Módulo 8",
+      "chave": "comp_m8",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 1",
+      "chave": "larg_m1",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 2",
+      "chave": "larg_m2",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 3",
+      "chave": "larg_m3",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 4",
+      "chave": "larg_m4",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 5",
+      "chave": "larg_m5",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 6",
+      "chave": "larg_m6",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 7",
+      "chave": "larg_m7",
+      "tipo": "entrada",
+      "valor": 2.4
+    },
+    {
+      "grupo": "Dimensões por Módulo",
+      "nome": "Largura Módulo 8",
+      "chave": "larg_m8",
+      "tipo": "entrada",
+      "valor": 2.4
     }
   ]
 }
