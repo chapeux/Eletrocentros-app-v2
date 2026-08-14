@@ -21,10 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
 # CONFIG FILE PATHS, REGRAS, ASSETS & PASSWORDS
-CONFIG_FILE = BASE_DIR / "config.json"
-FRONTEND_CONFIG_FILE = FRONTEND_DIR / "config.json"
-REGRAS_FILE = BASE_DIR / "regras.json"
-FRONTEND_REGRAS_FILE = FRONTEND_DIR / "regras.json"
+CONFIG_FILE = FRONTEND_DIR / "config.json"
+REGRAS_FILE = FRONTEND_DIR / "regras.json"
 ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
 
@@ -51,10 +49,9 @@ class AppAPI:
 
     def get_config(self) -> dict:
         """Lê e retorna a configuração modular do arquivo config.json."""
-        target = CONFIG_FILE if CONFIG_FILE.exists() else FRONTEND_CONFIG_FILE
-        if target.exists():
+        if CONFIG_FILE.exists():
             try:
-                with open(target, "r", encoding="utf-8") as f:
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"[Backend Python] Erro ao ler config.json: {e}")
@@ -64,8 +61,6 @@ class AppAPI:
         """Salva a nova configuração enviada pelo usuário no arquivo config.json e sincroniza no GitHub."""
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-                json.dump(config_data, f, ensure_ascii=False, indent=2)
-            with open(FRONTEND_CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
             print("[Backend Python] Configurações salvas em config.json com sucesso!")
             
@@ -79,10 +74,9 @@ class AppAPI:
 
     def get_regras(self) -> list:
         """Lê e retorna a estrutura de regras do arquivo regras.json."""
-        target = REGRAS_FILE if REGRAS_FILE.exists() else FRONTEND_REGRAS_FILE
-        if target.exists():
+        if REGRAS_FILE.exists():
             try:
-                with open(target, "r", encoding="utf-8") as f:
+                with open(REGRAS_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"[Backend Python] Erro ao ler regras.json: {e}")
@@ -124,8 +118,6 @@ class AppAPI:
 
             # 3. Salva a nova versão em regras.json
             with open(REGRAS_FILE, "w", encoding="utf-8") as f:
-                json.dump(regras_data, f, ensure_ascii=False, indent=2)
-            with open(FRONTEND_REGRAS_FILE, "w", encoding="utf-8") as f:
                 json.dump(regras_data, f, ensure_ascii=False, indent=2)
 
             # 4. Sincronização automática com GitHub em segundo plano

@@ -26,7 +26,7 @@ def get_current_user() -> str:
 def _auto_git_push_worker(commit_msg: str):
     try:
         # Adiciona arquivos modificados
-        subprocess.run(["git", "add", "regras.json", "config.json", "frontend/regras.json", "frontend/config.json"], cwd=BASE_DIR, check=False)
+        subprocess.run(["git", "add", "frontend/regras.json", "frontend/config.json"], cwd=BASE_DIR, check=False)
         
         # Realiza o commit
         commit_res = subprocess.run(["git", "commit", "-m", commit_msg], cwd=BASE_DIR, capture_output=True, text=True, check=False)
