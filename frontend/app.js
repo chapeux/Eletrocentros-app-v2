@@ -1134,30 +1134,68 @@
     { grupo: 'Tempos de Corte', nome: 'Base-MinB', chave: 'bas_mb', tipo: 'constante', valor: 14.17 }
   ];
 
-  var CAMPOS_COND_BLOCO = [
-    { k: 'tipoestrutura', n: 'Tipo de estrutura', opts: ['Móvel', 'Semimóvel', 'Modular', 'Fixo', 'Embarcado', 'Container Solar'] },
-    { k: 'trafo_oleo', n: 'Trafo a óleo', opts: ['Sim', 'Não'] },
-    { k: 'complexidade', n: 'Complexidade', opts: ['Simples', 'Médio', 'Alta', 'Outros'] },
-    { k: 'nmod', n: 'Nº de módulos', num: true },
-    { k: 'comp', n: 'Comprimento (m)', num: true },
-    { k: 'larg', n: 'Largura (m)', num: true },
-    { k: 'alt', n: 'Altura (m)', num: true },
-    { k: 'tipomaq', n: 'Tipo de máquina', opts: ['Split', 'Wall Mounted', 'Roof Top', 'Não possui', 'Não aplicável'] },
-    { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] },
-    { k: 'seguranca', n: 'Sistema de segurança', opts: ['CFTV', 'Controle Acesso', 'CFTV + Controle Acesso', 'Não possui', 'Não aplicável'] },
-    { k: 'casa_maquinas', n: 'Casa de Máquinas', opts: ['Sim', 'Não'] },
-    { k: 'white_martins', n: 'Cliente White Martins', opts: ['Sim', 'Não'] },
-    { k: 'qtdmaq', n: 'Qtd. Ar Cond.', num: true },
-    { k: 'nrcolunas', n: 'Nº de Colunas', num: true },
-    { k: 'paineis_interlig', n: 'Painéis Interligação', num: true }
-  ];
+  function getCamposCondBloco() {
+    var listas = (CONFIG && CONFIG.listas) ? CONFIG.listas : {};
+    var optsEstrutura = listas.tipoestrutura || ['Móvel', 'Semimóvel', 'Modular', 'Fixo', 'Embarcado', 'Container Solar', 'Skid (mecânica)', 'Skid (com elétrica)', 'Pilotis', 'ESSW (mecânica)', 'ESSW (elétrica)', 'Serviço Engenharia'];
+    var optsPlanpin = listas.planpin || ['WAU-ELETRO-08', 'WAU-ELETRO-09', 'WAU-ELETRO-04', 'Não aplicável'];
+    var optsTipomaq = listas.tipomaq || ['Split', 'Wall Mounted', 'Roof Top', 'Não possui', 'Não aplicável'];
+    var optsIncendio = listas.incendio || ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'];
+    var optsSeguranca = listas.seguranca || ['CFTV', 'Controle Acesso', 'CFTV + Controle Acesso', 'Não possui', 'Não aplicável'];
+    var optsComplexidade = listas.complexidade || ['Simples', 'Médio', 'Complexo', 'Não aplicável'];
+    var simNao = ['Sim', 'Não'];
+
+    return [
+      { k: 'tipoestrutura', n: 'Tipo de estrutura', opts: optsEstrutura },
+      { k: 'planpin', n: 'Plano de pintura', opts: optsPlanpin },
+      { k: 'complexidade', n: 'Complexidade', opts: optsComplexidade },
+      { k: 'nmod', n: 'Nº de módulos', num: true },
+      { k: 'comp', n: 'Comprimento (m)', num: true },
+      { k: 'larg', n: 'Largura (m)', num: true },
+      { k: 'alt', n: 'Altura (m)', num: true },
+      { k: 'chapaRemovivel', n: 'Chapa Removível', opts: simNao },
+      { k: 'peDireito', n: 'Pé Direito 3,3m', opts: simNao },
+      { k: 'trafo_oleo', n: 'Trafo a óleo', opts: simNao },
+      { k: 'tipomaq', n: 'Tipo de máquina', opts: optsTipomaq },
+      { k: 'qtdmaq', n: 'Qtd. Ar Cond.', num: true },
+      { k: 'incendio', n: 'Sistema de incêndio', opts: optsIncendio },
+      { k: 'seguranca', n: 'Sistema de segurança', opts: optsSeguranca },
+      { k: 'nrcolunas', n: 'Nº de Colunas', num: true },
+      { k: 'casa_maquinas', n: 'Casa de Máquinas', opts: simNao },
+      { k: 'white_martins', n: 'Cliente White Martins', opts: simNao },
+      { k: 'paineis_interlig', n: 'Painéis Interligação', num: true },
+      { k: 'testesw', n: 'Teste de Software', opts: simNao },
+      { k: 'progReles', n: 'Programação de Relés', opts: simNao },
+      { k: 'diagBTI', n: 'Diagrama BTI', opts: simNao },
+      { k: 'diagAgrup', n: 'Diagrama Agrupador', opts: simNao },
+      { k: 'fab1313', n: 'Fabricação 1313', opts: simNao },
+      { k: 'itemFilho', n: 'Item Filho', opts: simNao },
+      { k: 'semEngenharia', n: 'Sem Engenharia', opts: simNao },
+      { k: 'acess_escada_weg', n: 'Acessório: Escada WEG', opts: simNao },
+      { k: 'acess_escada_esp', n: 'Acessório: Escada Especial', opts: simNao },
+      { k: 'acess_porao', n: 'Acessório: Porão de Cabos', opts: simNao },
+      { k: 'acess_pilotis', n: 'Acessório: Pilotis', opts: simNao },
+      { k: 'acess_dutos', n: 'Acessório: Rede de Dutos', opts: simNao },
+      { k: 'acess_fundo_falso', n: 'Acessório: Fundo Falso', opts: simNao },
+      { k: 'acess_dutos_bww', n: 'Acessório: Dutos BWW', opts: simNao },
+      { k: 'acess_calhas', n: 'Acessório: Calhas Pluviais', opts: simNao },
+      { k: 'acess_dutos_gases', n: 'Acessório: Dutos de Gases', opts: simNao }
+    ];
+  }
+
+  var CAMPOS_COND_BLOCO = getCamposCondBloco();
 
   var SIM_CTX = {
     comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel',
+    planpin: 'WAU-ELETRO-08', chapaRemovivel: 'Não', peDireito: 'Não',
     trafo_oleo: 'Não', complexidade: 'Simples', tipomaq: 'Split',
     incendio: 'Não aplicável', seguranca: 'CFTV + Controle Acesso',
     casa_maquinas: 'Sim', white_martins: 'Não', qtdmaq: 2, nrcolunas: 10,
-    paineis_interlig: 2, dur_mcm: 1, dur_tes: 1, dur_ins: 1
+    paineis_interlig: 2, testesw: 'Não', progReles: 'Não', diagBTI: 'Não',
+    diagAgrup: 'Não', fab1313: 'Não', itemFilho: 'Não', semEngenharia: 'Não',
+    acess_escada_weg: 'Não', acess_escada_esp: 'Não', acess_porao: 'Não',
+    acess_pilotis: 'Não', acess_dutos: 'Não', acess_fundo_falso: 'Não',
+    acess_dutos_bww: 'Não', acess_calhas: 'Não', acess_dutos_gases: 'Não',
+    dur_mcm: 1, dur_tes: 1, dur_ins: 1
   };
 
   var OPS = ['+', '−', '×', '÷', '(', ')', '%', '^'];
@@ -1947,6 +1985,7 @@
       '</div>';
 
     if (base.forma === 'blocos') {
+      CAMPOS_COND_BLOCO = getCamposCondBloco();
       if (!base.blocos) {
         base.blocos = [
           { id: 'b1', nome: 'Lateral', it: [{ t: 'var', v: 'lat_f1' }, { t: 'op', v: '*' }, { t: 'var', v: 'comp' }, { t: 'op', v: '+' }, { t: 'num', v: 4 }] },
