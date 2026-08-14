@@ -44,6 +44,33 @@ if sys.platform == "win32":
         pass
 
 
+def format_compact_json(obj) -> str:
+    """
+    Formatador de JSON para regras.json que compacta objetos folhas e inlina
+    arrays repetitivos (como 'it', 'etapas', 'cond', 'condicoes', 'valores') em linha única.
+    """
+    s = json.dumps(obj, ensure_ascii=False, indent=2)
+
+    # 1. Compactar objetos folha em 1 única linha
+    s = re.sub(r'\{\s*"t":\s*"([^"]+)",\s*"v":\s*([^}\n]+?)\s*\}', r'{"t": "\1", "v": \2}', s)
+    s = re.sub(r'\{\s*"tipo":\s*"([^"]+)",\s*"valor":\s*([^}\n]+?)\s*\}', r'{"tipo": "\1", "valor": \2}', s)
+    s = re.sub(r'\{\s*"tipo":\s*"([^"]+)",\s*"modo":\s*"([^"]+)"\s*\}', r'{"tipo": "\1", "modo": "\2"}', s)
+    s = re.sub(r'\{\s*"tipo":\s*"([^"]+)",\s*"modo":\s*"([^"]+)",\s*"valor":\s*([^}\n]+?)\s*\}', r'{"tipo": "\1", "modo": "\2", "valor": \3}', s)
+    s = re.sub(r'\{\s*"tipo":\s*"([^"]+)",\s*"valor":\s*([^,]+),\s*"modo":\s*"([^"]+)"\s*\}', r'{"tipo": "\1", "valor": \2, "modo": "\3"}', s)
+    s = re.sub(r'\{\s*"c":\s*"([^"]+)",\s*"o":\s*"([^"]+)",\s*"val":\s*"([^"]+)",\s*"j":\s*"([^"]+)"\s*\}', r'{"c": "\1", "o": "\2", "val": "\3", "j": "\4"}', s)
+    s = re.sub(r'\{\s*"flag":\s*"([^"]+)",\s*"rotulo":\s*"([^"]+)",\s*"forma":\s*"([^"]+)",\s*"valor":\s*"([^"]+)"\s*\}', r'{"flag": "\1", "rotulo": "\2", "forma": "\3", "valor": "\4"}', s)
+
+    # 2. Inlinar arrays de tokens/condições/etapas como "it", "etapas", "cond", "condicoes", "valores"
+    def inline_key_array(match):
+        key = match.group(1)
+        content = match.group(2)
+        single_line = re.sub(r'\s*\n\s*', ' ', content)
+        return f'"{key}": [ {single_line.strip()} ]'
+
+    s = re.sub(r'"(it|etapas|cond|condicoes|valores)":\s*\[\s*([\s\S]*?)\s*\]', inline_key_array, s)
+    return s
+
+
 class AppAPI:
     """
     API exposta para o JavaScript via pywebview (window.pywebview.api)
