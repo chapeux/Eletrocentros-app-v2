@@ -5038,11 +5038,397 @@
             "etapas": [
               {
                 "tipo": "dividir",
-                "valor": 7.92
+                "valor": 4
+              },
+              {
+                "tipo": "dividir",
+                "valor": 7.04
               },
               {
                 "tipo": "arredondar",
-                "modo": "cima"
+                "modo": "padrao"
+              },
+              {
+                "tipo": "limitar_max",
+                "valor": 5
+              }
+            ],
+            "blocos": [
+              {
+                "id": "b1",
+                "nome": "Lateral",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "lat_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ],
+                "collapsed": false
+              },
+              {
+                "id": "b2",
+                "nome": "Frente/Fundo",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "ffd_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b3",
+                "nome": "Teto",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tet_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tet_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b4",
+                "nome": "Telhado",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tlh_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tlh_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b5",
+                "nome": "Base",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "bas_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              }
+            ],
+            "montagens": [
+              {
+                "id": "m1",
+                "nome": "Móvel",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Móvel",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  }
+                ],
+                "collapsed": false
+              },
+              {
+                "id": "m2",
+                "nome": "Embarcado",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Embarcado",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "lat_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "ffd_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b3"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tet_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "m0",
+                "nome": "Demais estruturas",
+                "padrao": true,
+                "cond": [],
+                "it": [
+                  {
+                    "t": "blk",
+                    "v": "b1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "lat_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "ffd_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b3"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tet_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 2
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b4"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tlh_mb"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "blk",
+                    "v": "b5"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_mb"
+                  }
+                ],
+                "collapsed": true
               }
             ]
           },
