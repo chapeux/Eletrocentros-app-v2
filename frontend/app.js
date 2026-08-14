@@ -815,6 +815,8 @@
           else if (s.tipo === 'somar') parts.push('+ ' + s.valor);
           else if (s.tipo === 'subtrair') parts.push('- ' + s.valor);
           else if (s.tipo === 'arredondar') parts.push((s.modo === 'baixo' ? '⌊floor⌋' : (s.modo === 'padrao' ? 'round' : '⌈ceil⌉')));
+          else if (s.tipo === 'limitar_max') parts.push('≤ ' + s.valor);
+          else if (s.tipo === 'limitar_min') parts.push('≥ ' + s.valor);
         });
         str += parts.join(' ');
       }
@@ -831,6 +833,8 @@
           else if (s.tipo === 'somar') parts.push('+ ' + s.valor);
           else if (s.tipo === 'subtrair') parts.push('- ' + s.valor);
           else if (s.tipo === 'arredondar') parts.push((s.modo === 'baixo' ? '⌊floor⌋' : (s.modo === 'padrao' ? 'round' : '⌈ceil⌉')));
+          else if (s.tipo === 'limitar_max') parts.push('≤ ' + s.valor);
+          else if (s.tipo === 'limitar_min') parts.push('≥ ' + s.valor);
         });
         str += ' ' + parts.join(' ');
       }
@@ -940,6 +944,10 @@
           if (modo === 'cima') v = Math.ceil(v);
           else if (modo === 'baixo') v = Math.floor(v);
           else if (modo === 'padrao') v = Math.round(v);
+        } else if (step.tipo === 'limitar_max') {
+          v = Math.min(v, num);
+        } else if (step.tipo === 'limitar_min') {
+          v = Math.max(v, num);
         }
       });
       return v;
@@ -983,6 +991,10 @@
           if (modo === 'cima') v = Math.ceil(v);
           else if (modo === 'baixo') v = Math.floor(v);
           else if (modo === 'padrao') v = Math.round(v);
+        } else if (step.tipo === 'limitar_max') {
+          v = Math.min(v, num);
+        } else if (step.tipo === 'limitar_min') {
+          v = Math.max(v, num);
         }
       });
 
@@ -1003,21 +1015,36 @@
     var compAcumVal = getVarVal('comp_acum', simCtxM);
 
     var expr = str
+      .replace(/^=\s*/, '')
       .replace(/\bH\b/gi, hVal)
       .replace(/\bcomp_acum\b/gi, compAcumVal)
-      .replace(/\bJN\b/gi, compAcumVal)
-      .replace(/,/g, '.');
+      .replace(/\bJN\b/gi, compAcumVal);
 
-    expr = expr.replace(/arredondar\.para\.cima\s*\(\s*([^;)]+)(?:\s*;\s*[0-9]+)?\s*\)/gi, 'Math.ceil($1)');
+    // Substitui vírgulas decimais entre números (ex: 7,04 -> 7.04)
+    expr = expr.replace(/([0-9]+),([0-9]+)/g, function (m, a, b) { return a + '.' + b; });
+    // Converte separador de parâmetros ';' em ','
+    expr = expr.replace(/;/g, ',');
+
+    expr = expr.replace(/arredondar\.para\.cima\s*\(\s*([^,)]+)(?:\s*,\s*[0-9]+)?\s*\)/gi, 'Math.ceil($1)');
     expr = expr.replace(/ceil\s*\(\s*([^)]+)\s*\)/gi, 'Math.ceil($1)');
+    expr = expr.replace(/arredondar\.para\.baixo\s*\(\s*([^,)]+)(?:\s*,\s*[0-9]+)?\s*\)/gi, 'Math.floor($1)');
+    expr = expr.replace(/floor\s*\(\s*([^)]+)\s*\)/gi, 'Math.floor($1)');
 
-    if (/\bH\b/i.test(str) && /\/\s*[0-9\.]+/i.test(expr) && !/Math\.ceil/i.test(expr)) {
+    if (/\bH\b/i.test(str) && /\/\s*[0-9\.]+/i.test(expr) && !/Math\./i.test(expr) && !/ARRED|SE|IF/i.test(expr)) {
       expr = 'Math.ceil(' + expr + ')';
     }
 
     try {
-      var fn = new Function('Math', '"use strict"; return (' + expr + ');');
-      var res = fn(Math);
+      var fn = new Function('SE, IF, ARRED, ROUND, MIN, MAX, Math', '"use strict"; return (' + expr + ');');
+      var res = fn(
+        function (cond, tVal, fVal) { return cond ? tVal : (fVal !== undefined ? fVal : 0); },
+        function (cond, tVal, fVal) { return cond ? tVal : (fVal !== undefined ? fVal : 0); },
+        function (x, dec) { var f = Math.pow(10, dec || 0); return Math.round(x * f) / f; },
+        function (x, dec) { var f = Math.pow(10, dec || 0); return Math.round(x * f) / f; },
+        Math.min,
+        Math.max,
+        Math
+      );
       return typeof res === 'number' && !isNaN(res) ? res : 0;
     } catch (e) {
       var num = parseFloat(expr.replace(/[^0-9\.-]/g, ''));
@@ -1851,12 +1878,14 @@
     var isArred = step.tipo === 'arredondar';
     return '<div class="step-row" data-step-idx="' + idx + '" style="display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px; padding:8px 10px; margin-top:6px;">' +
       '<span class="mono" style="font-size:11px; color:var(--text-faint); min-width:50px;">Passo ' + (idx + 1) + '</span>' +
-      '<select class="ipt step-tipo" style="padding:5px 8px; font-size:12px; width:130px; font-weight:500;">' +
+      '<select class="ipt step-tipo" style="padding:5px 8px; font-size:12px; width:150px; font-weight:500;">' +
       '<option value="dividir"' + (step.tipo === 'dividir' ? ' selected' : '') + '>Dividir (÷)</option>' +
       '<option value="multiplicar"' + (step.tipo === 'multiplicar' ? ' selected' : '') + '>Multiplicar (×)</option>' +
       '<option value="somar"' + (step.tipo === 'somar' ? ' selected' : '') + '>Somar (+)</option>' +
       '<option value="subtrair"' + (step.tipo === 'subtrair' ? ' selected' : '') + '>Subtrair (-)</option>' +
       '<option value="arredondar"' + (step.tipo === 'arredondar' ? ' selected' : '') + '>Arredondar</option>' +
+      '<option value="limitar_max"' + (step.tipo === 'limitar_max' ? ' selected' : '') + '>Limitar Máximo / Teto (≤)</option>' +
+      '<option value="limitar_min"' + (step.tipo === 'limitar_min' ? ' selected' : '') + '>Limitar Mínimo / Piso (≥)</option>' +
       '</select>' +
       (isArred ?
         '<select class="ipt step-modo" style="padding:5px 8px; font-size:12px; flex:1;">' +
