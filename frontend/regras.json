@@ -13248,7 +13248,14 @@
             ],
             "valor": 0
           },
-          "condicoes": []
+          "condicoes": [
+            {
+              "flag": "casa_maquinas",
+              "rotulo": "Casa Máquinas",
+              "forma": "fixo",
+              "valor": "5"
+            }
+          ]
         }
       },
       "MIN": {
