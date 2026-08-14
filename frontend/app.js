@@ -894,13 +894,28 @@
     $('btnOk').addEventListener('click', function () {
       recomputeForm();
       if (reqDone < reqTotal) {
-        alert('Existem ' + (reqTotal - reqDone) + ' campo(s) obrigatório(s) pendente(s). Verifique os indicadores âmbar.');
+        showToast('Atenção: ' + (reqTotal - reqDone) + ' campo(s) obrigatório(s) pendente(s). Calculando com parâmetros padrões…', true);
+      }
+      var res = executarCalculoTempos();
+      if (res) {
+        exibirModalResultadoCalculo(res);
+        showToast('Cálculo de tempos concluído com sucesso!');
       } else {
-        var res = executarCalculoTempos();
-        if (res) {
-          exibirModalResultadoCalculo(res);
-          showToast('Cálculo de tempos concluído com sucesso!');
-        }
+        // Se regras.json ainda não havia sido carregado na memória, tenta carregar imediatamente
+        fetch('regras.json').then(function (resp) { return resp.json(); }).then(function (data) {
+          if (data && data.length) {
+            state.regrasData = data;
+            var res2 = executarCalculoTempos();
+            if (res2) {
+              exibirModalResultadoCalculo(res2);
+              showToast('Cálculo de tempos concluído com sucesso!');
+            }
+          } else {
+            showToast('Não foi possível carregar as regras de regras.json.', true);
+          }
+        }).catch(function (err) {
+          showToast('Erro ao carregar regras.json: ' + (err.message || err), true);
+        });
       }
     });
   }
