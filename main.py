@@ -198,10 +198,11 @@ class AppAPI:
         """Abre o arquivo anexo diretamente da pasta de rede no visualizador padrão do sistema operacional."""
         try:
             if not file_path:
-                return {"status": "error", "message": "Caminho do arquivo não fornecido."}
+                return {"status": "error", "message": "Arquivo não especificado."}
             p = Path(file_path)
+            file_name = p.name or "Anexo"
             if not p.exists():
-                return {"status": "error", "message": f"O arquivo não foi encontrado na pasta de rede:\n{file_path}"}
+                return {"status": "error", "message": f"O arquivo '{file_name}' não foi encontrado ou não está acessível no momento."}
             
             if os.name == 'nt':
                 os.startfile(str(p))
@@ -212,7 +213,8 @@ class AppAPI:
             return {"status": "success"}
         except Exception as e:
             print(f"[Backend Python] Erro ao abrir anexo '{file_path}': {e}")
-            return {"status": "error", "message": str(e)}
+            file_name = Path(file_path).name if file_path else "Anexo"
+            return {"status": "error", "message": f"Não foi possível abrir o arquivo '{file_name}'. Verifique o acesso ao documento."}
 
     def get_logs(self, limit: int = 100) -> list:
         """Retorna o histórico de alterações de regras cadastrado no banco de dados MySQL."""

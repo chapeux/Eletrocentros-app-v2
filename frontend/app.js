@@ -3152,7 +3152,7 @@
               showToast('Erro ao abrir anexo: ' + (err ? (err.message || err) : 'Erro'), true);
             });
           } else {
-            showToast('Caminho do anexo:\n' + path, false);
+            showToast('Abertura de anexo disponível no aplicativo desktop.', false);
           }
         });
       });
