@@ -178,9 +178,10 @@ class AppAPI:
             )
             print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados. (Motivo: {motivo})")
 
-            # 3. Salva a nova versão em regras.json
+            # 3. Salva a nova versão em regras.json usando formato compacto
+            compact_json_str = format_compact_json(regras_data)
             with open(REGRAS_FILE, "w", encoding="utf-8") as f:
-                json.dump(regras_data, f, ensure_ascii=False, indent=2)
+                f.write(compact_json_str)
 
             # 4. Sincronização automática com GitHub em segundo plano
             resumo_git = f"Atualização de regras ({total_logs} alteração/ões)"
