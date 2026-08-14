@@ -5493,7 +5493,7 @@
         },
         "DUR": {
           "base": {
-            "forma": "derivado_h",
+            "forma": "constante",
             "etapas": [
               {
                 "tipo": "dividir",
@@ -5503,7 +5503,9 @@
                 "tipo": "arredondar",
                 "modo": "cima"
               }
-            ]
+            ],
+            "valor": 4,
+            "valor_base": 4
           },
           "condicoes": []
         }
