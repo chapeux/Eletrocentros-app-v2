@@ -303,6 +303,69 @@
       "chave": "larg_m8",
       "tipo": "entrada",
       "valor": 2.4
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Comprimento Acumulado (JN)",
+      "chave": "comp_acum",
+      "tipo": "entrada",
+      "valor": 12
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Qtd. Ar Condicionado (JS)",
+      "chave": "qtdmaq",
+      "tipo": "entrada",
+      "valor": 2
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Nº de Colunas (KJ)",
+      "chave": "nrcolunas",
+      "tipo": "entrada",
+      "valor": 10
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Painéis de Interligação (KK)",
+      "chave": "paineis_interlig",
+      "tipo": "entrada",
+      "valor": 2
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Casa de Máquinas (E)",
+      "chave": "casa_maquinas",
+      "tipo": "entrada",
+      "valor": "Sim"
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "Cliente White Martins (KZ)",
+      "chave": "white_martins",
+      "tipo": "entrada",
+      "valor": "Não"
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "DUR MCM (JX)",
+      "chave": "dur_mcm",
+      "tipo": "constante",
+      "valor": 1
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "DUR TES (KO)",
+      "chave": "dur_tes",
+      "tipo": "constante",
+      "valor": 1
+    },
+    {
+      "grupo": "Eletromecânica",
+      "nome": "DUR INS (KQ)",
+      "chave": "dur_ins",
+      "tipo": "constante",
+      "valor": 1
     }
   ]
 }

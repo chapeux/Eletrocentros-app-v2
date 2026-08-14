@@ -818,6 +818,21 @@
         });
         str += parts.join(' ');
       }
+    else if (b.forma === 'soma_campos') {
+      var cLista = b.campos || [];
+      str = 'Σ(' + cLista.join(' + ') + ')';
+      var etapas = b.etapas || [];
+      if (etapas.length) {
+        var parts = [];
+        etapas.forEach(function (s) {
+          if (s.tipo === 'dividir') parts.push('/ ' + s.valor);
+          else if (s.tipo === 'multiplicar') parts.push('× ' + s.valor);
+          else if (s.tipo === 'somar') parts.push('+ ' + s.valor);
+          else if (s.tipo === 'subtrair') parts.push('- ' + s.valor);
+          else if (s.tipo === 'arredondar') parts.push((s.modo === 'baixo' ? '⌊floor⌋' : (s.modo === 'padrao' ? 'round' : '⌈ceil⌉')));
+        });
+        str += ' ' + parts.join(' ');
+      }
     } else str = b.forma;
     var cCount = (ruleObj.condicoes || []).length;
     if (cCount > 0) str += ' (+ ' + cCount + ' cond)';
@@ -890,11 +905,49 @@
       if (base.subtracao_final) res -= parseFloat(base.subtracao_final) || 0;
       return res;
     }
+    if (forma === 'soma_campos') {
+      var total = 0;
+      var camposLista = base.campos || [];
+      var currentAreaObj = state.regrasData[state.selectedAreaIdx];
+      if (currentAreaObj && currentAreaObj.campos) {
+        camposLista.forEach(function (cKey) {
+          var outroCampoObj = currentAreaObj.campos[cKey];
+          if (outroCampoObj && outroCampoObj.H) {
+            var valH = calcValor(outroCampoObj.H, mod, flagsAtivos, outroCampoObj);
+            if (valH && !isNaN(valH) && isFinite(valH)) {
+              total += valH;
+            }
+          }
+        });
+      }
+      var v = total;
+      var etapas = base.etapas || [];
+      etapas.forEach(function (step) {
+        if (!step) return;
+        var num = parseFloat(step.valor);
+        if (isNaN(num)) num = 0;
+        if (step.tipo === 'dividir') {
+          if (num !== 0) v = v / num;
+        } else if (step.tipo === 'multiplicar') {
+          v = v * num;
+        } else if (step.tipo === 'somar') {
+          v = v + num;
+        } else if (step.tipo === 'subtrair') {
+          v = v - num;
+        } else if (step.tipo === 'arredondar') {
+          var modo = step.modo || step.arredondamento || 'cima';
+          if (modo === 'cima') v = Math.ceil(v);
+          else if (modo === 'baixo') v = Math.floor(v);
+          else if (modo === 'padrao') v = Math.round(v);
+        }
+      });
+      return v;
+    }
     if (forma === 'aditiva') return (parseFloat(base.valor_base) || 0) + (parseFloat(base.passo) || 0) * (mod - 1);
     if (forma === 'tabela') {
       if (!base.valores || base.valores[mod - 1] === undefined) return 0;
       var hVal = (vH !== undefined) ? vH : 0;
-      return evalExpr(base.valores[mod - 1], hVal);
+      return evalExpr(base.valores[mod - 1], hVal, mod);
     }
     if (forma === 'derivado_h') {
       var v = (vH !== undefined) ? vH : 0;
@@ -937,15 +990,22 @@
     return 0;
   }
 
-  function evalExpr(val, vH) {
+  function evalExpr(val, vH, mod) {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     if (!val || typeof val !== 'string') return 0;
     var str = val.trim();
     if (!str) return 0;
 
     var hVal = (vH !== undefined && !isNaN(vH)) ? vH : 0;
+    var mVal = (mod !== undefined && !isNaN(mod)) ? mod : 1;
+    var simCtxM = Object.assign({}, SIM_CTX, { nmod: mVal });
+    var compAcumVal = getVarVal('comp_acum', simCtxM);
 
-    var expr = str.replace(/\bH\b/gi, hVal).replace(/,/g, '.');
+    var expr = str
+      .replace(/\bH\b/gi, hVal)
+      .replace(/\bcomp_acum\b/gi, compAcumVal)
+      .replace(/\bJN\b/gi, compAcumVal)
+      .replace(/,/g, '.');
 
     expr = expr.replace(/arredondar\.para\.cima\s*\(\s*([^;)]+)(?:\s*;\s*[0-9]+)?\s*\)/gi, 'Math.ceil($1)');
     expr = expr.replace(/ceil\s*\(\s*([^)]+)\s*\)/gi, 'Math.ceil($1)');
@@ -1055,10 +1115,22 @@
     { k: 'larg', n: 'Largura (m)', num: true },
     { k: 'alt', n: 'Altura (m)', num: true },
     { k: 'tipomaq', n: 'Tipo de máquina', opts: ['Split', 'Wall Mounted', 'Roof Top', 'Não possui', 'Não aplicável'] },
-    { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] }
+    { k: 'incendio', n: 'Sistema de incêndio', opts: ['Com combate', 'Com instalações', 'Somente infra', 'Não aplicável'] },
+    { k: 'seguranca', n: 'Sistema de segurança', opts: ['CFTV', 'Controle Acesso', 'CFTV + Controle Acesso', 'Não possui', 'Não aplicável'] },
+    { k: 'casa_maquinas', n: 'Casa de Máquinas', opts: ['Sim', 'Não'] },
+    { k: 'white_martins', n: 'Cliente White Martins', opts: ['Sim', 'Não'] },
+    { k: 'qtdmaq', n: 'Qtd. Ar Cond.', num: true },
+    { k: 'nrcolunas', n: 'Nº de Colunas', num: true },
+    { k: 'paineis_interlig', n: 'Painéis Interligação', num: true }
   ];
 
-  var SIM_CTX = { comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel', trafo_oleo: 'Não', complexidade: 'Simples', tipomaq: 'Split', incendio: 'Não aplicável' };
+  var SIM_CTX = {
+    comp: 15, larg: 3, alt: 2.6, nmod: 1, tipoestrutura: 'Móvel',
+    trafo_oleo: 'Não', complexidade: 'Simples', tipomaq: 'Split',
+    incendio: 'Não aplicável', seguranca: 'CFTV + Controle Acesso',
+    casa_maquinas: 'Sim', white_martins: 'Não', qtdmaq: 2, nrcolunas: 10,
+    paineis_interlig: 2, dur_mcm: 1, dur_tes: 1, dur_ins: 1
+  };
 
   var OPS = ['+', '−', '×', '÷', '(', ')', '%', '^'];
   var OPMAP = { '+': '+', '−': '-', '×': '*', '÷': '/', '(': '(', ')': ')', '%': '%', '^': '**' };
@@ -1076,6 +1148,15 @@
   }
 
   function getVarVal(k, simCtx) {
+    if (k === 'comp_acum') {
+      var nmod = parseInt((simCtx && simCtx.nmod) || '1', 10) || 1;
+      var sumC = 0;
+      for (var mi = 1; mi <= nmod; mi++) {
+        var cM = (simCtx && simCtx['comp_m' + mi]) || (simCtx && simCtx.comp) || 12;
+        sumC += parseFloat(String(cM).replace(',', '.')) || 0;
+      }
+      return sumC;
+    }
     if (simCtx && simCtx[k] !== undefined && simCtx[k] !== '') return simCtx[k];
     var list = getVARS();
     var f = list.filter(function (x) { return x.chave === k || x.k === k; })[0];
@@ -1830,6 +1911,7 @@
       '<option value="degrau_fixo"' + (base.forma === 'degrau_fixo' ? ' selected' : '') + '>Fator Fixo 2m+ (1m Base / 2m+ Base × Fator)</option>' +
       '<option value="tabela"' + (base.forma === 'tabela' ? ' selected' : '') + '>Valores Personalizados por Módulo (Tabela 1m a 8m)</option>' +
       '<option value="derivado_h"' + (base.forma === 'derivado_h' ? ' selected' : '') + '>Derivado de Horas H (Fórmula Operacional)</option>' +
+      '<option value="soma_campos"' + (base.forma === 'soma_campos' ? ' selected' : '') + '>Soma de Campos (Agregação de outros campos calculados)</option>' +
       '<option value="blocos"' + (base.forma === 'blocos' ? ' selected' : '') + '>Blocos Condicionais (SE / Variáveis / Fórmulas)</option>' +
       '</select>' +
       '</div>';
@@ -2021,6 +2103,41 @@
       }
 
       html += '</div>';
+    } else if (base.forma === 'soma_campos') {
+      if (!base.campos) base.campos = [];
+      if (!base.etapas) base.etapas = [];
+      var areaObj = state.regrasData[state.selectedAreaIdx];
+      var allCamposKeys = areaObj && areaObj.campos ? Object.keys(areaObj.campos).filter(function (k) { return k !== state.selectedCampoKey; }) : [];
+
+      html += '<div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">' +
+        '<div style="font-size:11.5px; font-weight:600; color:var(--text-dim); display:flex; justify-content:space-between; align-items:center;">' +
+        '<span>Campos a Somar na Regra (H dos campos calculados)</span>' +
+        '<span style="font-weight:400; font-size:10.5px; color:var(--text-faint);">' + base.campos.length + ' selecionado(s)</span>' +
+        '</div>' +
+        '<div style="display:flex; flex-wrap:wrap; gap:6px; background:var(--panel-2); padding:10px; border-radius:8px; border:1px solid var(--border);">';
+
+      allCamposKeys.forEach(function (cKey) {
+        var isChecked = base.campos.indexOf(cKey) >= 0;
+        html += '<button type="button" class="btn-toggle-campo-soma" data-ckey="' + cKey + '" style="cursor:pointer; padding:4px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid ' + (isChecked ? 'var(--accent)' : 'var(--border)') + '; background:' + (isChecked ? 'var(--accent)' : 'var(--bg-body)') + '; color:' + (isChecked ? '#fff' : 'var(--text)') + '; transition:all 0.15s ease;">' +
+          (isChecked ? '✓ ' : '+ ') + cKey +
+          '</button>';
+      });
+
+      html += '</div>' +
+        '<div class="scale-chip" style="margin-top:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/></svg>Fórmula da Soma: <b>' + (base.campos.length ? 'Σ (' + base.campos.join(' + ') + ')' : 'Nenhum campo selecionado') + '</b></div>' +
+        '<div style="margin-top:8px; font-size:11.5px; font-weight:600; color:var(--text-dim); display:flex; justify-content:space-between; align-items:center;">' +
+        '<span>Etapas de Ajuste Matemático sobre o Total da Soma</span>' +
+        '<span style="font-weight:400; font-size:10.5px; color:var(--text-faint);">' + base.etapas.length + ' etapa(s)</span>' +
+        '</div>' +
+        '<div id="stepsList" style="display:flex; flex-direction:column; gap:6px;">';
+
+      base.etapas.forEach(function (s, idx) {
+        html += stepRowHtml(s, idx, base.etapas.length);
+      });
+
+      html += '</div>' +
+        '<button type="button" class="btn" id="btnAddStep" style="margin-top:4px; font-size:11.5px; border-style:dashed;">＋ Adicionar Etapa de Ajuste</button>' +
+        '</div>';
     } else if (base.forma === 'derivado_h') {
       if (!base.etapas || !base.etapas.length) {
         base.etapas = [];
@@ -2231,6 +2348,20 @@
           base.valores = [0, 0, 0, 0, 0, 0, 0, 0];
           for (var i = 0; i < Math.min(8, oldVals.length); i++) base.valores[i] = oldVals[i];
         }
+        if (base.forma === 'soma_campos') {
+          if (!base.campos || !base.campos.length) {
+            var areaObj = state.regrasData[state.selectedAreaIdx];
+            var allKeys = areaObj && areaObj.campos ? Object.keys(areaObj.campos).filter(function (k) { return k !== state.selectedCampoKey; }) : [];
+            base.campos = allKeys.slice(0, 3);
+          }
+          if (!base.etapas) {
+            base.etapas = [
+              { tipo: 'dividir', valor: 0.9 },
+              { tipo: 'multiplicar', valor: 0.1 },
+              { tipo: 'multiplicar', valor: 0.8 }
+            ];
+          }
+        }
         if (base.forma === 'derivado_h' && (!base.etapas || !base.etapas.length)) {
           base.etapas = [
             { tipo: 'dividir', valor: 7.92 },
@@ -2268,6 +2399,21 @@
         base.valores[mIdx] = this.value;
         markDirty();
         renderPreview(originalSubTab, subTabRule);
+      });
+    });
+
+    document.querySelectorAll('.btn-toggle-campo-soma').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var cKey = this.dataset.ckey;
+        if (!base.campos) base.campos = [];
+        var idx = base.campos.indexOf(cKey);
+        if (idx >= 0) {
+          base.campos.splice(idx, 1);
+        } else {
+          base.campos.push(cKey);
+        }
+        markDirty();
+        renderEditor();
       });
     });
 
