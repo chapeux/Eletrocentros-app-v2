@@ -117,14 +117,16 @@
       viewPlanejamento.classList.remove('hidden');
       viewManutencao.classList.add('hidden');
       if (modeChip) modeChip.style.display = 'none';
-      btnHist.style.display = 'none';
+      if (btnHist) btnHist.style.display = 'none';
+      if ($('btnCarregar')) $('btnCarregar').style.display = 'flex';
       ringWrap.style.display = 'flex';
       subTitleText.textContent = 'PCP & PLANEJAMENTO';
     } else {
       viewPlanejamento.classList.add('hidden');
       viewManutencao.classList.remove('hidden');
       if (modeChip) modeChip.style.display = 'none';
-      btnHist.style.display = 'flex';
+      if (btnHist) btnHist.style.display = 'flex';
+      if ($('btnCarregar')) $('btnCarregar').style.display = 'none';
       ringWrap.style.display = 'none';
       subTitleText.textContent = 'REGRAS & PARÂMETROS';
       if (!state.disciplinas.length) {
@@ -826,8 +828,7 @@
     var wrap = $('colList');
     if (!wrap) return;
     var areaObj = state.regrasData[state.selectedAreaIdx];
-    var isMecanica = areaObj && (areaObj.area === 'MECÂNICA' || areaObj.area === 'Mecanica' || (areaObj.area && areaObj.area.toUpperCase().indexOf('MEC') >= 0));
-    if ($('legendWrapper')) $('legendWrapper').style.display = isMecanica ? 'flex' : 'none';
+    if ($('legendWrapper')) $('legendWrapper').style.display = 'flex';
     if (!areaObj) {
       wrap.innerHTML = '<div class="list-head"><h2>Campos</h2><span>Nenhum campo</span></div>';
       return;
