@@ -300,39 +300,39 @@
               </div>
               <div class="pane-body">
                 <div class="check-grid">
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="esc_plat_padao_weg"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Escada Padrão WEG</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="esc_plat_especial"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Escada Especial</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="porao_de_cabos"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Porão de Cabos</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="pilotis"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Pilotis</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="rede_de_dutos"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Rede de Dutos</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="fundo_falso"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Fundo Falso</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="dutos_bww"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Dutos BWW</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="calhas_pluviais"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Calhas Pluviais</label>
-                  <label class="check"><input type="checkbox" class="acessorio"><span class="box"><svg
+                  <label class="check"><input type="checkbox" class="acessorio" data-flag="duto_de_gases"><span class="box"><svg
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>Dutos de Gases</label>
@@ -825,6 +825,77 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
           Criar bloco
         </button>
+      </div>
+    </div>
+  <!-- ================= MODAL RESULTADO DO CÁLCULO DE TEMPOS ================= -->
+  <div class="modal-overlay" id="modalResultadoCalculo">
+    <div class="modal" style="max-width: 820px; max-height: 88vh; display: flex; flex-direction: column;">
+      <div class="modal-head">
+        <div class="ico" style="background: rgba(46, 196, 182, 0.15); color: var(--accent);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <line x1="8" y1="6" x2="16" y2="6" />
+            <line x1="8" y1="10" x2="16" y2="10" />
+            <line x1="8" y1="14" x2="11" y2="14" />
+            <line x1="13" y1="14" x2="16" y2="14" />
+            <line x1="8" y1="18" x2="11" y2="18" />
+            <line x1="13" y1="18" x2="16" y2="18" />
+          </svg>
+        </div>
+        <div class="modal-head-text">
+          <b>Resultado do Cálculo de Tempos</b>
+          <span>Estimativa de Horas Orçadas e Duração — PCP &amp; Engenharia</span>
+        </div>
+        <button type="button" class="btn-close" id="btnCloseResultadoCalculo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+        <!-- KPI Cards Summary Header -->
+        <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;">
+          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Total Horas Orçadas</span>
+            <span id="resTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent);">0,00 h</span>
+            <span style="font-size: 11px; color: var(--text-faint);">Soma de todos os processos</span>
+          </div>
+
+          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Duração Estimada Total</span>
+            <span id="resTotalDUR" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--amber);">0,0 dias</span>
+            <span style="font-size: 11px; color: var(--text-faint);">Tempo de ciclo estimado</span>
+          </div>
+
+          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Especificação Estrutural</span>
+            <span id="resEstruturaInfo" style="font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+            <span id="resDetagensInfo" style="font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+          </div>
+        </div>
+
+        <!-- Table of Results -->
+        <div class="calc-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1);">
+          <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+            <thead>
+              <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 10px 14px;">Processo / Campo</th>
+                <th style="padding: 10px 14px; text-align: right;">Horas (H)</th>
+                <th style="padding: 10px 14px; text-align: right;">Duração (DUR)</th>
+              </tr>
+            </thead>
+            <tbody id="resTableBody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-foot" style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn" id="btnCopiarResumoCalculo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; margin-right:6px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiar Resumo
+        </button>
+        <button type="button" class="btn primary" id="btnFecharResultadoCalculo">Fechar</button>
       </div>
     </div>
   </div>

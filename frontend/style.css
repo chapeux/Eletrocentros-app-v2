@@ -1820,5 +1820,38 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 .addbtn[draggable="true"] { cursor: grab; }
 .addbtn[draggable="true"]:active { cursor: grabbing; }
 
+/* Calculation Results Table Styles */
+.calc-table tr.area-header-row td {
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel-2));
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+}
+.calc-table tr.campo-row td {
+  border-bottom: 1px solid var(--hairline);
+  padding: 8px 14px;
+}
+.calc-table tr.campo-row:hover td {
+  background: var(--panel-2);
+}
+.calc-table tr.area-total-row td {
+  background: var(--panel-2);
+  font-weight: 700;
+  border-bottom: 2px solid var(--border);
+  padding: 8px 14px;
+}
+.calc-table tr.grand-total-row td {
+  background: color-mix(in srgb, var(--accent) 15%, var(--panel-2));
+  font-weight: 800;
+  font-size: 13.5px;
+  border-top: 2px solid var(--accent);
+  padding: 12px 14px;
+}
+
 
 

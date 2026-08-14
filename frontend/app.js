@@ -608,6 +608,287 @@
     });
   }
 
+  /* ==========================================================================
+     CÁLCULO DE TEMPOS & RESULTADO MODAL LOGIC
+     ========================================================================== */
+  function collectFormContext() {
+    var tipoestrutura = selVal('tipoestrutura') || 'Móvel';
+    var planpin = selVal('planpin') || 'WAU-ELETRO-08';
+    var tipomaq = selVal('tipomaq') || 'Não possui';
+    var complexidade = selVal('complexidade') || 'Simples';
+    var incendio = selVal('incendio') || 'Não aplicável';
+    var seguranca = selVal('seguranca') || 'Não possui';
+
+    var comp = parseFloat(($('comp') ? $('comp').value : '12').replace(',', '.')) || 12;
+    var larg = parseFloat(($('larg') ? $('larg').value : '2.4').replace(',', '.')) || 2.4;
+    var alt = parseFloat(($('alt') ? $('alt').value : '2.6').replace(',', '.')) || 2.6;
+    var nmod = parseInt(selVal('nrmodulos') || ($('nmod') ? $('nmod').value : '1'), 10) || 1;
+    var qtdmaq = parseInt(($('qtdmaq') ? $('qtdmaq').value : '0'), 10) || 0;
+    var nrcolunas = parseInt(($('nrcolunas') ? $('nrcolunas').value : '0'), 10) || 0;
+
+    var chapaRemovivel = $('chapaRemovivel') && $('chapaRemovivel').checked ? 'Sim' : 'Não';
+    var peDireito = $('peDireito') && $('peDireito').checked ? 'Sim' : 'Não';
+    var testesw = $('testesw') && $('testesw').checked ? 'Sim' : 'Não';
+    var white_martins = $('whiteMartins') && $('whiteMartins').checked ? 'Sim' : 'Não';
+    var trafo_oleo = $('trafoOleo') && $('trafoOleo').checked ? 'Sim' : 'Não';
+    var casa_maquinas = (tipomaq === 'Roof Top' || qtdmaq > 0) ? 'Sim' : 'Não';
+
+    var acess_escada_weg = 'Não', acess_escada_esp = 'Não', acess_porao = 'Não', acess_pilotis = 'Não';
+    var acess_dutos = 'Não', acess_fundo_falso = 'Não', acess_dutos_bww = 'Não', acess_calhas = 'Não', acess_dutos_gases = 'Não';
+
+    document.querySelectorAll('.acessorio').forEach(function (el) {
+      if (!el.checked) return;
+      var flag = el.dataset.flag;
+      if (!flag) {
+        var txt = (el.parentElement ? el.parentElement.textContent : '').toLowerCase();
+        if (txt.indexOf('weg') !== -1) flag = 'esc_plat_padao_weg';
+        else if (txt.indexOf('especial') !== -1) flag = 'esc_plat_especial';
+        else if (txt.indexOf('porão') !== -1 || txt.indexOf('porao') !== -1) flag = 'porao_de_cabos';
+        else if (txt.indexOf('pilotis') !== -1) flag = 'pilotis';
+        else if (txt.indexOf('rede de dutos') !== -1) flag = 'rede_de_dutos';
+        else if (txt.indexOf('fundo falso') !== -1) flag = 'fundo_falso';
+        else if (txt.indexOf('bww') !== -1) flag = 'dutos_bww';
+        else if (txt.indexOf('calhas') !== -1) flag = 'calhas_pluviais';
+        else if (txt.indexOf('gases') !== -1) flag = 'duto_de_gases';
+      }
+      if (flag === 'esc_plat_padao_weg') acess_escada_weg = 'Sim';
+      if (flag === 'esc_plat_especial') acess_escada_esp = 'Sim';
+      if (flag === 'porao_de_cabos') acess_porao = 'Sim';
+      if (flag === 'pilotis') acess_pilotis = 'Sim';
+      if (flag === 'rede_de_dutos') acess_dutos = 'Sim';
+      if (flag === 'fundo_falso') acess_fundo_falso = 'Sim';
+      if (flag === 'dutos_bww') acess_dutos_bww = 'Sim';
+      if (flag === 'calhas_pluviais') acess_calhas = 'Sim';
+      if (flag === 'duto_de_gases') acess_dutos_gases = 'Sim';
+    });
+
+    var ctx = {
+      comp: comp, larg: larg, alt: alt, nmod: nmod,
+      tipoestrutura: tipoestrutura, planpin: planpin,
+      tipomaq: tipomaq, qtdmaq: qtdmaq, complexidade: complexidade,
+      incendio: incendio, seguranca: seguranca, nrcolunas: nrcolunas,
+      chapaRemovivel: chapaRemovivel, peDireito: peDireito,
+      testesw: testesw, white_martins: white_martins, trafo_oleo: trafo_oleo,
+      casa_maquinas: casa_maquinas,
+      paineis_interlig: Math.max(1, Math.round(nrcolunas / 5)),
+      dur_mcm: 1, dur_tes: 1, dur_ins: 1,
+      acess_escada_weg: acess_escada_weg, acess_escada_esp: acess_escada_esp,
+      acess_porao: acess_porao, acess_pilotis: acess_pilotis,
+      acess_dutos: acess_dutos, acess_fundo_falso: acess_fundo_falso,
+      acess_dutos_bww: acess_dutos_bww, acess_calhas: acess_calhas,
+      acess_dutos_gases: acess_dutos_gases
+    };
+
+    var sumComp = 0;
+    for (var i = 1; i <= 8; i++) {
+      var mRow = document.querySelector('.mod-row[data-mod="' + i + '"]');
+      var mCompVal = (mRow && mRow.querySelector('.mod-comp')) ? parseFloat(mRow.querySelector('.mod-comp').value.replace(',', '.')) : NaN;
+      var mLargVal = (mRow && mRow.querySelector('.mod-larg')) ? parseFloat(mRow.querySelector('.mod-larg').value.replace(',', '.')) : NaN;
+
+      var finalCompM = (!isNaN(mCompVal) && mCompVal > 0) ? mCompVal : comp;
+      var finalLargM = (!isNaN(mLargVal) && mLargVal > 0) ? mLargVal : larg;
+
+      ctx['comp_m' + i] = finalCompM;
+      ctx['larg_m' + i] = finalLargM;
+
+      if (i <= nmod) {
+        sumComp += finalCompM;
+      }
+    }
+
+    ctx.comp_acum = sumComp || (comp * nmod);
+    return ctx;
+  }
+
+  function collectFormFlags(ctx) {
+    return {
+      chapa_remov: ctx.chapaRemovivel === 'Sim',
+      pe_direito_3_3_m: ctx.peDireito === 'Sim',
+      teste_software: ctx.testesw === 'Sim',
+      white_martins: ctx.white_martins === 'Sim',
+      trafo_a_oleo: ctx.trafo_oleo === 'Sim',
+      trafo_oleo: ctx.trafo_oleo === 'Sim',
+      casa_maquinas: ctx.casa_maquinas === 'Sim',
+      sist_seguranca: ctx.seguranca !== 'Não possui' && ctx.seguranca !== 'Não aplicável' && ctx.seguranca !== '',
+      incendio_c_combate: ctx.incendio === 'Com combate',
+      climat_c_dutos: ctx.tipomaq === 'Roof Top' || ctx.tipomaq === 'Wall Mounted',
+      esc_plat_padao_weg: ctx.acess_escada_weg === 'Sim',
+      esc_plat_especial: ctx.acess_escada_esp === 'Sim',
+      porao_de_cabos: ctx.acess_porao === 'Sim',
+      pilotis: ctx.acess_pilotis === 'Sim',
+      rede_de_dutos: ctx.acess_dutos === 'Sim',
+      fundo_falso: ctx.acess_fundo_falso === 'Sim',
+      dutos_bww: ctx.acess_dutos_bww === 'Sim',
+      calhas_pluviais: ctx.acess_calhas === 'Sim',
+      duto_de_gases: ctx.acess_dutos_gases === 'Sim'
+    };
+  }
+
+  function executarCalculoTempos() {
+    if (!state.regrasData || !state.regrasData.length) {
+      showToast('Nenhuma regra disponível para cálculo no momento.', true);
+      return null;
+    }
+
+    var ctx = collectFormContext();
+    var flagsAtivos = collectFormFlags(ctx);
+    Object.assign(SIM_CTX, ctx);
+
+    var nmod = ctx.nmod || 1;
+    var resultadosAreas = [];
+    var totalGeralH = 0;
+    var totalGeralDUR = 0;
+
+    state.regrasData.forEach(function (areaObj) {
+      var areaNome = areaObj.area || 'Geral';
+      var camposRes = [];
+      var areaTotalH = 0;
+      var areaTotalDUR = 0;
+
+      var camposKeys = Object.keys(areaObj.campos || {});
+      camposKeys.forEach(function (cKey) {
+        var campoObj = areaObj.campos[cKey];
+        var valH = 0;
+        var valDUR = 0;
+
+        if (campoObj.H) {
+          valH = calcValor(campoObj.H, nmod, flagsAtivos, campoObj, undefined);
+          if (isNaN(valH) || !isFinite(valH)) valH = 0;
+        }
+
+        if (campoObj.DUR) {
+          valDUR = calcValor(campoObj.DUR, nmod, flagsAtivos, campoObj, valH);
+          if (isNaN(valDUR) || !isFinite(valDUR)) valDUR = 0;
+        }
+
+        valH = Math.round(valH * 100) / 100;
+        valDUR = Math.round(valDUR * 10) / 10;
+
+        areaTotalH += valH;
+        areaTotalDUR += valDUR;
+
+        camposRes.push({
+          chave: cKey,
+          h: valH,
+          dur: valDUR
+        });
+      });
+
+      totalGeralH += areaTotalH;
+      totalGeralDUR += areaTotalDUR;
+
+      resultadosAreas.push({
+        area: areaNome,
+        campos: camposRes,
+        totalH: Math.round(areaTotalH * 100) / 100,
+        totalDUR: Math.round(areaTotalDUR * 10) / 10
+      });
+    });
+
+    return {
+      ctx: ctx,
+      resultadosAreas: resultadosAreas,
+      totalGeralH: Math.round(totalGeralH * 100) / 100,
+      totalGeralDUR: Math.round(totalGeralDUR * 10) / 10
+    };
+  }
+
+  function exibirModalResultadoCalculo(res) {
+    if (!res) return;
+    var modal = $('modalResultadoCalculo');
+    if (!modal) return;
+
+    var ctx = res.ctx;
+
+    $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
+    $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias';
+
+    $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm × ' + ctx.alt.toLocaleString('pt-BR') + 'm)';
+    $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
+
+    var tbody = $('resTableBody');
+    tbody.innerHTML = '';
+
+    res.resultadosAreas.forEach(function (area) {
+      var trHead = document.createElement('tr');
+      trHead.className = 'area-header-row';
+      trHead.innerHTML = '<td colspan="3">' + escapeHtml(area.area) + '</td>';
+      tbody.appendChild(trHead);
+
+      area.campos.forEach(function (c) {
+        var trC = document.createElement('tr');
+        trC.className = 'campo-row';
+        trC.innerHTML =
+          '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--accent); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+        tbody.appendChild(trC);
+      });
+
+      var trSub = document.createElement('tr');
+      trSub.className = 'area-total-row';
+      trSub.innerHTML =
+        '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+      tbody.appendChild(trSub);
+    });
+
+    var trGrand = document.createElement('tr');
+    trGrand.className = 'grand-total-row';
+    trGrand.innerHTML =
+      '<td>TOTAL GERAL ORÇADO</td>' +
+      '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent); font-size:15px;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+      '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
+    tbody.appendChild(trGrand);
+
+    modal.classList.add('open');
+    window._lastCalculationResult = res;
+  }
+
+  function fecharModalResultadoCalculo() {
+    var modal = $('modalResultadoCalculo');
+    if (modal) modal.classList.remove('open');
+  }
+
+  if ($('btnCloseResultadoCalculo')) $('btnCloseResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
+  if ($('btnFecharResultadoCalculo')) $('btnFecharResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
+
+  if ($('btnCopiarResumoCalculo')) {
+    $('btnCopiarResumoCalculo').addEventListener('click', function () {
+      var res = window._lastCalculationResult;
+      if (!res) return;
+      var ctx = res.ctx;
+      var lines = [];
+      lines.push('==================================================');
+      lines.push('ELETROCENTROS APP — RESUMO DO CÁLCULO DE TEMPOS');
+      lines.push('==================================================');
+      lines.push('Estrutura: ' + ctx.nmod + ' Módulos — ' + ctx.comp + 'm x ' + ctx.larg + 'm x ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')');
+      lines.push('Plano Pintura: ' + ctx.planpin + ' | Máquina: ' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x)');
+      lines.push('Complexidade: ' + ctx.complexidade + ' | Incêndio: ' + ctx.incendio + ' | Segurança: ' + ctx.seguranca);
+      lines.push('');
+      lines.push('TOTAL HORAS (H): ' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h');
+      lines.push('DURAÇÃO ESTIMADA (DUR): ' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
+      lines.push('--------------------------------------------------');
+
+      res.resultadosAreas.forEach(function (area) {
+        lines.push('[' + area.area + ']');
+        area.campos.forEach(function (c) {
+          lines.push(' - ' + c.chave + ': ' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h | ' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
+        });
+        lines.push(' Subtotal: ' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h | ' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
+        lines.push('');
+      });
+
+      var textToCopy = lines.join('\n');
+      navigator.clipboard.writeText(textToCopy).then(function () {
+        showToast('Resumo do cálculo copiado para a área de transferência!');
+      }).catch(function () {
+        showToast('Não foi possível copiar automaticamente.', true);
+      });
+    });
+  }
+
   /* Footer Actions */
   if ($('btnOk')) {
     $('btnOk').addEventListener('click', function () {
@@ -615,7 +896,11 @@
       if (reqDone < reqTotal) {
         alert('Existem ' + (reqTotal - reqDone) + ' campo(s) obrigatório(s) pendente(s). Verifique os indicadores âmbar.');
       } else {
-        showToast('Dados validados com sucesso! Pronto para integração Python.');
+        var res = executarCalculoTempos();
+        if (res) {
+          exibirModalResultadoCalculo(res);
+          showToast('Cálculo de tempos concluído com sucesso!');
+        }
       }
     });
   }
@@ -3797,7 +4082,8 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 3800);
   }
 
-  // Load external configuration on startup
+  // Load external configuration and rules on startup
   loadExternalConfig();
+  carregarDisciplinas();
 
 })();
