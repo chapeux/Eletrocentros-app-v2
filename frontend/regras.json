@@ -1617,11 +1617,11 @@
             "etapas": [
               {
                 "tipo": "dividir",
-                "valor": 7.92
+                "valor": 14.69
               },
               {
                 "tipo": "arredondar",
-                "modo": "cima"
+                "modo": "padrao"
               }
             ]
           },
