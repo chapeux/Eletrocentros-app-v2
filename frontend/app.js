@@ -2803,40 +2803,70 @@
     }
   }
 
-  if ($('anexoDropArea')) {
-    $('anexoDropArea').addEventListener('click', function (e) {
+  function handleFilesInput(filesList) {
+    var files = Array.from(filesList || []);
+    if (!files.length) return;
+
+    files.forEach(function (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        showToast('O arquivo "' + file.name + '" é muito grande (máximo 50MB).', true);
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function (evt) {
+        currentAnexosList.push({
+          nome: file.name,
+          base64: evt.target.result,
+          tamanho: file.size
+        });
+        renderAnexosModalList();
+      };
+      reader.onerror = function () {
+        showToast('Erro ao ler o arquivo "' + file.name + '".', true);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  var dropAreaEl = $('anexoDropArea');
+  if (dropAreaEl) {
+    dropAreaEl.addEventListener('click', function (e) {
       if (e.target && (e.target.classList.contains('anexo-item-del') || e.target.closest('.anexo-item-del'))) {
         return;
       }
       if ($('inputAnexoSave')) $('inputAnexoSave').click();
     });
+
+    ['dragenter', 'dragover'].forEach(function (evtName) {
+      dropAreaEl.addEventListener(evtName, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropAreaEl.classList.add('drag-over');
+      });
+    });
+
+    ['dragleave', 'dragend'].forEach(function (evtName) {
+      dropAreaEl.addEventListener(evtName, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropAreaEl.classList.remove('drag-over');
+      });
+    });
+
+    dropAreaEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropAreaEl.classList.remove('drag-over');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleFilesInput(e.dataTransfer.files);
+      }
+    });
   }
 
   if ($('inputAnexoSave')) {
     $('inputAnexoSave').addEventListener('change', function (e) {
-      var files = Array.from(e.target.files || []);
-      if (!files.length) return;
-
-      files.forEach(function (file) {
-        if (file.size > 50 * 1024 * 1024) {
-          showToast('O arquivo "' + file.name + '" é muito grande (máximo 50MB).', true);
-          return;
-        }
-
-        var reader = new FileReader();
-        reader.onload = function (evt) {
-          currentAnexosList.push({
-            nome: file.name,
-            base64: evt.target.result,
-            tamanho: file.size
-          });
-          renderAnexosModalList();
-        };
-        reader.onerror = function () {
-          showToast('Erro ao ler o arquivo "' + file.name + '".', true);
-        };
-        reader.readAsDataURL(file);
-      });
+      handleFilesInput(this.files);
       this.value = '';
     });
   }

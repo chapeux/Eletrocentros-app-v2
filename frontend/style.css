@@ -1797,6 +1797,7 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 
 #anexoDropArea:hover { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 6%, var(--panel-2)) !important; }
 #anexoDropArea.has-file { border-color: var(--teal) !important; background: color-mix(in srgb, var(--teal) 8%, var(--panel-2)) !important; }
+#anexoDropArea.drag-over { border-color: var(--accent) !important; border-style: solid !important; background: color-mix(in srgb, var(--accent) 15%, var(--panel-2)) !important; transform: scale(1.01); box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 30%, transparent) !important; }
 
 .anexo-item-modal { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 11.5px; }
 .anexo-item-modal .anexo-item-name { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text); }
