@@ -619,6 +619,23 @@
           <span id="motivoCharCount" style="font-size:11.5px; font-weight:600; color:var(--red);">0 / 20 mín.</span>
         </label>
         <textarea id="inputMotivoSave" rows="3" placeholder="Ex: Ajuste no fator de segurança do trafo a óleo conforme nova especificação técnica..." style="width:100%; font-family:inherit; font-size:13px; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--panel-2); color:var(--text); outline:none; resize:vertical; box-sizing:border-box;"></textarea>
+
+        <div style="margin-top:14px;">
+          <label style="font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Anexo de evidência / documento (opcional):</span>
+            <span style="font-size:11px; font-weight:400; color:var(--text-faint);">Salvo na pasta de rede</span>
+          </label>
+          <input type="file" id="inputAnexoSave" style="display:none;">
+          <div id="anexoDropArea" style="border:1px dashed var(--border); border-radius:8px; padding:10px 12px; background:var(--panel-2); display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; transition:all 0.2s ease;">
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; min-width:16px; color:var(--accent);"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              <span id="anexoLabelText" style="font-size:12px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Clique para anexar um arquivo do seu computador...</span>
+            </div>
+            <button type="button" id="btnRemoveAnexo" style="display:none; background:none; border:none; color:var(--text-faint); cursor:pointer; padding:2px 4px; border-radius:4px;" title="Remover anexo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px; height:14px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="mhead" style="border-top:1px solid var(--hairline); border-bottom:none; justify-content:flex-end; gap:10px; background:var(--panel-2);">
         <button type="button" class="btn" id="btnCancelMotivo">Cancelar</button>

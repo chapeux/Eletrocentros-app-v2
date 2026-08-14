@@ -81,19 +81,29 @@ def init_db() -> bool:
             depois LONGTEXT,
             detalhes TEXT,
             motivo TEXT,
+            anexo_nome VARCHAR(255),
+            anexo_caminho TEXT,
             INDEX idx_data_hora (data_hora),
             INDEX idx_grupo_campo (grupo_area, regra_campo)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """
         cursor.execute(create_table_sql)
 
-        # 3. Garante adição da coluna 'motivo' em tabelas existentes se necessário
+        # 3. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em tabelas existentes se necessário
         try:
             cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'motivo';")
             if not cursor.fetchone():
                 cursor.execute("ALTER TABLE logs_modificacoes ADD COLUMN motivo TEXT;")
+            
+            cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'anexo_nome';")
+            if not cursor.fetchone():
+                cursor.execute("ALTER TABLE logs_modificacoes ADD COLUMN anexo_nome VARCHAR(255);")
+
+            cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'anexo_caminho';")
+            if not cursor.fetchone():
+                cursor.execute("ALTER TABLE logs_modificacoes ADD COLUMN anexo_caminho TEXT;")
         except Exception as ex:
-            print(f"[Database Python] Aviso ao verificar coluna 'motivo': {ex}")
+            print(f"[Database Python] Aviso ao verificar colunas adicionais: {ex}")
 
         conn.commit()
         cursor.close()
@@ -114,9 +124,11 @@ def registrar_log(
     depois: Any,
     detalhes: str = "",
     usuario: Optional[str] = None,
-    motivo: Optional[str] = None
+    motivo: Optional[str] = None,
+    anexo_nome: Optional[str] = None,
+    anexo_caminho: Optional[str] = None
 ) -> bool:
-    """Insere um novo registro na tabela 'logs_modificacoes'."""
+    """Insere um novo registro na tabela 'logs_modificacoes' com anexo opcional."""
     if not usuario:
         usuario = get_current_user()
 
@@ -126,10 +138,10 @@ def registrar_log(
 
     sql = f"""
         INSERT INTO {DB_TABELA} 
-        (data_hora, usuario, grupo_area, regra_campo, subtab, antes, depois, detalhes, motivo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (data_hora, usuario, grupo_area, regra_campo, subtab, antes, depois, detalhes, motivo, anexo_nome, anexo_caminho)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    valores = (data_hora, usuario, grupo_area, regra_campo, subtab, antes_str, depois_str, detalhes, motivo)
+    valores = (data_hora, usuario, grupo_area, regra_campo, subtab, antes_str, depois_str, detalhes, motivo, anexo_nome, anexo_caminho)
 
     try:
         conn = get_db_connection(with_db=True)
@@ -138,14 +150,22 @@ def registrar_log(
         conn.commit()
         cursor.close()
         conn.close()
-        print(f"[Database Python] Log gravado em {DB_TABELA}: [{grupo_area} -> {regra_campo} ({subtab})] por '{usuario}' (Motivo: {motivo})")
+        anexo_info = f" (Anexo: {anexo_nome})" if anexo_nome else ""
+        print(f"[Database Python] Log gravado em {DB_TABELA}: [{grupo_area} -> {regra_campo} ({subtab})] por '{usuario}' (Motivo: {motivo}){anexo_info}")
         return True
     except Exception as e:
         print(f"[Database Python] Erro ao gravar log no MySQL: {e}")
         return False
 
 
-def comparar_e_registrar_alteracoes(regras_antigas: List[Dict], regras_novas: List[Dict], usuario: Optional[str] = None, motivo: Optional[str] = None) -> int:
+def comparar_e_registrar_alteracoes(
+    regras_antigas: List[Dict],
+    regras_novas: List[Dict],
+    usuario: Optional[str] = None,
+    motivo: Optional[str] = None,
+    anexo_nome: Optional[str] = None,
+    anexo_caminho: Optional[str] = None
+) -> int:
     """
     Compara o estado anterior e novo das regras (estrutura de regras.json)
     e registra um log para cada sub-regra (H ou DUR) que sofreu alteração.
@@ -185,7 +205,9 @@ def comparar_e_registrar_alteracoes(regras_antigas: List[Dict], regras_novas: Li
                         depois=regra_nova,
                         detalhes=detalhes,
                         usuario=usuario,
-                        motivo=motivo
+                        motivo=motivo,
+                        anexo_nome=anexo_nome,
+                        anexo_caminho=anexo_caminho
                     )
                     if sucesso:
                         total_logs += 1
@@ -196,7 +218,7 @@ def comparar_e_registrar_alteracoes(regras_antigas: List[Dict], regras_novas: Li
 def obter_logs(limit: int = 100) -> List[Dict[str, Any]]:
     """Retorna os logs de alterações mais recentes cadastrados na tabela 'logs_modificacoes'."""
     sql = f"""
-        SELECT id, data_hora, usuario, grupo_area, regra_campo, subtab, antes, depois, detalhes, motivo
+        SELECT id, data_hora, usuario, grupo_area, regra_campo, subtab, antes, depois, detalhes, motivo, anexo_nome, anexo_caminho
         FROM {DB_TABELA}
         ORDER BY id DESC
         LIMIT %s

@@ -2655,7 +2655,7 @@
     body.innerHTML = html;
   }
 
-  function saveRegrasCampo(motivo) {
+  function saveRegrasCampo(motivo, anexoNome, anexoBase64) {
     ['btnSave', 'btnSaveFooter'].forEach(function (id) {
       var btn = $(id);
       if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
@@ -2674,8 +2674,15 @@
       });
     }
 
+    var payload = {
+      regras: state.regrasData,
+      motivo: motivo || '',
+      anexo_nome: anexoNome || null,
+      anexo_base64: anexoBase64 || null
+    };
+
     if (isPyWebviewAvailable()) {
-      window.pywebview.api.save_regras({ regras: state.regrasData, motivo: motivo || '' }).then(function (res) {
+      window.pywebview.api.save_regras(payload).then(function (res) {
         if (res && res.status === 'error') {
           showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
           resetSaveButtons();
@@ -2690,7 +2697,7 @@
       fetch('/api/save_regras', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ regras: state.regrasData, motivo: motivo || '' })
+        body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (res) {
         if (res && res.status === 'error') {
           showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
@@ -2704,6 +2711,28 @@
         onRegrasSaveSuccess();
       });
     }
+  }
+
+  var currentAnexoData = { nome: null, base64: null };
+
+  function resetAnexoInput() {
+    currentAnexoData = { nome: null, base64: null };
+    var ipt = $('inputAnexoSave');
+    if (ipt) ipt.value = '';
+    var lbl = $('anexoLabelText');
+    if (lbl) lbl.textContent = 'Clique para anexar um arquivo do seu computador...';
+    var area = $('anexoDropArea');
+    if (area) area.classList.remove('has-file');
+    var btnRem = $('btnRemoveAnexo');
+    if (btnRem) btnRem.style.display = 'none';
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   function updateMotivoCharCounter() {
@@ -2729,14 +2758,62 @@
   function promptMotivoESalvar() {
     var modal = $('modalMotivo');
     var input = $('inputMotivoSave');
+    resetAnexoInput();
     if (modal && input) {
       input.value = '';
       updateMotivoCharCounter();
       modal.classList.add('open');
       setTimeout(function () { input.focus(); }, 100);
     } else {
-      saveRegrasCampo('');
+      saveRegrasCampo('', null, null);
     }
+  }
+
+  if ($('anexoDropArea')) {
+    $('anexoDropArea').addEventListener('click', function (e) {
+      if (e.target && (e.target.id === 'btnRemoveAnexo' || e.target.closest('#btnRemoveAnexo'))) {
+        return;
+      }
+      if ($('inputAnexoSave')) $('inputAnexoSave').click();
+    });
+  }
+
+  if ($('inputAnexoSave')) {
+    $('inputAnexoSave').addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 50 * 1024 * 1024) {
+        showToast('O arquivo selecionado é muito grande (máximo 50MB).', true);
+        resetAnexoInput();
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function (evt) {
+        currentAnexoData.nome = file.name;
+        currentAnexoData.base64 = evt.target.result;
+
+        var lbl = $('anexoLabelText');
+        if (lbl) lbl.textContent = file.name + ' (' + formatBytes(file.size) + ')';
+        var area = $('anexoDropArea');
+        if (area) area.classList.add('has-file');
+        var btnRem = $('btnRemoveAnexo');
+        if (btnRem) btnRem.style.display = 'block';
+      };
+      reader.onerror = function () {
+        showToast('Erro ao ler o arquivo selecionado.', true);
+        resetAnexoInput();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if ($('btnRemoveAnexo')) {
+    $('btnRemoveAnexo').addEventListener('click', function (e) {
+      e.stopPropagation();
+      resetAnexoInput();
+    });
   }
 
   if ($('inputMotivoSave')) {
@@ -2765,20 +2842,24 @@
         showToast('O motivo da alteração precisa ter no mínimo 20 caracteres.', true);
         return;
       }
+      var anexoNome = currentAnexoData.nome;
+      var anexoBase64 = currentAnexoData.base64;
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
-      saveRegrasCampo(motivo);
+      saveRegrasCampo(motivo, anexoNome, anexoBase64);
     });
   }
 
   if ($('btnCancelMotivo')) {
     $('btnCancelMotivo').addEventListener('click', function () {
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
+      resetAnexoInput();
     });
   }
 
   if ($('btnCloseMotivoModal')) {
     $('btnCloseMotivoModal').addEventListener('click', function () {
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
+      resetAnexoInput();
     });
   }
 
@@ -2958,6 +3039,15 @@
 
         '<div class="hdetail">' +
           (log.motivo ? '<div class="hmotivo-box"><strong>Motivo:</strong> ' + escapeHtml(log.motivo) + '</div>' : '') +
+          ((log.anexo_caminho || log.anexo_nome) ? (
+            '<div class="hanexo-box">' +
+              '<div class="hanexo-info">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+                '<span class="hanexo-name" title="' + escapeHtml(log.anexo_caminho || log.anexo_nome) + '">' + escapeHtml(log.anexo_nome || (log.anexo_caminho ? log.anexo_caminho.split(/[\\/]/).pop() : 'Anexo')) + '</span>' +
+              '</div>' +
+              (log.anexo_caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(log.anexo_caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
+            '</div>'
+          ) : '') +
           '<div class="hdetail-label">O que mudou</div>' +
           '<div class="diff">' +
             '<div class="diff-col before">' +
@@ -2976,6 +3066,27 @@
       row.addEventListener('click', function () {
         item.classList.toggle('open');
       });
+
+      // Event listener para abrir anexo na rede
+      var btnAbrir = item.querySelector('.btn-abrir-anexo');
+      if (btnAbrir) {
+        btnAbrir.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var path = this.dataset.caminho;
+          if (!path) return;
+          if (isPyWebviewAvailable()) {
+            window.pywebview.api.open_attachment(path).then(function (res) {
+              if (res && res.status === 'error') {
+                showToast(res.message || 'Erro ao abrir anexo.', true);
+              }
+            }).catch(function (err) {
+              showToast('Erro ao abrir anexo: ' + (err ? (err.message || err) : 'Erro'), true);
+            });
+          } else {
+            showToast('Caminho do anexo:\n' + path, false);
+          }
+        });
+      }
 
       histModalBody.appendChild(item);
     });

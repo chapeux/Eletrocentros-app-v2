@@ -5,11 +5,14 @@ Substituição de Tkinter por Interface Web Desktop Moderna em HTML5/CSS3/JS.
 
 import sys
 import os
+import re
 import json
+import base64
 import http.server
 import socketserver
 import threading
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 
 # Módulo Backend de Banco de Dados MySQL e Sincronização GitHub
@@ -25,6 +28,11 @@ CONFIG_FILE = FRONTEND_DIR / "config.json"
 REGRAS_FILE = FRONTEND_DIR / "regras.json"
 ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
+
+# Diretório de rede para armazenamento de anexos do histórico
+ATTACHMENTS_NETWORK_DIR = Path(
+    r"Q:\GROUPS\BR_SC_ITJ_WAU_DPTO_PRODUCAO\Processos WAU Chaves Especiais e Acionamentos\10 - PASTAS PESSOAIS\Luan Schappo\Anexos_Historico"
+)
 
 # Define Windows AppUserModelID para ícone na barra de tarefas do Windows
 if sys.platform == "win32":
@@ -83,15 +91,19 @@ class AppAPI:
         return []
 
     def save_regras(self, *args, **kwargs) -> dict:
-        """Salva as regras atualizadas, registra histórico no MySQL e sincroniza com o GitHub."""
+        """Salva as regras atualizadas, copia anexo para a rede, registra histórico no MySQL e sincroniza com o GitHub."""
         try:
             regras_data = None
             motivo = None
+            anexo_nome = None
+            anexo_base64 = None
 
             if len(args) >= 1:
                 if isinstance(args[0], dict) and "regras" in args[0]:
                     regras_data = args[0].get("regras")
                     motivo = args[0].get("motivo")
+                    anexo_nome = args[0].get("anexo_nome")
+                    anexo_base64 = args[0].get("anexo_base64")
                 else:
                     regras_data = args[0]
             elif "regras_data" in kwargs:
@@ -102,6 +114,11 @@ class AppAPI:
             elif "motivo" in kwargs and motivo is None:
                 motivo = kwargs.get("motivo")
 
+            if "anexo_nome" in kwargs and anexo_nome is None:
+                anexo_nome = kwargs.get("anexo_nome")
+            if "anexo_base64" in kwargs and anexo_base64 is None:
+                anexo_base64 = kwargs.get("anexo_base64")
+
             if not regras_data:
                 return {"status": "error", "message": "Nenhum dado de regras fornecido."}
 
@@ -109,11 +126,46 @@ class AppAPI:
             if len(motivo_str) < 20:
                 return {"status": "error", "message": "O motivo da alteração é obrigatório e deve ter no mínimo 20 caracteres detalhando a mudança."}
 
+            # Processamento de anexo opcional para a pasta de rede
+            anexo_caminho_final = None
+            if anexo_nome and anexo_base64:
+                try:
+                    safe_nome = re.sub(r'[^\w\.\-\(\) ]', '_', anexo_nome)
+                    ts_prefix = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    file_name = f"{ts_prefix}_{safe_nome}"
+
+                    try:
+                        ATTACHMENTS_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
+                        dest_file = ATTACHMENTS_NETWORK_DIR / file_name
+                    except Exception as net_ex:
+                        print(f"[Backend Python] Aviso ao acessar pasta de rede ({net_ex}). Usando fallback local...")
+                        fallback_dir = BASE_DIR / "anexos_historico"
+                        fallback_dir.mkdir(parents=True, exist_ok=True)
+                        dest_file = fallback_dir / file_name
+
+                    raw_data = anexo_base64
+                    if "," in raw_data:
+                        raw_data = raw_data.split(",", 1)[1]
+                    file_bytes = base64.b64decode(raw_data)
+                    with open(dest_file, "wb") as f_out:
+                        f_out.write(file_bytes)
+
+                    anexo_caminho_final = str(dest_file)
+                    print(f"[Backend Python] Anexo salvo com sucesso em: {anexo_caminho_final}")
+                except Exception as anexo_err:
+                    print(f"[Backend Python] Erro ao processar anexo: {anexo_err}")
+
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()
 
             # 2. Compara e registra as alterações na tabela 'logs_modificacoes' no MySQL
-            total_logs = comparar_e_registrar_alteracoes(regras_antigas, regras_data, motivo=motivo)
+            total_logs = comparar_e_registrar_alteracoes(
+                regras_antigas,
+                regras_data,
+                motivo=motivo,
+                anexo_nome=anexo_nome if anexo_caminho_final else None,
+                anexo_caminho=anexo_caminho_final
+            )
             print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados. (Motivo: {motivo})")
 
             # 3. Salva a nova versão em regras.json
@@ -127,9 +179,29 @@ class AppAPI:
             sync_github_async(resumo=resumo_git)
 
             print("[Backend Python] Regras salvas em regras.json com sucesso!")
-            return {"status": "success", "logs_registrados": total_logs}
+            return {"status": "success", "logs_registrados": total_logs, "anexo_caminho": anexo_caminho_final}
         except Exception as e:
             print(f"[Backend Python] Erro ao salvar regras.json: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def open_attachment(self, file_path: str) -> dict:
+        """Abre o arquivo anexo diretamente da pasta de rede no visualizador padrão do sistema operacional."""
+        try:
+            if not file_path:
+                return {"status": "error", "message": "Caminho do arquivo não fornecido."}
+            p = Path(file_path)
+            if not p.exists():
+                return {"status": "error", "message": f"O arquivo não foi encontrado na pasta de rede:\n{file_path}"}
+            
+            if os.name == 'nt':
+                os.startfile(str(p))
+            else:
+                import subprocess
+                subprocess.Popen(["xdg-open", str(p)])
+            
+            return {"status": "success"}
+        except Exception as e:
+            print(f"[Backend Python] Erro ao abrir anexo '{file_path}': {e}")
             return {"status": "error", "message": str(e)}
 
     def get_logs(self, limit: int = 100) -> list:
