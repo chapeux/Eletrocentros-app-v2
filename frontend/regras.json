@@ -9550,7 +9550,7 @@
         },
         "DUR": {
           "base": {
-            "forma": "derivado_h",
+            "forma": "constante",
             "etapas": [
               {
                 "tipo": "dividir",
@@ -9560,7 +9560,8 @@
                 "tipo": "arredondar",
                 "modo": "cima"
               }
-            ]
+            ],
+            "valor": 0
           },
           "condicoes": []
         }
