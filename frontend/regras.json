@@ -12607,11 +12607,17 @@
             "etapas": [
               {
                 "tipo": "dividir",
-                "valor": 7.92
+                "valor": 7.04
+              },
+              {
+                "tipo": "dividir",
+                "modo": "cima",
+                "valor": 3
               },
               {
                 "tipo": "arredondar",
-                "modo": "cima"
+                "valor": 1,
+                "modo": "padrao"
               }
             ]
           },
