@@ -16053,11 +16053,17 @@
             "etapas": [
               {
                 "tipo": "dividir",
-                "valor": 7.92
+                "valor": 4.04
+              },
+              {
+                "tipo": "dividir",
+                "modo": "cima",
+                "valor": 4
               },
               {
                 "tipo": "arredondar",
-                "modo": "cima"
+                "valor": 1,
+                "modo": "padrao"
               }
             ]
           },
