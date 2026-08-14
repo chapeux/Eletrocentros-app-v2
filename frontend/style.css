@@ -1798,6 +1798,12 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 #anexoDropArea:hover { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 6%, var(--panel-2)) !important; }
 #anexoDropArea.has-file { border-color: var(--teal) !important; background: color-mix(in srgb, var(--teal) 8%, var(--panel-2)) !important; }
 
+.anexo-item-modal { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; font-size: 11.5px; }
+.anexo-item-modal .anexo-item-name { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--text); }
+.anexo-item-modal .anexo-item-name svg { width: 14px; height: 14px; min-width: 14px; color: var(--teal); }
+.anexo-item-modal .anexo-item-del { background: none; border: none; color: var(--text-faint); cursor: pointer; padding: 2px 5px; border-radius: 4px; display: flex; align-items: center; }
+.anexo-item-modal .anexo-item-del:hover { color: var(--red); background: var(--red-dim); }
+
 /* Drag & Drop Formula Chips & Add Buttons */
 .chip[draggable="true"] { cursor: grab; user-select: none; }
 .chip[draggable="true"]:active { cursor: grabbing; }

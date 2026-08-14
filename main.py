@@ -91,19 +91,20 @@ class AppAPI:
         return []
 
     def save_regras(self, *args, **kwargs) -> dict:
-        """Salva as regras atualizadas, copia anexo para a rede, registra histórico no MySQL e sincroniza com o GitHub."""
+        """Salva as regras atualizadas, copia anexos para a rede, registra histórico no MySQL e sincroniza com o GitHub."""
         try:
             regras_data = None
             motivo = None
-            anexo_nome = None
-            anexo_base64 = None
+            anexos_input = []
 
             if len(args) >= 1:
                 if isinstance(args[0], dict) and "regras" in args[0]:
                     regras_data = args[0].get("regras")
                     motivo = args[0].get("motivo")
-                    anexo_nome = args[0].get("anexo_nome")
-                    anexo_base64 = args[0].get("anexo_base64")
+                    if "anexos" in args[0] and isinstance(args[0]["anexos"], list):
+                        anexos_input = args[0]["anexos"]
+                    elif args[0].get("anexo_nome") and args[0].get("anexo_base64"):
+                        anexos_input = [{"nome": args[0]["anexo_nome"], "base64": args[0]["anexo_base64"]}]
                 else:
                     regras_data = args[0]
             elif "regras_data" in kwargs:
@@ -114,10 +115,10 @@ class AppAPI:
             elif "motivo" in kwargs and motivo is None:
                 motivo = kwargs.get("motivo")
 
-            if "anexo_nome" in kwargs and anexo_nome is None:
-                anexo_nome = kwargs.get("anexo_nome")
-            if "anexo_base64" in kwargs and anexo_base64 is None:
-                anexo_base64 = kwargs.get("anexo_base64")
+            if "anexos" in kwargs and isinstance(kwargs["anexos"], list):
+                anexos_input = kwargs["anexos"]
+            elif "anexo_nome" in kwargs and "anexo_base64" in kwargs:
+                anexos_input = [{"nome": kwargs["anexo_nome"], "base64": kwargs["anexo_base64"]}]
 
             if not regras_data:
                 return {"status": "error", "message": "Nenhum dado de regras fornecido."}
@@ -126,34 +127,43 @@ class AppAPI:
             if len(motivo_str) < 20:
                 return {"status": "error", "message": "O motivo da alteração é obrigatório e deve ter no mínimo 20 caracteres detalhando a mudança."}
 
-            # Processamento de anexo opcional para a pasta de rede
-            anexo_caminho_final = None
-            if anexo_nome and anexo_base64:
-                try:
-                    safe_nome = re.sub(r'[^\w\.\-\(\) ]', '_', anexo_nome)
-                    ts_prefix = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    file_name = f"{ts_prefix}_{safe_nome}"
-
+            # Processamento de anexos múltiplos para a pasta de rede
+            anexos_salvos = []
+            if anexos_input:
+                ts_prefix = datetime.now().strftime("%Y%m%d_%H%M%S")
+                for idx, anexo_item in enumerate(anexos_input):
+                    a_nome = anexo_item.get("nome")
+                    a_base64 = anexo_item.get("base64")
+                    if not a_nome or not a_base64:
+                        continue
                     try:
-                        ATTACHMENTS_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
-                        dest_file = ATTACHMENTS_NETWORK_DIR / file_name
-                    except Exception as net_ex:
-                        print(f"[Backend Python] Aviso ao acessar pasta de rede ({net_ex}). Usando fallback local...")
-                        fallback_dir = BASE_DIR / "anexos_historico"
-                        fallback_dir.mkdir(parents=True, exist_ok=True)
-                        dest_file = fallback_dir / file_name
+                        safe_nome = re.sub(r'[^\w\.\-\(\) ]', '_', a_nome)
+                        file_name = f"{ts_prefix}_{idx+1}_{safe_nome}" if len(anexos_input) > 1 else f"{ts_prefix}_{safe_nome}"
 
-                    raw_data = anexo_base64
-                    if "," in raw_data:
-                        raw_data = raw_data.split(",", 1)[1]
-                    file_bytes = base64.b64decode(raw_data)
-                    with open(dest_file, "wb") as f_out:
-                        f_out.write(file_bytes)
+                        try:
+                            ATTACHMENTS_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
+                            dest_file = ATTACHMENTS_NETWORK_DIR / file_name
+                        except Exception as net_ex:
+                            print(f"[Backend Python] Aviso ao acessar pasta de rede ({net_ex}). Usando fallback local...")
+                            fallback_dir = BASE_DIR / "anexos_historico"
+                            fallback_dir.mkdir(parents=True, exist_ok=True)
+                            dest_file = fallback_dir / file_name
 
-                    anexo_caminho_final = str(dest_file)
-                    print(f"[Backend Python] Anexo salvo com sucesso em: {anexo_caminho_final}")
-                except Exception as anexo_err:
-                    print(f"[Backend Python] Erro ao processar anexo: {anexo_err}")
+                        raw_data = a_base64
+                        if "," in raw_data:
+                            raw_data = raw_data.split(",", 1)[1]
+                        file_bytes = base64.b64decode(raw_data)
+                        with open(dest_file, "wb") as f_out:
+                            f_out.write(file_bytes)
+
+                        caminho_final = str(dest_file)
+                        anexos_salvos.append({"nome": a_nome, "caminho": caminho_final})
+                        print(f"[Backend Python] Anexo [{idx+1}/{len(anexos_input)}] salvo em: {caminho_final}")
+                    except Exception as anexo_err:
+                        print(f"[Backend Python] Erro ao processar anexo '{a_nome}': {anexo_err}")
+
+            anexo_caminho_db = json.dumps(anexos_salvos, ensure_ascii=False) if anexos_salvos else None
+            anexo_nome_db = ", ".join([x["nome"] for x in anexos_salvos]) if anexos_salvos else None
 
             # 1. Carrega as regras anteriores para calcular o diff
             regras_antigas = self.get_regras()
@@ -163,8 +173,8 @@ class AppAPI:
                 regras_antigas,
                 regras_data,
                 motivo=motivo,
-                anexo_nome=anexo_nome if anexo_caminho_final else None,
-                anexo_caminho=anexo_caminho_final
+                anexo_nome=anexo_nome_db,
+                anexo_caminho=anexo_caminho_db
             )
             print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados. (Motivo: {motivo})")
 
@@ -179,7 +189,7 @@ class AppAPI:
             sync_github_async(resumo=resumo_git)
 
             print("[Backend Python] Regras salvas em regras.json com sucesso!")
-            return {"status": "success", "logs_registrados": total_logs, "anexo_caminho": anexo_caminho_final}
+            return {"status": "success", "logs_registrados": total_logs, "anexos_salvos": anexos_salvos}
         except Exception as e:
             print(f"[Backend Python] Erro ao salvar regras.json: {e}")
             return {"status": "error", "message": str(e)}

@@ -240,6 +240,25 @@ def obter_logs(limit: int = 100) -> List[Dict[str, Any]]:
                         r[key] = json.loads(r[key])
                     except Exception:
                         pass
+
+            # Processa lista de anexos (suporta múltiplos ou anexo único legado)
+            anexos_lista = []
+            caminho_raw = r.get("anexo_caminho")
+            nome_raw = r.get("anexo_nome")
+
+            if caminho_raw:
+                caminho_str = str(caminho_raw).strip()
+                if caminho_str.startswith("[") and caminho_str.endswith("]"):
+                    try:
+                        parsed = json.loads(caminho_str)
+                        if isinstance(parsed, list):
+                            anexos_lista = parsed
+                    except Exception:
+                        pass
+                if not anexos_lista:
+                    anexos_lista = [{"nome": nome_raw or os.path.basename(caminho_str), "caminho": caminho_str}]
+
+            r["anexos"] = anexos_lista
             logs.append(r)
         cursor.close()
         conn.close()

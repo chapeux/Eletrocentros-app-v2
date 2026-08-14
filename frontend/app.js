@@ -2655,7 +2655,7 @@
     body.innerHTML = html;
   }
 
-  function saveRegrasCampo(motivo, anexoNome, anexoBase64) {
+  function saveRegrasCampo(motivo, anexosList) {
     ['btnSave', 'btnSaveFooter'].forEach(function (id) {
       var btn = $(id);
       if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
@@ -2677,8 +2677,7 @@
     var payload = {
       regras: state.regrasData,
       motivo: motivo || '',
-      anexo_nome: anexoNome || null,
-      anexo_base64: anexoBase64 || null
+      anexos: anexosList || []
     };
 
     if (isPyWebviewAvailable()) {
@@ -2713,18 +2712,53 @@
     }
   }
 
-  var currentAnexoData = { nome: null, base64: null };
+  var currentAnexosList = [];
 
   function resetAnexoInput() {
-    currentAnexoData = { nome: null, base64: null };
+    currentAnexosList = [];
     var ipt = $('inputAnexoSave');
     if (ipt) ipt.value = '';
+    renderAnexosModalList();
+  }
+
+  function renderAnexosModalList() {
+    var listEl = $('anexosFileList');
     var lbl = $('anexoLabelText');
-    if (lbl) lbl.textContent = 'Clique para anexar um arquivo do seu computador...';
     var area = $('anexoDropArea');
-    if (area) area.classList.remove('has-file');
-    var btnRem = $('btnRemoveAnexo');
-    if (btnRem) btnRem.style.display = 'none';
+    if (!listEl) return;
+
+    if (!currentAnexosList.length) {
+      listEl.innerHTML = '';
+      if (lbl) lbl.textContent = 'Clique para selecionar arquivo(s) do seu computador...';
+      if (area) area.classList.remove('has-file');
+      return;
+    }
+
+    if (lbl) lbl.textContent = '＋ Adicionar mais arquivo(s) (' + currentAnexosList.length + ' selecionado' + (currentAnexosList.length === 1 ? '' : 's') + ')...';
+    if (area) area.classList.add('has-file');
+
+    var html = '';
+    currentAnexosList.forEach(function (fileObj, idx) {
+      html += '<div class="anexo-item-modal">' +
+        '<div class="anexo-item-name">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+          '<span>' + escapeHtml(fileObj.nome) + ' (' + formatBytes(fileObj.tamanho || 0) + ')</span>' +
+        '</div>' +
+        '<button type="button" class="anexo-item-del" data-idx="' + idx + '" title="Remover este anexo">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+        '</button>' +
+      '</div>';
+    });
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.anexo-item-del').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var idx = +this.dataset.idx;
+        currentAnexosList.splice(idx, 1);
+        renderAnexosModalList();
+      });
+    });
   }
 
   function formatBytes(bytes) {
@@ -2765,13 +2799,13 @@
       modal.classList.add('open');
       setTimeout(function () { input.focus(); }, 100);
     } else {
-      saveRegrasCampo('', null, null);
+      saveRegrasCampo('', []);
     }
   }
 
   if ($('anexoDropArea')) {
     $('anexoDropArea').addEventListener('click', function (e) {
-      if (e.target && (e.target.id === 'btnRemoveAnexo' || e.target.closest('#btnRemoveAnexo'))) {
+      if (e.target && (e.target.classList.contains('anexo-item-del') || e.target.closest('.anexo-item-del'))) {
         return;
       }
       if ($('inputAnexoSave')) $('inputAnexoSave').click();
@@ -2780,39 +2814,30 @@
 
   if ($('inputAnexoSave')) {
     $('inputAnexoSave').addEventListener('change', function (e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
+      var files = Array.from(e.target.files || []);
+      if (!files.length) return;
 
-      if (file.size > 50 * 1024 * 1024) {
-        showToast('O arquivo selecionado é muito grande (máximo 50MB).', true);
-        resetAnexoInput();
-        return;
-      }
+      files.forEach(function (file) {
+        if (file.size > 50 * 1024 * 1024) {
+          showToast('O arquivo "' + file.name + '" é muito grande (máximo 50MB).', true);
+          return;
+        }
 
-      var reader = new FileReader();
-      reader.onload = function (evt) {
-        currentAnexoData.nome = file.name;
-        currentAnexoData.base64 = evt.target.result;
-
-        var lbl = $('anexoLabelText');
-        if (lbl) lbl.textContent = file.name + ' (' + formatBytes(file.size) + ')';
-        var area = $('anexoDropArea');
-        if (area) area.classList.add('has-file');
-        var btnRem = $('btnRemoveAnexo');
-        if (btnRem) btnRem.style.display = 'block';
-      };
-      reader.onerror = function () {
-        showToast('Erro ao ler o arquivo selecionado.', true);
-        resetAnexoInput();
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  if ($('btnRemoveAnexo')) {
-    $('btnRemoveAnexo').addEventListener('click', function (e) {
-      e.stopPropagation();
-      resetAnexoInput();
+        var reader = new FileReader();
+        reader.onload = function (evt) {
+          currentAnexosList.push({
+            nome: file.name,
+            base64: evt.target.result,
+            tamanho: file.size
+          });
+          renderAnexosModalList();
+        };
+        reader.onerror = function () {
+          showToast('Erro ao ler o arquivo "' + file.name + '".', true);
+        };
+        reader.readAsDataURL(file);
+      });
+      this.value = '';
     });
   }
 
@@ -2842,10 +2867,11 @@
         showToast('O motivo da alteração precisa ter no mínimo 20 caracteres.', true);
         return;
       }
-      var anexoNome = currentAnexoData.nome;
-      var anexoBase64 = currentAnexoData.base64;
+      var anexosPayload = currentAnexosList.map(function (x) {
+        return { nome: x.nome, base64: x.base64 };
+      });
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
-      saveRegrasCampo(motivo, anexoNome, anexoBase64);
+      saveRegrasCampo(motivo, anexosPayload);
     });
   }
 
@@ -3039,15 +3065,29 @@
 
         '<div class="hdetail">' +
           (log.motivo ? '<div class="hmotivo-box"><strong>Motivo:</strong> ' + escapeHtml(log.motivo) + '</div>' : '') +
-          ((log.anexo_caminho || log.anexo_nome) ? (
-            '<div class="hanexo-box">' +
-              '<div class="hanexo-info">' +
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-                '<span class="hanexo-name" title="' + escapeHtml(log.anexo_caminho || log.anexo_nome) + '">' + escapeHtml(log.anexo_nome || (log.anexo_caminho ? log.anexo_caminho.split(/[\\/]/).pop() : 'Anexo')) + '</span>' +
-              '</div>' +
-              (log.anexo_caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(log.anexo_caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
-            '</div>'
-          ) : '') +
+          (function () {
+            var anexosList = log.anexos || [];
+            if (!anexosList.length && (log.anexo_caminho || log.anexo_nome)) {
+              anexosList = [{
+                nome: log.anexo_nome || (log.anexo_caminho ? log.anexo_caminho.split(/[\\/]/).pop() : 'Anexo'),
+                caminho: log.anexo_caminho
+              }];
+            }
+            if (!anexosList.length) return '';
+            var h = '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">';
+            anexosList.forEach(function (anx) {
+              var aNome = anx.nome || (anx.caminho ? anx.caminho.split(/[\\/]/).pop() : 'Anexo');
+              h += '<div class="hanexo-box">' +
+                '<div class="hanexo-info">' +
+                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+                  '<span class="hanexo-name" title="' + escapeHtml(anx.caminho || aNome) + '">' + escapeHtml(aNome) + '</span>' +
+                '</div>' +
+                (anx.caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(anx.caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
+              '</div>';
+            });
+            h += '</div>';
+            return h;
+          })() +
           '<div class="hdetail-label">O que mudou</div>' +
           '<div class="diff">' +
             '<div class="diff-col before">' +
@@ -3067,9 +3107,8 @@
         item.classList.toggle('open');
       });
 
-      // Event listener para abrir anexo na rede
-      var btnAbrir = item.querySelector('.btn-abrir-anexo');
-      if (btnAbrir) {
+      // Event listeners para abrir anexos na rede
+      item.querySelectorAll('.btn-abrir-anexo').forEach(function (btnAbrir) {
         btnAbrir.addEventListener('click', function (e) {
           e.stopPropagation();
           var path = this.dataset.caminho;
@@ -3086,7 +3125,7 @@
             showToast('Caminho do anexo:\n' + path, false);
           }
         });
-      }
+      });
 
       histModalBody.appendChild(item);
     });
