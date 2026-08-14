@@ -15813,7 +15813,7 @@
         },
         "DUR": {
           "base": {
-            "forma": "derivado_h",
+            "forma": "blocos",
             "etapas": [
               {
                 "tipo": "dividir",
@@ -15822,6 +15822,208 @@
               {
                 "tipo": "arredondar",
                 "modo": "cima"
+              }
+            ],
+            "blocos": [
+              {
+                "id": "b1",
+                "nome": "Lateral",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "lat_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ],
+                "collapsed": false
+              },
+              {
+                "id": "b2",
+                "nome": "Frente/Fundo",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "ffd_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "num",
+                    "v": 4
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b3",
+                "nome": "Teto",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tet_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tet_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b4",
+                "nome": "Telhado",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "tlh_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "tlh_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "b5",
+                "nome": "Base",
+                "it": [
+                  {
+                    "t": "var",
+                    "v": "bas_f1"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "comp"
+                  },
+                  {
+                    "t": "op",
+                    "v": "+"
+                  },
+                  {
+                    "t": "var",
+                    "v": "bas_f2"
+                  },
+                  {
+                    "t": "op",
+                    "v": "*"
+                  },
+                  {
+                    "t": "var",
+                    "v": "larg"
+                  }
+                ],
+                "collapsed": true
+              }
+            ],
+            "montagens": [
+              {
+                "id": "m1",
+                "nome": "Complexo",
+                "cond": [
+                  {
+                    "c": "complexidade",
+                    "o": "=",
+                    "val": "Complexo",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 15
+                  }
+                ],
+                "collapsed": true
+              },
+              {
+                "id": "m848761",
+                "nome": "Outros",
+                "cond": [
+                  {
+                    "c": "tipoestrutura",
+                    "o": "=",
+                    "val": "Móvel",
+                    "j": "E"
+                  }
+                ],
+                "it": [
+                  {
+                    "t": "num",
+                    "v": 5
+                  }
+                ],
+                "collapsed": true,
+                "padrao": true
               }
             ]
           },
