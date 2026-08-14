@@ -818,6 +818,7 @@
         });
         str += parts.join(' ');
       }
+    }
     else if (b.forma === 'soma_campos') {
       var cLista = b.campos || [];
       str = 'Σ(' + cLista.join(' + ') + ')';
