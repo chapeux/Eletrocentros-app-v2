@@ -733,6 +733,7 @@
     var ctx = collectFormContext();
     var flagsAtivos = collectFormFlags(ctx);
     Object.assign(SIM_CTX, ctx);
+    salvarUltimaExecucao(ctx);
 
     var nmod = ctx.nmod || 1;
     var resultadosAreas = [];
@@ -928,9 +929,75 @@
     });
   }
 
+  function salvarUltimaExecucao(ctx) {
+    try {
+      localStorage.setItem('eletrocentros_last_execution', JSON.stringify(ctx));
+    } catch (e) {}
+  }
+
+  function carregarUltimaExecucao() {
+    var raw = null;
+    try { raw = localStorage.getItem('eletrocentros_last_execution'); } catch (e) {}
+    var ctx = null;
+    if (raw) {
+      try { ctx = JSON.parse(raw); } catch (e) {}
+    }
+
+    if (!ctx) {
+      ctx = {
+        comp: 12, larg: 2.4, alt: 2.6, nmod: 2,
+        tipoestrutura: 'Modular', planpin: 'WAU-ELETRO-08',
+        tipomaq: 'Split', qtdmaq: 2, complexidade: 'Médio',
+        incendio: 'Com combate', seguranca: 'CFTV + Controle Acesso', nrcolunas: 10,
+        chapaRemovivel: 'Sim', peDireito: 'Não', testesw: 'Não',
+        white_martins: 'Não', trafo_oleo: 'Não', casa_maquinas: 'Sim',
+        acess_escada_weg: 'Sim', acess_escada_esp: 'Não', acess_porao: 'Não',
+        acess_pilotis: 'Não', acess_dutos: 'Sim', acess_fundo_falso: 'Não',
+        acess_dutos_bww: 'Não', acess_calhas: 'Sim', acess_dutos_gases: 'Não'
+      };
+    }
+
+    if ($('comp')) $('comp').value = ctx.comp || 12;
+    if ($('larg')) $('larg').value = ctx.larg || 2.4;
+    if ($('alt')) $('alt').value = ctx.alt || 2.6;
+    if ($('qtdmaq')) $('qtdmaq').value = ctx.qtdmaq || 0;
+    if ($('nrcolunas')) $('nrcolunas').value = ctx.nrcolunas || 0;
+
+    setSelectValue('tipoestrutura', ctx.tipoestrutura || 'Modular');
+    setSelectValue('nrmodulos', String(ctx.nmod || 2));
+    setSelectValue('planpin', ctx.planpin || 'WAU-ELETRO-08');
+    setSelectValue('tipomaq', ctx.tipomaq || 'Split');
+    setSelectValue('complexidade', ctx.complexidade || 'Médio');
+    setSelectValue('incendio', ctx.incendio || 'Com combate');
+    setSelectValue('seguranca', ctx.seguranca || 'CFTV + Controle Acesso');
+
+    if ($('chapaRemovivel')) $('chapaRemovivel').checked = (ctx.chapaRemovivel === 'Sim');
+    if ($('peDireito')) $('peDireito').checked = (ctx.peDireito === 'Sim');
+    if ($('testesw')) $('testesw').checked = (ctx.testesw === 'Sim');
+    if ($('whiteMartins')) $('whiteMartins').checked = (ctx.white_martins === 'Sim');
+    if ($('trafoOleo')) $('trafoOleo').checked = (ctx.trafo_oleo === 'Sim');
+
+    document.querySelectorAll('.acessorio').forEach(function (el) {
+      var flag = el.dataset.flag;
+      if (!flag) return;
+      if (flag === 'esc_plat_padao_weg') el.checked = (ctx.acess_escada_weg === 'Sim');
+      if (flag === 'esc_plat_especial') el.checked = (ctx.acess_escada_esp === 'Sim');
+      if (flag === 'porao_de_cabos') el.checked = (ctx.acess_porao === 'Sim');
+      if (flag === 'pilotis') el.checked = (ctx.acess_pilotis === 'Sim');
+      if (flag === 'rede_de_dutos') el.checked = (ctx.acess_dutos === 'Sim');
+      if (flag === 'fundo_falso') el.checked = (ctx.acess_fundo_falso === 'Sim');
+      if (flag === 'dutos_bww') el.checked = (ctx.acess_dutos_bww === 'Sim');
+      if (flag === 'calhas_pluviais') el.checked = (ctx.acess_calhas === 'Sim');
+      if (flag === 'duto_de_gases') el.checked = (ctx.acess_dutos_gases === 'Sim');
+    });
+
+    recomputeForm();
+    showToast('Última execução carregada com sucesso no formulário!');
+  }
+
   if ($('btnCarregar')) {
     $('btnCarregar').addEventListener('click', function () {
-      showToast('Carregando última sessão salva...');
+      carregarUltimaExecucao();
     });
   }
 
