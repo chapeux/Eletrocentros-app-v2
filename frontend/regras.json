@@ -5686,11 +5686,16 @@
             "etapas": [
               {
                 "tipo": "dividir",
-                "valor": 7.92
+                "valor": 3
               },
               {
-                "tipo": "arredondar",
-                "modo": "cima"
+                "tipo": "dividir",
+                "modo": "cima",
+                "valor": 7.04
+              },
+              {
+                "tipo": "limitar_max",
+                "valor": 4
               }
             ]
           },
