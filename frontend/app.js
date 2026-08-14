@@ -699,6 +699,8 @@
         if (data && data.length) {
           state.regrasData = data;
           renderRegrasAreasNav();
+        } else {
+          fetchRegrasFallback();
         }
       }).catch(function (err) {
         console.warn('[Regras] Erro pywebview:', err);
@@ -712,13 +714,19 @@
   function fetchRegrasFallback() {
     fetch('regras.json').then(function (resp) {
       if (resp.ok) return resp.json();
+      throw new Error('Status ' + resp.status);
     }).then(function (data) {
       if (data && data.length) {
         state.regrasData = data;
         renderRegrasAreasNav();
+      } else {
+        var nav = $('sectionNavManutencao');
+        if (nav) nav.innerHTML = '<div style="color:var(--text-danger); font-size:12px; padding:8px 12px;">Nenhuma regra encontrada no regras.json.</div>';
       }
     }).catch(function (err) {
-      console.log('[Regras] Erro ao carregar regras.json fallback.');
+      console.warn('[Regras] Erro ao carregar regras.json fallback:', err);
+      var nav = $('sectionNavManutencao');
+      if (nav) nav.innerHTML = '<div style="color:var(--text-danger); font-size:12px; padding:8px 12px;">Erro ao carregar regras.json.</div>';
     });
   }
 

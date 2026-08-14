@@ -51,9 +51,10 @@ class AppAPI:
 
     def get_config(self) -> dict:
         """Lê e retorna a configuração modular do arquivo config.json."""
-        if CONFIG_FILE.exists():
+        target = CONFIG_FILE if CONFIG_FILE.exists() else FRONTEND_CONFIG_FILE
+        if target.exists():
             try:
-                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                with open(target, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"[Backend Python] Erro ao ler config.json: {e}")
@@ -78,9 +79,10 @@ class AppAPI:
 
     def get_regras(self) -> list:
         """Lê e retorna a estrutura de regras do arquivo regras.json."""
-        if REGRAS_FILE.exists():
+        target = REGRAS_FILE if REGRAS_FILE.exists() else FRONTEND_REGRAS_FILE
+        if target.exists():
             try:
-                with open(REGRAS_FILE, "r", encoding="utf-8") as f:
+                with open(target, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"[Backend Python] Erro ao ler regras.json: {e}")
