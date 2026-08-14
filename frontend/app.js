@@ -3080,7 +3080,7 @@
               h += '<div class="hanexo-box">' +
                 '<div class="hanexo-info">' +
                   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-                  '<span class="hanexo-name" title="' + escapeHtml(anx.caminho || aNome) + '">' + escapeHtml(aNome) + '</span>' +
+                  '<span class="hanexo-name" title="' + escapeHtml(aNome) + '">' + escapeHtml(aNome) + '</span>' +
                 '</div>' +
                 (anx.caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(anx.caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
               '</div>';
