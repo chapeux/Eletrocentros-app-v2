@@ -224,6 +224,7 @@
                 </div>
               </div>
               <div class="pane-body">
+                <!-- Subseção Elétrica -->
                 <div class="row">
                   <div class="field">
                     <span class="field-label"><i class="led req" data-led="tipomaq"></i><span class="txt">Tipo Máq. Ar
@@ -239,11 +240,6 @@
                       <button type="button" class="inc">+</button>
                     </div>
                   </div>
-                  <div class="field">
-                    <span class="field-label"><i class="led req" data-led="complexidade"></i><span
-                        class="txt">Complexidade</span></span>
-                    <div class="csel" id="csel-complexidade" data-req="1"></div>
-                  </div>
                 </div>
                 <div class="row" style="margin-top:11px;">
                   <div class="field">
@@ -256,15 +252,6 @@
                         Segurança</span></span>
                     <div class="csel" id="csel-seguranca" data-req="1"></div>
                   </div>
-                  <div class="field">
-                    <span class="field-label"><i class="led req" data-led="nrcolunas"></i><span class="txt">Nº Colunas
-                        Total</span></span>
-                    <div class="stepper" id="stepper-nrcolunas" data-req="1">
-                      <button type="button" class="dec">–</button>
-                      <input type="text" inputmode="numeric" class="mono" id="nrcolunas" value="">
-                      <button type="button" class="inc">+</button>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="row c2" style="margin-top:12px;">
@@ -276,10 +263,37 @@
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
                       </svg></span>White Martins</label>
+                </div>
+
+                <!-- Separador Físico: Equipamentos -->
+                <div style="height:1px; background:var(--hairline); margin:16px 0 12px 0;"></div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+                  Equipamentos
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="complexidade"></i><span
+                        class="txt">Complexidade</span></span>
+                    <div class="csel" id="csel-complexidade" data-req="1"></div>
+                  </div>
+                  <div class="field">
+                    <span class="field-label"><i class="led req" data-led="nrcolunas"></i><span class="txt">Nº Colunas
+                        Total</span></span>
+                    <div class="stepper" id="stepper-nrcolunas" data-req="1">
+                      <button type="button" class="dec">–</button>
+                      <input type="text" inputmode="numeric" class="mono" id="nrcolunas" value="">
+                      <button type="button" class="inc">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row" style="margin-top:12px;">
                   <label class="check"><input type="checkbox" id="trafoOleo"><span class="box"><svg viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="3">
                         <path d="M4 12l5 5L20 6" />
-                      </svg></span>Transformador a Óleo c/ Bacia</label>
+                      </svg></span>Transformador a Óleo c/ Bacia de Contenção</label>
                 </div>
               </div>
             </section>
@@ -338,19 +352,18 @@
                       </svg></span>Dutos de Gases</label>
                 </div>
 
-                <div style="height:1px; background:var(--hairline); margin:14px 0;"></div>
-
-                <div class="row c2">
-                  <div>
-                    <div class="pane-hint" id="containerHint"
-                      style="margin-bottom:7px; display:flex; gap:6px; align-items:center;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <rect x="2" y="7" width="20" height="10" rx="1.5" />
-                        <path d="M6 7V5h12v2M2 12h20" />
-                      </svg>
-                      Container Marítimo — requer "Container Solar"
-                    </div>
+                <!-- Separador Físico: Container Marítimo / Solar -->
+                <div id="blockContainerMaritimo" class="sub-pane-block" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--hairline);">
+                  <div class="pane-hint" id="containerHint"
+                    style="margin-bottom:10px; display:flex; gap:6px; align-items:center; font-weight:600; color:var(--text-dim);">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <rect x="2" y="7" width="20" height="10" rx="1.5" />
+                      <path d="M6 7V5h12v2M2 12h20" />
+                    </svg>
+                    Container Marítimo — exclusivo para "Container Solar"
+                  </div>
+                  <div class="check-grid" style="grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:10px;">
                     <label class="check"><input type="checkbox" id="progReles"><span class="box"><svg
                           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                           <path d="M4 12l5 5L20 6" />
@@ -362,10 +375,14 @@
                     <label class="check"><input type="checkbox" id="diagAgrup"><span class="box"><svg
                           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                           <path d="M4 12l5 5L20 6" />
-                        </svg></span>Diagrama Agrupador</label>
+                        </svg></span>Diagrama Agrupador / Agrupamento</label>
                   </div>
-                  <div>
-                    <div class="pane-hint" style="margin-bottom:7px;">Fabricação — padrão 1306</div>
+                </div>
+
+                <!-- Separador Físico: Fabricação -->
+                <div class="sub-pane-block" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--hairline);">
+                  <div class="pane-hint" style="margin-bottom:10px; font-weight:600; color:var(--text-dim);">Fabricação (padrão 1306)</div>
+                  <div class="check-grid" style="grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:10px;">
                     <label class="check"><input type="checkbox" id="fab1313"><span class="box"><svg viewBox="0 0 24 24"
                           fill="none" stroke="currentColor" stroke-width="3">
                           <path d="M4 12l5 5L20 6" />

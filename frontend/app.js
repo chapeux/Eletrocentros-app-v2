@@ -477,6 +477,15 @@
     applyInput('sec-eletrica', 'nrcolunas', true, true);
 
     var isContainer = tipo === 'Container Solar';
+    var blockContainerMaritimo = $('blockContainerMaritimo');
+    if (blockContainerMaritimo) {
+      blockContainerMaritimo.style.display = isContainer ? '' : 'none';
+      if (!isContainer) {
+        if ($('progReles')) $('progReles').checked = false;
+        if ($('diagBTI')) $('diagBTI').checked = false;
+        if ($('diagAgrup')) $('diagAgrup').checked = false;
+      }
+    }
     if ($('containerHint')) $('containerHint').style.opacity = isContainer ? '1' : '.55';
 
     var anySap = $('criarDRs').checked ||
