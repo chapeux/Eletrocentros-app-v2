@@ -1418,7 +1418,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 4.86,
+                "valor_base": 4.86
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 4.86,
+                "valor_base": 4.86
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1454,7 +1476,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 4.86,
+                "valor_base": 4.86
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 4.86,
+                "valor_base": 4.86
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1490,7 +1534,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1526,7 +1592,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 16.2,
+                "valor_base": 16.2
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 16.2,
+                "valor_base": 16.2
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1609,12 +1697,32 @@
                 "nome": "Demais estruturas",
                 "padrao": true,
                 "cond": [  ],
-                "it": [ {"t": "op", "v": "("}, {"t": "blk", "v": "b1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "lat_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "ffd_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b3"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tet_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b4"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tlh_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b5"}, {"t": "op", "v": "*"}, {"t": "var", "v": "bas_mb"}, {"t": "op", "v": ")"}, {"t": "op", "v": "/"}, {"t": "num", "v": 60}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1} ],
-                "collapsed": true
+                "it": [ {"t": "op", "v": "("}, {"t": "blk", "v": "b1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "lat_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "ffd_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b3"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tet_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b4"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tlh_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b5"}, {"t": "op", "v": "*"}, {"t": "var", "v": "bas_mb"}, {"t": "op", "v": ")"}, {"t": "op", "v": "/"}, {"t": "num", "v": 60}, {"t": "op", "v": "*"}, {"t": "op", "v": "("}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1}, {"t": "op", "v": ")"} ],
+                "collapsed": false
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
