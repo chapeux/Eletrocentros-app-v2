@@ -655,10 +655,211 @@
             </div>
           </div>
 
+          <button type="button" class="btn" id="btnAdicionarLinhaSeletor" style="display:none; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Adicionar Combinação
+          </button>
           <button type="button" class="btn primary btn-save-footer" id="btnSaveFooter" disabled>Salvar regras</button>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ================= MODAL ADICIONAR / EDITAR COMBINAÇÃO DO SELETOR ================= -->
+  <div class="ovl" id="modalSeletorRow">
+    <div class="modal blk-modal" style="max-width: 820px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="mhead" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="mhead-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent); margin-right:8px; vertical-align:middle;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <h3 style="display:inline; margin:0;" id="modalSeletorRowTitle">Nova Combinação do Seletor</h3>
+        </div>
+        <button type="button" class="icon-btn" id="btnCloseModalSeletorRow" style="font-size:20px; border:none; background:none; color:var(--text-dim); cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="mbody" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+        <!-- Bloco 1: Critérios da Estrutura -->
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.5px;">
+          1. Parâmetros de Seleção (Chaves da Combinação)
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <div class="field">
+            <span class="field-label"><span class="txt">Tipo de Estrutura</span></span>
+            <input type="text" id="iptSelTipoEstrutura" class="ipt" placeholder="Ex: Eletrocentro" list="listTiposEstruturaSeletor">
+            <datalist id="listTiposEstruturaSeletor">
+              <option value="Eletrocentro">
+              <option value="EletrocentroB">
+              <option value="Container   Marítimo">
+              <option value="Container   MarítimoBE">
+              <option value="Container   MarítimoBI">
+              <option value="Container   MarítimoBEI">
+              <option value="Container   MarítimoBII">
+              <option value="Skid   (mecânica)">
+              <option value="Skid   (mecânica)B">
+              <option value="Skid (com   elétrica)">
+              <option value="Skid (com   elétrica)B">
+              <option value="Pilotis">
+              <option value="PilotisB">
+              <option value="ESSW   (mecânica)">
+              <option value="ESSW   (elétrica)">
+              <option value="Serviço   Engenharia">
+            </datalist>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Nº Módulos</span></span>
+            <select id="iptSelNModulos" class="ipt">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Casa Máquinas</span></span>
+            <select id="iptSelCasaMaq" class="ipt">
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Sist. Segurança</span></span>
+            <select id="iptSelSistSeg" class="ipt">
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Teste SW</span></span>
+            <select id="iptSelTesteSW" class="ipt">
+              <option value="Não">Não</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bloco 2: PEP Standard -->
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.5px;">
+          2. Código PEP Standard Sugerido
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div class="field">
+            <span class="field-label"><span class="txt">PEP Standard</span></span>
+            <input type="text" id="iptSelPepStandard" class="ipt mono" placeholder="Ex: 130-1306020" style="font-weight:700; color:var(--accent);">
+          </div>
+        </div>
+
+        <!-- Bloco 3: Centros de Trabalho Principais -->
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.5px;">
+          3. Centros de Trabalho — Engenharia &amp; Disciplinas Gerais
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <div class="field">
+            <span class="field-label"><span class="txt">Eng. Mecânica (DR / Alt)</span></span>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="iptSelDrEngMec" class="ipt mono" placeholder="DR (10001248)" style="flex:2;">
+              <input type="text" id="iptSelAltEngMec" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Eng. Elétrica (DR / Alt)</span></span>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="iptSelDrEngEle" class="ipt mono" placeholder="DR (10001252)" style="flex:2;">
+              <input type="text" id="iptSelAltEngEle" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Acessórios (DR / Alt)</span></span>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="iptSelDrAcess" class="ipt mono" placeholder="DR (10001306)" style="flex:2;">
+              <input type="text" id="iptSelAltAcess" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Eletromecânica (DR / Alt)</span></span>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="iptSelDrEletromec" class="ipt mono" placeholder="DR (10001267)" style="flex:2;">
+              <input type="text" id="iptSelAltEletromec" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloco 4: Centros de Trabalho por Módulo Mecânica (1 a 8) -->
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.5px;">
+          4. Centros de Trabalho — Mecânica por Módulo (M1 a M8)
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px;">
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 1 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec1" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec1" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 2 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec2" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec2" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 3 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec3" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec3" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 4 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec4" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec4" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 5 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec5" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec5" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 6 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec6" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec6" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 7 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec7" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec7" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label"><span class="txt">Módulo 8 (DR / Alt)</span></span>
+            <div style="display:flex; gap:4px;">
+              <input type="text" id="iptSelDrMec8" class="ipt mono" placeholder="DR" style="flex:2;">
+              <input type="text" id="iptSelAltMec8" class="ipt mono" placeholder="Alt" value="1" style="flex:1;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mfoot" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-top: 1px solid var(--border);">
+        <div>
+          <button type="button" class="btn" id="btnExcluirModalSeletorRow" style="display:none; color:var(--red); border-color:rgba(239,68,68,0.3);">Excluir Combinação</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn" id="btnCancelModalSeletorRow">Cancelar</button>
+          <button type="button" class="btn primary" id="btnSalvarModalSeletorRow">Salvar Combinação</button>
+        </div>
+      </div>
     </div>
   </div>
 

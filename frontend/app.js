@@ -1386,6 +1386,10 @@
     }
     if ($('legendWrapper')) $('legendWrapper').style.display = '';
 
+    if ($('btnAdicionarLinhaSeletor')) {
+      $('btnAdicionarLinhaSeletor').style.display = 'none';
+    }
+
     var areaObj = state.regrasData[areaIdx];
     var camposKeys = Object.keys(areaObj ? areaObj.campos || {} : {});
     state.selectedCampoKey = camposKeys.length ? camposKeys[0] : null;
@@ -1411,6 +1415,10 @@
       $('maintContentSeletor').classList.remove('hidden');
     }
     if ($('legendWrapper')) $('legendWrapper').style.display = 'none';
+
+    if ($('btnAdicionarLinhaSeletor')) {
+      $('btnAdicionarLinhaSeletor').style.display = 'inline-flex';
+    }
 
     if ($('maintFooterMeta')) {
       $('maintFooterMeta').textContent = 'Seletor de PEP & Centros de Trabalho (' + (state.seletorData ? state.seletorData.length : 0) + ' combinações)';
@@ -1527,24 +1535,153 @@
     });
   }
 
+  var currentEditingSeletorIdx = -1;
+
+  function abrirModalNovoSeletorRow() {
+    currentEditingSeletorIdx = -1;
+    if ($('modalSeletorRowTitle')) $('modalSeletorRowTitle').textContent = 'Nova Combinação do Seletor';
+    if ($('btnSalvarModalSeletorRow')) $('btnSalvarModalSeletorRow').textContent = 'Adicionar Combinação';
+    if ($('btnExcluirModalSeletorRow')) $('btnExcluirModalSeletorRow').style.display = 'none';
+
+    if ($('iptSelTipoEstrutura')) $('iptSelTipoEstrutura').value = 'Eletrocentro';
+    if ($('iptSelNModulos')) $('iptSelNModulos').value = '1';
+    if ($('iptSelCasaMaq')) $('iptSelCasaMaq').value = 'Não';
+    if ($('iptSelSistSeg')) $('iptSelSistSeg').value = 'Não';
+    if ($('iptSelTesteSW')) $('iptSelTesteSW').value = 'Não';
+    if ($('iptSelPepStandard')) $('iptSelPepStandard').value = '';
+
+    if ($('iptSelDrEngMec')) $('iptSelDrEngMec').value = '';
+    if ($('iptSelAltEngMec')) $('iptSelAltEngMec').value = '1';
+    if ($('iptSelDrEngEle')) $('iptSelDrEngEle').value = '';
+    if ($('iptSelAltEngEle')) $('iptSelAltEngEle').value = '1';
+    if ($('iptSelDrAcess')) $('iptSelDrAcess').value = '';
+    if ($('iptSelAltAcess')) $('iptSelAltAcess').value = '1';
+    if ($('iptSelDrEletromec')) $('iptSelDrEletromec').value = '';
+    if ($('iptSelAltEletromec')) $('iptSelAltEletromec').value = '1';
+
+    for (var m = 1; m <= 8; m++) {
+      if ($('iptSelDrMec' + m)) $('iptSelDrMec' + m).value = '';
+      if ($('iptSelAltMec' + m)) $('iptSelAltMec' + m).value = '1';
+    }
+
+    var modal = $('modalSeletorRow');
+    if (modal) modal.classList.add('open');
+  }
+
   function abrirModalEditarLinhaSeletor(rowIdx) {
     var row = state.seletorData[rowIdx];
     if (!row) return;
+    currentEditingSeletorIdx = rowIdx;
 
-    var newPep = prompt('PEP Standard para ' + row['Tipo Estrutura'] + ' (' + row['Nº Módulos?'] + ' mód):', row['PEP Standard'] || '');
-    if (newPep !== null) {
-      row['PEP Standard'] = newPep.trim();
-      var drMec = prompt('DR Eng Mecânica:', row['DR Eng Mec'] || '');
-      if (drMec !== null) row['DR Eng Mec'] = drMec.trim();
-      var drEle = prompt('DR Eng Elétrica:', row['DR Eng Ele'] || '');
-      if (drEle !== null) row['DR Eng Ele'] = drEle.trim();
-      var drEletrMec = prompt('DR Eletromecânica:', row['DR Eletromec'] || '');
-      if (drEletrMec !== null) row['DR Eletromec'] = drEletrMec.trim();
+    if ($('modalSeletorRowTitle')) {
+      $('modalSeletorRowTitle').textContent = 'Editar Combinação: ' + (row['Tipo Estrutura'] || '') + ' (' + (row['Nº Módulos?'] || '1') + ' Mód)';
+    }
+    if ($('btnSalvarModalSeletorRow')) $('btnSalvarModalSeletorRow').textContent = 'Salvar Alterações';
+    if ($('btnExcluirModalSeletorRow')) $('btnExcluirModalSeletorRow').style.display = 'inline-flex';
+
+    if ($('iptSelTipoEstrutura')) $('iptSelTipoEstrutura').value = row['Tipo Estrutura'] || '';
+    if ($('iptSelNModulos')) $('iptSelNModulos').value = String(row['Nº Módulos?'] || '1');
+    if ($('iptSelCasaMaq')) $('iptSelCasaMaq').value = row['Casa Máq.?'] || 'Não';
+    if ($('iptSelSistSeg')) $('iptSelSistSeg').value = row['Sist. Seg.?'] || 'Não';
+    if ($('iptSelTesteSW')) $('iptSelTesteSW').value = row['Teste SW?'] || 'Não';
+    if ($('iptSelPepStandard')) $('iptSelPepStandard').value = row['PEP Standard'] || '';
+
+    if ($('iptSelDrEngMec')) $('iptSelDrEngMec').value = row['DR Eng Mec'] || '';
+    if ($('iptSelAltEngMec')) $('iptSelAltEngMec').value = row['Alt Eng Mec'] || '1';
+    if ($('iptSelDrEngEle')) $('iptSelDrEngEle').value = row['DR Eng Ele'] || '';
+    if ($('iptSelAltEngEle')) $('iptSelAltEngEle').value = row['Alt Eng Ele'] || '1';
+    if ($('iptSelDrAcess')) $('iptSelDrAcess').value = row['DR Acess'] || '';
+    if ($('iptSelAltAcess')) $('iptSelAltAcess').value = row['Alt Acess'] || '1';
+    if ($('iptSelDrEletromec')) $('iptSelDrEletromec').value = row['DR Eletromec'] || '';
+    if ($('iptSelAltEletromec')) $('iptSelAltEletromec').value = row['Alt Eletromec'] || '1';
+
+    for (var m = 1; m <= 8; m++) {
+      if ($('iptSelDrMec' + m)) $('iptSelDrMec' + m).value = row['DR Mec ' + m] || row['DR Mec' + m] || '';
+      if ($('iptSelAltMec' + m)) $('iptSelAltMec' + m).value = row['Alt Mec ' + m] || row['Alt Mec' + m] || '1';
+    }
+
+    var modal = $('modalSeletorRow');
+    if (modal) modal.classList.add('open');
+  }
+
+  function fecharModalSeletorRow() {
+    var modal = $('modalSeletorRow');
+    if (modal) modal.classList.remove('open');
+  }
+
+  if ($('btnAdicionarLinhaSeletor')) {
+    $('btnAdicionarLinhaSeletor').addEventListener('click', abrirModalNovoSeletorRow);
+  }
+  if ($('btnCloseModalSeletorRow')) {
+    $('btnCloseModalSeletorRow').addEventListener('click', fecharModalSeletorRow);
+  }
+  if ($('btnCancelModalSeletorRow')) {
+    $('btnCancelModalSeletorRow').addEventListener('click', fecharModalSeletorRow);
+  }
+
+  if ($('btnSalvarModalSeletorRow')) {
+    $('btnSalvarModalSeletorRow').addEventListener('click', function () {
+      var tipo = ($('iptSelTipoEstrutura') ? $('iptSelTipoEstrutura').value : '').trim();
+      var pep = ($('iptSelPepStandard') ? $('iptSelPepStandard').value : '').trim();
+      if (!tipo) {
+        showToast('Informe o Tipo de Estrutura para esta combinação.', true);
+        return;
+      }
+      if (!pep) {
+        showToast('Informe o código do PEP Standard.', true);
+        return;
+      }
+
+      var rowData = {
+        "Tipo Estrutura": tipo,
+        "Nº Módulos?": $('iptSelNModulos') ? $('iptSelNModulos').value : '1',
+        "Casa Máq.?": $('iptSelCasaMaq') ? $('iptSelCasaMaq').value : 'Não',
+        "Sist. Seg.?": $('iptSelSistSeg') ? $('iptSelSistSeg').value : 'Não',
+        "Teste SW?": $('iptSelTesteSW') ? $('iptSelTesteSW').value : 'Não',
+        "PEP Standard": pep,
+        "DR Eng Mec": $('iptSelDrEngMec') ? $('iptSelDrEngMec').value.trim() : '',
+        "Alt Eng Mec": $('iptSelAltEngMec') ? $('iptSelAltEngMec').value.trim() : '1',
+        "DR Eng Ele": $('iptSelDrEngEle') ? $('iptSelDrEngEle').value.trim() : '',
+        "Alt Eng Ele": $('iptSelAltEngEle') ? $('iptSelAltEngEle').value.trim() : '1',
+        "DR Acess": $('iptSelDrAcess') ? $('iptSelDrAcess').value.trim() : '',
+        "Alt Acess": $('iptSelAltAcess') ? $('iptSelAltAcess').value.trim() : '1',
+        "DR Eletromec": $('iptSelDrEletromec') ? $('iptSelDrEletromec').value.trim() : '',
+        "Alt Eletromec": $('iptSelAltEletromec') ? $('iptSelAltEletromec').value.trim() : '1'
+      };
+
+      for (var m = 1; m <= 8; m++) {
+        var drMVal = $('iptSelDrMec' + m) ? $('iptSelDrMec' + m).value.trim() : '';
+        var altMVal = $('iptSelAltMec' + m) ? $('iptSelAltMec' + m).value.trim() : '1';
+        rowData['DR Mec ' + m] = drMVal;
+        rowData['Alt Mec ' + m] = altMVal;
+      }
+
+      if (currentEditingSeletorIdx >= 0 && currentEditingSeletorIdx < state.seletorData.length) {
+        state.seletorData[currentEditingSeletorIdx] = rowData;
+        showToast('Combinação atualizada no Seletor.');
+      } else {
+        state.seletorData.push(rowData);
+        showToast('Nova combinação adicionada ao Seletor.');
+      }
 
       marcarSeletorDirty();
       renderSeletorTable();
-      showToast('Combinação atualizada no Seletor.');
-    }
+      fecharModalSeletorRow();
+    });
+  }
+
+  if ($('btnExcluirModalSeletorRow')) {
+    $('btnExcluirModalSeletorRow').addEventListener('click', function () {
+      if (currentEditingSeletorIdx >= 0 && currentEditingSeletorIdx < state.seletorData.length) {
+        if (confirm('Deseja realmente remover esta combinação do Seletor?')) {
+          state.seletorData.splice(currentEditingSeletorIdx, 1);
+          marcarSeletorDirty();
+          renderSeletorTable();
+          fecharModalSeletorRow();
+          showToast('Combinação removida do Seletor.');
+        }
+      }
+    });
   }
 
   function carregarSeletor() {
