@@ -1208,6 +1208,7 @@
     } else str = b.forma;
     var cCount = (ruleObj.condicoes || []).length;
     if (cCount > 0) str += ' (+ ' + cCount + ' cond)';
+    if (b.perfis && Array.isArray(b.perfis) && b.perfis.length > 0) str += ' [CS/ESSW]';
     return str;
   }
 
@@ -1265,6 +1266,257 @@
     return null;
   }
 
+  function getEspeciais(subTabRule) {
+    if (!subTabRule) return { solar: { ativo: false, base: { forma: 'constante', valor: 0 }, herdar_condicoes: true, condicoes: [] }, essw: { ativo: false, base: { forma: 'constante', valor: 0 }, herdar_condicoes: true, condicoes: [] } };
+
+    if (!subTabRule.especiais) {
+      subTabRule.especiais = {
+        solar: { ativo: false, base: { forma: 'constante', valor: 0 }, herdar_condicoes: true, condicoes: [] },
+        essw: { ativo: false, base: { forma: 'constante', valor: 0 }, herdar_condicoes: true, condicoes: [] }
+      };
+
+      if (subTabRule.base && Array.isArray(subTabRule.base.perfis)) {
+        subTabRule.base.perfis.forEach(function (p) {
+          if (!p || !p.cond) return;
+          var isCs = p.cond.some(function (c) { return c.c === 'tipoestrutura' && c.val === 'Container Solar'; });
+          var isEssw = p.cond.some(function (c) { return c.c === 'tipoestrutura' && (c.val === 'ESSW (mecânica)' || c.val === 'ESSW (elétrica)' || c.val === 'ESSW'); });
+
+          var v = 0;
+          if (p.it && Array.isArray(p.it) && p.it.length) {
+            if (p.it.length === 1 && p.it[0].t === 'num') v = p.it[0].v;
+            else v = chainExpr(p.it, false, SIM_CTX);
+          } else if (p.valor !== undefined) {
+            v = p.valor;
+          }
+
+          if (isCs) {
+            subTabRule.especiais.solar.ativo = true;
+            subTabRule.especiais.solar.base = { forma: 'constante', valor: v, valor_base: v };
+          }
+          if (isEssw) {
+            subTabRule.especiais.essw.ativo = true;
+            subTabRule.especiais.essw.base = { forma: 'constante', valor: v, valor_base: v };
+          }
+        });
+      }
+    }
+
+    ['solar', 'essw'].forEach(function (k) {
+      if (!subTabRule.especiais[k]) {
+        subTabRule.especiais[k] = { ativo: false, base: { forma: 'constante', valor: 0 }, herdar_condicoes: true, condicoes: [] };
+      }
+      if (!subTabRule.especiais[k].base) {
+        subTabRule.especiais[k].base = { forma: 'constante', valor: 0 };
+      }
+      if (subTabRule.especiais[k].herdar_condicoes === undefined) {
+        subTabRule.especiais[k].herdar_condicoes = true;
+      }
+      if (!subTabRule.especiais[k].condicoes) {
+        subTabRule.especiais[k].condicoes = [];
+      }
+    });
+
+    return subTabRule.especiais;
+  }
+
+  function syncEspeciaisToPerfis(subTabRule) {
+    var esp = getEspeciais(subTabRule);
+    var base = subTabRule.base;
+    if (!base) return;
+
+    var perfis = [];
+    if (esp.solar && esp.solar.ativo) {
+      var valS = parseFloat(String(esp.solar.base.valor).replace(',', '.')) || 0;
+      perfis.push({
+        id: 'perfil_cs',
+        nome: 'Container Solar',
+        cond: [{ c: 'tipoestrutura', o: '=', val: 'Container Solar', j: 'E' }],
+        it: [{ t: 'num', v: valS }],
+        valor: valS
+      });
+    }
+    if (esp.essw && esp.essw.ativo) {
+      var valE = parseFloat(String(esp.essw.base.valor).replace(',', '.')) || 0;
+      perfis.push({
+        id: 'perfil_essw',
+        nome: 'ESSW',
+        cond: [
+          { c: 'tipoestrutura', o: '=', val: 'ESSW (mecânica)', j: 'E' },
+          { c: 'tipoestrutura', o: '=', val: 'ESSW (elétrica)', j: 'OU' }
+        ],
+        it: [{ t: 'num', v: valE }],
+        valor: valE
+      });
+    }
+    if (perfis.length > 0) {
+      base.perfis = perfis;
+    } else {
+      delete base.perfis;
+    }
+  }
+
+  function espCondRowHtml(c, i, espKey) {
+    var opts = FLAGS.map(function (f) { return '<option value="' + f.key + '"' + (f.key === c.flag ? ' selected' : '') + '>' + f.nome + '</option>'; }).join('');
+    var valorAtual = c.forma === 'tabela' ? (c.valores ? c.valores[0] : 0) : (c.valor !== undefined ? c.valor : 0);
+
+    var formaOptions = [
+      { tipo: 'fixo', label: '＋ Valor Fixo (+V fixo)' },
+      { tipo: 'escala_multiplicativa', label: '📈 Escala Multiplicativa' },
+      { tipo: 'subtrair', label: '－ Subtrair Fixo (-V fixo)' },
+      { tipo: 'multiplicar', label: '× Multiplicar Fixo (× V fixo)' },
+      { tipo: 'dividir', label: '÷ Dividir Fixo (÷ V fixo)' }
+    ];
+
+    var cForma = c.forma || 'fixo';
+    var selectFormaHtml = '<select class="cond-select esp-cond-forma" data-esp="' + espKey + '" data-idx="' + i + '" style="max-width:170px; font-weight:500;">' +
+      formaOptions.map(function (opt) {
+        return '<option value="' + opt.tipo + '"' + (opt.tipo === cForma ? ' selected' : '') + '>' + opt.label + '</option>';
+      }).join('') +
+      '</select>';
+
+    var valorInputHtml = '<span class="cr-txt">opera</span><input type="text" class="cond-num esp-cond-valor" data-esp="' + espKey + '" data-idx="' + i + '" value="' + valorAtual + '" title="Aceita números ou expressões" style="width:75px;">';
+
+    return '<div class="esp-cond-row" data-esp="' + espKey + '" data-idx="' + i + '" style="flex-wrap:wrap; background:var(--panel-1); padding:6px 8px; border-radius:6px; margin-top:4px; border:1px solid var(--border);">' +
+      '<span class="cr-txt">Se</span><select class="cond-select esp-cond-flag" data-esp="' + espKey + '" data-idx="' + i + '" style="max-width:180px;">' + opts + '</select>' +
+      valorInputHtml +
+      selectFormaHtml +
+      '<button type="button" class="cond-remove esp-cond-remove" data-esp="' + espKey + '" data-idx="' + i + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      '</div>';
+  }
+
+  function perfisBlockHtml(subTabRule, subTab) {
+    var esp = getEspeciais(subTabRule);
+    var unit = subTab === 'H' ? 'h' : 'dias';
+    var hasActive = (esp.solar && esp.solar.ativo) || (esp.essw && esp.essw.ativo);
+
+    var html = '<div class="field-block special-perfis-accordion" style="margin-top:16px; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--panel-1);">' +
+      '<div class="accordion-head" id="toggleSpecialRules" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--panel-2); cursor:pointer; user-select:none; border-bottom:1px solid var(--border);">' +
+      '<div style="display:flex; align-items:center; gap:8px;">' +
+      '<span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:var(--amber-dim); color:var(--amber); font-size:12px; font-weight:700;">⚡</span>' +
+      '<span style="font-size:12.5px; font-weight:700; color:var(--text);">Regras de Estruturas Especiais (Container Solar & ESSW)</span>' +
+      (hasActive ? '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:var(--accent-dim); color:var(--accent);">Personalizado</span>' : '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:var(--panel-3); color:var(--text-faint);">Padrão</span>') +
+      '</div>' +
+      '<div style="display:flex; align-items:center; gap:8px;">' +
+      '<span style="font-size:11px; color:var(--text-faint); font-family:IBM Plex Mono;">Clique para expandir / ocultar</span>' +
+      '<span class="acc-chevron" id="accChevron" style="font-size:12px; color:var(--text-dim); transition:transform 0.2s ease;">' + (state.specialRulesExpanded ? '▲' : '▼') + '</span>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="accordion-body" id="specialRulesBody" style="display:' + (state.specialRulesExpanded ? 'block' : 'none') + '; padding:14px; background:var(--panel-1);">' +
+      '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">';
+
+    // 1. Container Solar Card
+    var cs = esp.solar;
+    var csVal = cs.base ? (cs.base.valor !== undefined ? cs.base.valor : (cs.base.valor_base || 0)) : 0;
+    var csForma = cs.base ? (cs.base.forma || 'constante') : 'constante';
+
+    html += '<div class="esp-card" style="border:1px solid ' + (cs.ativo ? 'var(--accent)' : 'var(--border)') + '; border-radius:8px; padding:12px; background:var(--panel-2); display:flex; flex-direction:column; gap:10px;">' +
+      '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+      '<label style="display:flex; align-items:center; gap:7px; font-weight:700; font-size:12.5px; cursor:pointer;">' +
+      '<input type="checkbox" id="chkEspSolar"' + (cs.ativo ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
+      '<span>☀️ Container Solar</span>' +
+      '</label>' +
+      '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:' + (cs.ativo ? 'var(--accent-dim)' : 'var(--panel-3)') + '; color:' + (cs.ativo ? 'var(--accent)' : 'var(--text-faint)') + ';">' + (cs.ativo ? 'Ativo' : 'Desativado') + '</span>' +
+      '</div>';
+
+    if (cs.ativo) {
+      html += '<div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border); padding-top:10px;">' +
+        '<div>' +
+        '<div style="font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:4px;">Cálculo Base (Solar):</div>' +
+        '<div style="display:flex; gap:6px;">' +
+        '<select id="selFormaEspSolar" class="ipt" style="padding:4px 8px; font-size:11.5px; max-width:130px;">' +
+        '<option value="constante"' + (csForma === 'constante' ? ' selected' : '') + '>Valor Fixo</option>' +
+        '<option value="derivado_h"' + (csForma === 'derivado_h' ? ' selected' : '') + '>Fórmula (H)</option>' +
+        '</select>' +
+        '<div class="num-field" style="flex:1;">' +
+        '<input type="text" id="iptValEspSolar" value="' + csVal + '" placeholder="ex: 16.2" style="font-weight:600;">' +
+        '<span>' + unit + '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div style="display:flex; flex-direction:column; gap:6px;">' +
+        '<label style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text); cursor:pointer;">' +
+        '<input type="checkbox" id="chkHerdarSolar"' + (cs.herdar_condicoes ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
+        '<span>Aplicar condições gerais da regra padrão</span>' +
+        '</label>' +
+        '</div>' +
+
+        '<div style="display:flex; flex-direction:column; gap:6px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+        '<span style="font-size:11px; font-weight:600; color:var(--text-dim);">Condições Específicas para Solar (' + cs.condicoes.length + '):</span>' +
+        '<button type="button" class="btn btn-add-esp-cond" data-esp="solar" style="font-size:10.5px; padding:2px 6px;">＋ Condição</button>' +
+        '</div>' +
+        '<div id="listEspCondSolar" style="display:flex; flex-direction:column; gap:4px;">';
+
+      cs.condicoes.forEach(function (c, i) {
+        html += espCondRowHtml(c, i, 'solar');
+      });
+
+      html += '</div></div></div>';
+    } else {
+      html += '<div style="font-size:11px; color:var(--text-faint); font-style:italic;">Utiliza a regra e condições padrão de 1 a 8 módulos.</div>';
+    }
+    html += '</div>';
+
+    // 2. ESSW Card
+    var essw = esp.essw;
+    var esswVal = essw.base ? (essw.base.valor !== undefined ? essw.base.valor : (essw.base.valor_base || 0)) : 0;
+    var esswForma = essw.base ? (essw.base.forma || 'constante') : 'constante';
+
+    html += '<div class="esp-card" style="border:1px solid ' + (essw.ativo ? 'var(--accent)' : 'var(--border)') + '; border-radius:8px; padding:12px; background:var(--panel-2); display:flex; flex-direction:column; gap:10px;">' +
+      '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+      '<label style="display:flex; align-items:center; gap:7px; font-weight:700; font-size:12.5px; cursor:pointer;">' +
+      '<input type="checkbox" id="chkEspEssw"' + (essw.ativo ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
+      '<span>⚡ ESSW (Mecânica / Elétrica)</span>' +
+      '</label>' +
+      '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:' + (essw.ativo ? 'var(--accent-dim)' : 'var(--panel-3)') + '; color:' + (essw.ativo ? 'var(--accent)' : 'var(--text-faint)') + ';">' + (essw.ativo ? 'Ativo' : 'Desativado') + '</span>' +
+      '</div>';
+
+    if (essw.ativo) {
+      html += '<div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border); padding-top:10px;">' +
+        '<div>' +
+        '<div style="font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:4px;">Cálculo Base (ESSW):</div>' +
+        '<div style="display:flex; gap:6px;">' +
+        '<select id="selFormaEspEssw" class="ipt" style="padding:4px 8px; font-size:11.5px; max-width:130px;">' +
+        '<option value="constante"' + (esswForma === 'constante' ? ' selected' : '') + '>Valor Fixo</option>' +
+        '<option value="derivado_h"' + (esswForma === 'derivado_h' ? ' selected' : '') + '>Fórmula (H)</option>' +
+        '</select>' +
+        '<div class="num-field" style="flex:1;">' +
+        '<input type="text" id="iptValEspEssw" value="' + esswVal + '" placeholder="ex: 3.24" style="font-weight:600;">' +
+        '<span>' + unit + '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div style="display:flex; flex-direction:column; gap:6px;">' +
+        '<label style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text); cursor:pointer;">' +
+        '<input type="checkbox" id="chkHerdarEssw"' + (essw.herdar_condicoes ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
+        '<span>Aplicar condições gerais da regra padrão</span>' +
+        '</label>' +
+        '</div>' +
+
+        '<div style="display:flex; flex-direction:column; gap:6px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+        '<span style="font-size:11px; font-weight:600; color:var(--text-dim);">Condições Específicas para ESSW (' + essw.condicoes.length + '):</span>' +
+        '<button type="button" class="btn btn-add-esp-cond" data-esp="essw" style="font-size:10.5px; padding:2px 6px;">＋ Condição</button>' +
+        '</div>' +
+        '<div id="listEspCondEssw" style="display:flex; flex-direction:column; gap:4px;">';
+
+      essw.condicoes.forEach(function (c, i) {
+        html += espCondRowHtml(c, i, 'essw');
+      });
+
+      html += '</div></div></div>';
+    } else {
+      html += '<div style="font-size:11px; color:var(--text-faint); font-style:italic;">Utiliza a regra e condições padrão de 1 a 8 módulos.</div>';
+    }
+    html += '</div>';
+
+    html += '</div></div></div>';
+    return html;
+  }
+
   function aplicarEtapasSimples(v, etapas) {
     (etapas || []).forEach(function (step) {
       if (!step) return;
@@ -1285,30 +1537,33 @@
     return v;
   }
 
-  function valorBase(base, mod, campoObj, flagsAtivos, vH) {
+  function valorBase(base, mod, campoObj, flagsAtivos, vH, simCtxOverride) {
     if (!base) return 0;
 
+    var activeCtx = Object.assign({}, SIM_CTX, simCtxOverride || {}, { nmod: mod });
+
     if (base.perfis && Array.isArray(base.perfis) && base.perfis.length) {
-      var simCtxPerfil = Object.assign({}, SIM_CTX, { nmod: mod });
-      var perfilHit = matchedPerfil(base.perfis, simCtxPerfil);
+      var perfilHit = matchedPerfil(base.perfis, activeCtx);
       if (perfilHit) {
-        if (perfilHit.it) {
-          var vPerfil = evalChain(perfilHit.it, simCtxPerfil, base.blocos);
+        if (perfilHit.it && Array.isArray(perfilHit.it) && perfilHit.it.length) {
+          var vPerfil = evalChain(perfilHit.it, activeCtx, base.blocos);
           return isFinite(vPerfil) ? vPerfil : 0;
         }
         if (perfilHit.etapas) {
           var vBaseDur = (vH !== undefined) ? vH : 0;
           return aplicarEtapasSimples(vBaseDur, perfilHit.etapas);
         }
-        if (perfilHit.valor !== undefined) return parseFloat(perfilHit.valor) || 0;
+        if (perfilHit.valor !== undefined) {
+          if (typeof perfilHit.valor === 'number') return perfilHit.valor;
+          return evalExpr(perfilHit.valor, vH, mod);
+        }
       }
     }
 
     var forma = base.forma;
     if (forma === 'blocos') {
-      var simCtx = Object.assign({}, SIM_CTX, { nmod: mod });
-      var hitM = matchedMontagem(base.montagens, simCtx);
-      var bVal = hitM ? evalChain(hitM.it, simCtx, base.blocos) : 0;
+      var hitM = matchedMontagem(base.montagens, activeCtx);
+      var bVal = hitM ? evalChain(hitM.it, activeCtx, base.blocos) : 0;
       return isFinite(bVal) ? bVal : 0;
     }
     if (forma === 'constante') return parseFloat(base.valor !== undefined ? base.valor : base.valor_base) || 0;
@@ -1341,7 +1596,7 @@
         camposLista.forEach(function (cKey) {
           var outroCampoObj = currentAreaObj.campos[cKey];
           if (outroCampoObj && outroCampoObj.H) {
-            var valH = calcValor(outroCampoObj.H, mod, flagsAtivos, outroCampoObj);
+            var valH = calcValor(outroCampoObj.H, mod, flagsAtivos, outroCampoObj, undefined, simCtxOverride);
             if (valH && !isNaN(valH) && isFinite(valH)) {
               total += valH;
             }
@@ -1350,30 +1605,7 @@
       }
       var v = total;
       var etapas = base.etapas || [];
-      etapas.forEach(function (step) {
-        if (!step) return;
-        var num = parseFloat(step.valor);
-        if (isNaN(num)) num = 0;
-        if (step.tipo === 'dividir') {
-          if (num !== 0) v = v / num;
-        } else if (step.tipo === 'multiplicar') {
-          v = v * num;
-        } else if (step.tipo === 'somar') {
-          v = v + num;
-        } else if (step.tipo === 'subtrair') {
-          v = v - num;
-        } else if (step.tipo === 'arredondar') {
-          var modo = step.modo || step.arredondamento || 'cima';
-          if (modo === 'cima') v = Math.ceil(v);
-          else if (modo === 'baixo') v = Math.floor(v);
-          else if (modo === 'padrao') v = Math.round(v);
-        } else if (step.tipo === 'limitar_max') {
-          v = Math.min(v, num);
-        } else if (step.tipo === 'limitar_min') {
-          v = Math.max(v, num);
-        }
-      });
-      return v;
+      return aplicarEtapasSimples(v, etapas);
     }
     if (forma === 'aditiva') return (parseFloat(base.valor_base) || 0) + (parseFloat(base.passo) || 0) * (mod - 1);
     if (forma === 'tabela') {
@@ -1384,9 +1616,8 @@
     if (forma === 'derivado_h') {
       var v = (vH !== undefined) ? vH : 0;
       if (vH === undefined && campoObj && campoObj.H && state.selectedSubTab !== 'H') {
-        v = calcValor(campoObj.H, mod, flagsAtivos, campoObj);
+        v = calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, simCtxOverride);
       }
-
       var etapas = base.etapas;
       if (!etapas || !etapas.length) {
         etapas = [];
@@ -1395,33 +1626,7 @@
         if (base.subtracao) etapas.push({ tipo: 'subtrair', valor: base.subtracao });
         if (base.soma) etapas.push({ tipo: 'somar', valor: base.soma });
       }
-
-      etapas.forEach(function (step) {
-        if (!step) return;
-        var num = parseFloat(step.valor);
-        if (isNaN(num)) num = 0;
-
-        if (step.tipo === 'dividir') {
-          if (num !== 0) v = v / num;
-        } else if (step.tipo === 'multiplicar') {
-          v = v * num;
-        } else if (step.tipo === 'somar') {
-          v = v + num;
-        } else if (step.tipo === 'subtrair') {
-          v = v - num;
-        } else if (step.tipo === 'arredondar') {
-          var modo = step.modo || step.arredondamento || 'cima';
-          if (modo === 'cima') v = Math.ceil(v);
-          else if (modo === 'baixo') v = Math.floor(v);
-          else if (modo === 'padrao') v = Math.round(v);
-        } else if (step.tipo === 'limitar_max') {
-          v = Math.min(v, num);
-        } else if (step.tipo === 'limitar_min') {
-          v = Math.max(v, num);
-        }
-      });
-
-      return v;
+      return aplicarEtapasSimples(v, etapas);
     }
     return 0;
   }
@@ -1475,12 +1680,26 @@
     }
   }
 
-  function valorBonus(b, mod, vAtual, vH) {
-    var val = evalExpr(b.valor, vH);
+  function valorBonus(b, mod, vAtual, vH, simCtxOverride) {
+    var activeCtx = Object.assign({}, SIM_CTX, simCtxOverride || {}, { nmod: mod });
+    if (b.perfis && Array.isArray(b.perfis) && b.perfis.length) {
+      var perfilHit = matchedPerfil(b.perfis, activeCtx);
+      if (perfilHit) {
+        if (perfilHit.it && Array.isArray(perfilHit.it) && perfilHit.it.length) {
+          var vPerfil = evalChain(perfilHit.it, activeCtx);
+          return isFinite(vPerfil) ? vPerfil : 0;
+        }
+        if (perfilHit.valor !== undefined) {
+          if (typeof perfilHit.valor === 'number') return perfilHit.valor;
+          return evalExpr(perfilHit.valor, vH, mod);
+        }
+      }
+    }
+    var val = evalExpr(b.valor, vH, mod);
     if (!vAtual) vAtual = 0;
     if (b.forma === 'tabela') {
       if (b.valores && b.valores[mod - 1] !== undefined) {
-        return evalExpr(b.valores[mod - 1], vH);
+        return evalExpr(b.valores[mod - 1], vH, mod);
       }
       return val;
     }
@@ -1509,11 +1728,51 @@
     return 0;
   }
 
-  function calcValor(analise, mod, flagsAtivos, campoObj, vH) {
-    if (!analise || !analise.base) return 0;
-    var v = valorBase(analise.base, mod, campoObj, flagsAtivos, vH);
+  function calcValor(analise, mod, flagsAtivos, campoObj, vH, simCtxOverride) {
+    if (!analise) return 0;
+    var activeCtx = Object.assign({}, SIM_CTX, simCtxOverride || {}, { nmod: mod });
+    var tipo = (activeCtx && activeCtx.tipoestrutura) || 'Móvel';
+    var isSolar = (tipo === 'Container Solar');
+    var isEssw = (tipo === 'ESSW (mecânica)' || tipo === 'ESSW (elétrica)' || tipo === 'ESSW');
+
+    var esp = getEspeciais(analise);
+
+    if (isSolar && esp.solar && esp.solar.ativo) {
+      var vBaseSolar = valorBase(esp.solar.base, mod, campoObj, flagsAtivos, vH, activeCtx);
+      var vTotalSolar = vBaseSolar;
+      if (esp.solar.herdar_condicoes && analise.condicoes) {
+        analise.condicoes.forEach(function (c) {
+          if (flagsAtivos && flagsAtivos[c.flag]) vTotalSolar += valorBonus(c, mod, vTotalSolar, vH, activeCtx);
+        });
+      }
+      if (esp.solar.condicoes) {
+        esp.solar.condicoes.forEach(function (c) {
+          if (flagsAtivos && flagsAtivos[c.flag]) vTotalSolar += valorBonus(c, mod, vTotalSolar, vH, activeCtx);
+        });
+      }
+      return vTotalSolar;
+    }
+
+    if (isEssw && esp.essw && esp.essw.ativo) {
+      var vBaseEssw = valorBase(esp.essw.base, mod, campoObj, flagsAtivos, vH, activeCtx);
+      var vTotalEssw = vBaseEssw;
+      if (esp.essw.herdar_condicoes && analise.condicoes) {
+        analise.condicoes.forEach(function (c) {
+          if (flagsAtivos && flagsAtivos[c.flag]) vTotalEssw += valorBonus(c, mod, vTotalEssw, vH, activeCtx);
+        });
+      }
+      if (esp.essw.condicoes) {
+        esp.essw.condicoes.forEach(function (c) {
+          if (flagsAtivos && flagsAtivos[c.flag]) vTotalEssw += valorBonus(c, mod, vTotalEssw, vH, activeCtx);
+        });
+      }
+      return vTotalEssw;
+    }
+
+    if (!analise.base) return 0;
+    var v = valorBase(analise.base, mod, campoObj, flagsAtivos, vH, activeCtx);
     (analise.condicoes || []).forEach(function (c) {
-      if (flagsAtivos && flagsAtivos[c.flag]) v += valorBonus(c, mod, v, vH);
+      if (flagsAtivos && flagsAtivos[c.flag]) v += valorBonus(c, mod, v, vH, activeCtx);
     });
     return v;
   }
@@ -2715,12 +2974,15 @@
     }
     html += '</div>';
 
+    // Seção de Perfis Especiais (Container Solar & ESSW)
+    html += perfisBlockHtml(subTabRule, state.selectedSubTab);
+
     html += '<div class="field-block"><div class="field-label">Condições adicionais (' + state.selectedSubTab + ') <span class="hint">acréscimo por opção</span></div><div class="cond-list" id="condList">';
     (subTabRule.condicoes || []).forEach(function (c, i) { html += condRowHtml(c, i); });
     html += '</div><button type="button" class="add-cond" id="btnAddCond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Adicionar condição</button></div>';
 
-    html += '<div class="field-block"><div class="field-label">Prévia de cálculo por nº de módulos (' + state.selectedSubTab + ')</div>' +
-      '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '</tr></thead><tbody id="previewBody"></tbody></table></div>';
+    html += '<div class="field-block"><div class="field-label">Prévia de cálculo por estrutura (' + state.selectedSubTab + ') <span class="hint">1m a 8m, Container Solar e ESSW</span></div>' +
+      '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '<th class="th-special" title="Estrutura Container Solar (Linha fixa)">☀️ Solar</th><th class="th-special" title="Estrutura ESSW (Linha fixa)">⚡ ESSW</th></tr></thead><tbody id="previewBody"></tbody></table></div>';
 
     html += '</div>';
 
@@ -2875,7 +3137,7 @@
             base.montagens = [
               { id: 'm1', nome: 'Móvel', cond: [{ c: 'tipoestrutura', o: '=', val: 'Móvel', j: 'E' }], it: [{ t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
               { id: 'm2', nome: 'Embarcado', cond: [{ c: 'tipoestrutura', o: '=', val: 'Embarcado', j: 'E' }], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] },
-              { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', v: '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
+              { id: 'm0', nome: 'Demais estruturas', padrao: true, cond: [], it: [{ t: 'blk', v: 'b1' }, { t: 'op', v: '*' }, { t: 'var', v: 'lat_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b2' }, { t: 'op', v: '*' }, { t: 'var', v: 'ffd_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b3' }, { t: 'op', v: '*' }, { t: 'var', v: 'tet_mb' }, { t: 'op', v: '+' }, { t: 'num', v: 2 }, { t: 'op', 'v': '*' }, { t: 'blk', v: 'b4' }, { t: 'op', v: '*' }, { t: 'var', v: 'tlh_mb' }, { t: 'op', v: '+' }, { t: 'blk', v: 'b5' }, { t: 'op', v: '*' }, { t: 'var', v: 'bas_mb' }] }
             ];
           }
         }
@@ -2956,6 +3218,172 @@
         markDirty(); renderPreview(originalSubTab, subTabRule);
       });
     }
+
+    // Wiring Collapsible Accordion & Special Rules (Solar / ESSW)
+    var btnToggleEsp = $('toggleSpecialRules');
+    if (btnToggleEsp) {
+      btnToggleEsp.addEventListener('click', function () {
+        state.specialRulesExpanded = !state.specialRulesExpanded;
+        var bodyEl = $('specialRulesBody');
+        var chevEl = $('accChevron');
+        if (bodyEl) bodyEl.style.display = state.specialRulesExpanded ? 'block' : 'none';
+        if (chevEl) chevEl.textContent = state.specialRulesExpanded ? '▲' : '▼';
+      });
+    }
+
+    var esp = getEspeciais(subTabRule);
+
+    // Solar Wiring
+    var chkSolar = $('chkEspSolar');
+    if (chkSolar) {
+      chkSolar.addEventListener('change', function () {
+        esp.solar.ativo = this.checked;
+        if (this.checked && (!esp.solar.base || esp.solar.base.valor === undefined || esp.solar.base.valor === 0)) {
+          var curBase = base.valor !== undefined ? base.valor : (base.valor_base || 0);
+          esp.solar.base = { forma: 'constante', valor: curBase, valor_base: curBase };
+        }
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderEditor();
+      });
+    }
+
+    var selFormaSolar = $('selFormaEspSolar');
+    if (selFormaSolar) {
+      selFormaSolar.addEventListener('change', function () {
+        esp.solar.base.forma = this.value;
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    var iptValSolar = $('iptValEspSolar');
+    if (iptValSolar) {
+      iptValSolar.addEventListener('input', function () {
+        var num = parseFloat(this.value.replace(',', '.'));
+        esp.solar.base.valor = !isNaN(num) ? num : this.value;
+        esp.solar.base.valor_base = !isNaN(num) ? num : this.value;
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    var chkHerdarSolar = $('chkHerdarSolar');
+    if (chkHerdarSolar) {
+      chkHerdarSolar.addEventListener('change', function () {
+        esp.solar.herdar_condicoes = this.checked;
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    // ESSW Wiring
+    var chkEssw = $('chkEspEssw');
+    if (chkEssw) {
+      chkEssw.addEventListener('change', function () {
+        esp.essw.ativo = this.checked;
+        if (this.checked && (!esp.essw.base || esp.essw.base.valor === undefined || esp.essw.base.valor === 0)) {
+          var curBase = base.valor !== undefined ? base.valor : (base.valor_base || 0);
+          esp.essw.base = { forma: 'constante', valor: curBase, valor_base: curBase };
+        }
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderEditor();
+      });
+    }
+
+    var selFormaEssw = $('selFormaEspEssw');
+    if (selFormaEssw) {
+      selFormaEssw.addEventListener('change', function () {
+        esp.essw.base.forma = this.value;
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    var iptValEssw = $('iptValEspEssw');
+    if (iptValEssw) {
+      iptValEssw.addEventListener('input', function () {
+        var num = parseFloat(this.value.replace(',', '.'));
+        esp.essw.base.valor = !isNaN(num) ? num : this.value;
+        esp.essw.base.valor_base = !isNaN(num) ? num : this.value;
+        syncEspeciaisToPerfis(subTabRule);
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    var chkHerdarEssw = $('chkHerdarEssw');
+    if (chkHerdarEssw) {
+      chkHerdarEssw.addEventListener('change', function () {
+        esp.essw.herdar_condicoes = this.checked;
+        markDirty();
+        renderPreview(originalSubTab, subTabRule);
+      });
+    }
+
+    // Wiring Add Condition Buttons for Solar / ESSW
+    document.querySelectorAll('.btn-add-esp-cond').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var espKey = this.dataset.esp;
+        if (esp[espKey]) {
+          if (!esp[espKey].condicoes) esp[espKey].condicoes = [];
+          esp[espKey].condicoes.push({ flag: FLAGS[0].key, rotulo: FLAGS[0].nome, forma: 'fixo', valor: 1 });
+          markDirty();
+          renderEditor();
+        }
+      });
+    });
+
+    // Wiring Condition Rows for Solar / ESSW
+    document.querySelectorAll('.esp-cond-row').forEach(function (row) {
+      var espKey = row.dataset.esp;
+      var idx = +row.dataset.idx;
+      var targetList = esp[espKey] ? esp[espKey].condicoes : null;
+      if (!targetList || !targetList[idx]) return;
+      var c = targetList[idx];
+
+      var flagSel = row.querySelector('.esp-cond-flag');
+      if (flagSel) {
+        flagSel.addEventListener('change', function () {
+          c.flag = this.value;
+          c.rotulo = flagNome(this.value);
+          markDirty();
+          renderPreview(originalSubTab, subTabRule);
+        });
+      }
+
+      var valIpt = row.querySelector('.esp-cond-valor');
+      if (valIpt) {
+        valIpt.addEventListener('input', function () {
+          c.valor = this.value;
+          markDirty();
+          renderPreview(originalSubTab, subTabRule);
+        });
+      }
+
+      var formaSel = row.querySelector('.esp-cond-forma');
+      if (formaSel) {
+        formaSel.addEventListener('change', function () {
+          c.forma = this.value;
+          markDirty();
+          renderPreview(originalSubTab, subTabRule);
+        });
+      }
+
+      var delBtn = row.querySelector('.esp-cond-remove');
+      if (delBtn) {
+        delBtn.addEventListener('click', function () {
+          targetList.splice(idx, 1);
+          markDirty();
+          renderEditor();
+        });
+      }
+    });
+
     if ($('btnAddCond')) {
       $('btnAddCond').addEventListener('click', function () {
         subTabRule.condicoes.push({ flag: FLAGS[0].key, rotulo: FLAGS[0].nome, forma: 'fixo', valor: 1 });
@@ -3040,16 +3468,20 @@
   }
 
   function wireCondRows(originalSubTab, subTabRule) {
-    document.querySelectorAll('.cond-row').forEach(function (row) {
+    document.querySelectorAll('#condList > .cond-row').forEach(function (row) {
       var idx = +row.dataset.idx;
-      var c = subTabRule.condicoes[idx];
+      var c = subTabRule.condicoes ? subTabRule.condicoes[idx] : null;
       if (!c) return;
-      row.querySelector('.cond-flag').addEventListener('change', function () {
-        c.flag = this.value;
-        c.rotulo = flagNome(this.value);
-        markDirty();
-        renderPreview(originalSubTab, subTabRule);
-      });
+
+      var flagSel = row.querySelector('.cond-flag');
+      if (flagSel) {
+        flagSel.addEventListener('change', function () {
+          c.flag = this.value;
+          c.rotulo = flagNome(this.value);
+          markDirty();
+          renderPreview(originalSubTab, subTabRule);
+        });
+      }
       var valorIpt = row.querySelector('.cond-valor');
       if (valorIpt) {
         valorIpt.addEventListener('input', function () {
@@ -3087,10 +3519,13 @@
           renderPreview(originalSubTab, subTabRule);
         });
       });
-      row.querySelector('.cond-remove').addEventListener('click', function () {
-        subTabRule.condicoes.splice(idx, 1);
-        renderEditor();
-      });
+      var remBtn = row.querySelector('.cond-remove');
+      if (remBtn) {
+        remBtn.addEventListener('click', function () {
+          subTabRule.condicoes.splice(idx, 1);
+          renderEditor();
+        });
+      }
     });
   }
 
@@ -3100,11 +3535,14 @@
     var areaObj = state.regrasData[state.selectedAreaIdx];
     var campoObj = (areaObj && areaObj.campos) ? areaObj.campos[state.selectedCampoKey] : null;
 
-    // Collect all condition flags from both H and DUR (and subTabRule)
+    // Collect all condition flags from both H and DUR (and subTabRule and especiais)
     var conds = [];
     if (campoObj && campoObj.H && campoObj.H.condicoes) conds = conds.concat(campoObj.H.condicoes);
     if (campoObj && campoObj.DUR && campoObj.DUR.condicoes) conds = conds.concat(campoObj.DUR.condicoes);
     if (subTabRule && subTabRule.condicoes) conds = conds.concat(subTabRule.condicoes);
+    var espRule = getEspeciais(subTabRule);
+    if (espRule.solar && espRule.solar.condicoes) conds = conds.concat(espRule.solar.condicoes);
+    if (espRule.essw && espRule.essw.condicoes) conds = conds.concat(espRule.essw.condicoes);
 
     var uniqueFlags = [];
     var seenFlags = {};
@@ -3115,26 +3553,43 @@
       }
     });
 
+    var cols = [
+      { k: '1m', m: 1, ctx: { tipoestrutura: 'Móvel', nmod: 1 } },
+      { k: '2m', m: 2, ctx: { tipoestrutura: 'Móvel', nmod: 2 } },
+      { k: '3m', m: 3, ctx: { tipoestrutura: 'Móvel', nmod: 3 } },
+      { k: '4m', m: 4, ctx: { tipoestrutura: 'Móvel', nmod: 4 } },
+      { k: '5m', m: 5, ctx: { tipoestrutura: 'Móvel', nmod: 5 } },
+      { k: '6m', m: 6, ctx: { tipoestrutura: 'Móvel', nmod: 6 } },
+      { k: '7m', m: 7, ctx: { tipoestrutura: 'Móvel', nmod: 7 } },
+      { k: '8m', m: 8, ctx: { tipoestrutura: 'Móvel', nmod: 8 } },
+      { k: 'Solar', m: 1, ctx: { tipoestrutura: 'Container Solar', nmod: 1 }, special: true },
+      { k: 'ESSW', m: 1, ctx: { tipoestrutura: 'ESSW (mecânica)', nmod: 1 }, special: true }
+    ];
+
     function rowFor(label, flagsAtivos) {
       var isDur = state.selectedSubTab === 'DUR';
       var subTabH = campoObj ? campoObj['H'] : null;
 
-      var hOrigVals = [];
-      var hNewVals = [];
-      if (isDur && subTabH) {
-        hOrigVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return calcValor(subTabH, m, flagsAtivos, campoObj); });
-        hNewVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return calcValor(subTabH, m, flagsAtivos, campoObj); });
-      }
+      var hOrigVals = cols.map(function (col) {
+        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, undefined, col.ctx) : undefined;
+      });
+      var hNewVals = cols.map(function (col) {
+        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, undefined, col.ctx) : undefined;
+      });
 
-      var origVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m, idx) {
-        return calcValor(originalSubTab, m, flagsAtivos, campoObj, isDur ? hOrigVals[idx] : undefined);
+      var origVals = cols.map(function (col, idx) {
+        return calcValor(originalSubTab, col.m, flagsAtivos, campoObj, isDur ? hOrigVals[idx] : undefined, col.ctx);
       });
-      var newVals = [1, 2, 3, 4, 5, 6, 7, 8].map(function (m, idx) {
-        return calcValor(subTabRule, m, flagsAtivos, campoObj, isDur ? hNewVals[idx] : undefined);
+      var newVals = cols.map(function (col, idx) {
+        return calcValor(subTabRule, col.m, flagsAtivos, campoObj, isDur ? hNewVals[idx] : undefined, col.ctx);
       });
+
       return '<tr><td>' + label + '</td>' + newVals.map(function (v, i) {
         var changed = v !== null && origVals[i] !== null && Math.abs(v - origVals[i]) > 0.001;
-        return '<td class="' + (changed ? 'changed' : '') + '">' + (v !== null ? (typeof v === 'number' ? v.toFixed(2) : v) : '—') + '</td>';
+        var cls = [];
+        if (cols[i].special) cls.push('td-special');
+        if (changed) cls.push('changed');
+        return '<td class="' + cls.join(' ') + '">' + (v !== null ? (typeof v === 'number' ? v.toFixed(2) : v) : '—') + '</td>';
       }).join('') + '</tr>';
     }
 

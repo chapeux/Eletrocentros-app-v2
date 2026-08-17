@@ -1137,10 +1137,32 @@ section.pane.disabled .check {
 .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .preview-table th { text-align: right; font-weight: 500; color: var(--text-faint); font-size: 10.5px; padding: 6px 8px; border-bottom: 1px solid var(--hairline); font-family: "IBM Plex Mono"; }
 .preview-table th:first-child { text-align: left; }
+.preview-table th.th-special { color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); border-left: 1px dashed var(--border-strong); font-weight: 600; }
 .preview-table td { text-align: right; padding: 7px 8px; font-family: "IBM Plex Mono"; border-bottom: 1px solid var(--hairline); color: var(--text-dim); }
 .preview-table td:first-child { text-align: left; color: var(--text-faint); font-family: "IBM Plex Sans"; font-size: 11.5px; }
+.preview-table td.td-special { background: color-mix(in srgb, var(--accent) 5%, transparent); border-left: 1px dashed var(--border-strong); font-weight: 600; color: var(--text); }
 .preview-table td.changed { color: var(--amber); font-weight: 600; }
 .preview-table tr:last-child td { border-bottom: none; }
+
+.special-perfis-accordion {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.special-perfis-accordion .accordion-head:hover {
+  background: var(--panel-3) !important;
+}
+.esp-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+.esp-card:focus-within {
+  border-color: var(--accent) !important;
+}
+.esp-cond-row {
+  transition: background 0.15s ease;
+}
+.esp-cond-row:hover {
+  background: var(--panel-2) !important;
+}
 
 .editor-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--hairline); }
 
