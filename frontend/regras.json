@@ -71,7 +71,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 16.2,
+                "valor_base": 16.2
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 3.24,
+                "valor_base": 3.24
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -111,7 +133,29 @@
               }
             ]
           },
-          "condicoes": [ { "flag": "chapa_remov", "rotulo": "Chapa Removível", "forma": "por_modulo", "valor": 3 }, { "flag": "trafo_a_oleo", "rotulo": "Trafo a Óleo", "forma": "fixo", "valor": 8 } ]
+          "condicoes": [ { "flag": "chapa_remov", "rotulo": "Chapa Removível", "forma": "por_modulo", "valor": 3 }, { "flag": "trafo_a_oleo", "rotulo": "Trafo a Óleo", "forma": "fixo", "valor": 8 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 35.64,
+                "valor_base": 35.64
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 19.44,
+                "valor_base": 19.44
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -138,7 +182,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
