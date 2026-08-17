@@ -47,7 +47,27 @@
             "forma": "derivado_h",
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"}, {"tipo": "subtrair", "valor": 1} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "LMM": {
@@ -108,7 +128,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PBS": {
@@ -163,7 +205,27 @@
             "valor": 8,
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PPA": {
@@ -239,7 +301,29 @@
               }
             ]
           },
-          "condicoes": [ { "flag": "pe_direito_3_3_m", "rotulo": "Pé Direito 3,3m", "forma": "multiplicar", "valor": 1.3 } ]
+          "condicoes": [ { "flag": "pe_direito_3_3_m", "rotulo": "Pé Direito 3,3m", "forma": "multiplicar", "valor": 1.3 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 12.15,
+                "valor_base": 12.15
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 32.4,
+                "valor_base": 32.4
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -247,7 +331,27 @@
             "valor": 6,
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PCE": {
@@ -269,7 +373,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 0,
+                "valor_base": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -296,7 +422,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 3.24,
+                "valor_base": 3.24
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 3.24,
+                "valor_base": 3.24
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -304,7 +452,27 @@
             "valor": 5,
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "LCA": {
@@ -322,7 +490,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -341,9 +531,47 @@
             "valor_base": 20,
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "cima"}, {"tipo": "subtrair", "valor": 1} ],
             "escala": 0.5,
-            "fator": 1.5
+            "fator": 1.5,
+            "perfis": [
+              {
+                "id": "perfil_cs",
+                "nome": "Container Solar",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "Container Solar", "j": "E"} ],
+                "it": [ {"t": "num", "v": 47} ],
+                "valor": 47
+              },
+              {
+                "id": "perfil_essw",
+                "nome": "ESSW",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "ESSW (mecânica)", "j": "E"}, {"c": "tipoestrutura", "o": "=", "val": "ESSW (elétrica)", "j": "OU"} ],
+                "it": [ {"t": "num", "v": 6.48} ],
+                "valor": 6.48
+              }
+            ]
           },
-          "condicoes": [ { "flag": "esc_plat_padao_weg", "rotulo": "Esc./Plat. Padrão WEG", "forma": "escala_multiplicativa", "valor": 24, "escala": 0.5 }, { "flag": "esc_plat_especial", "rotulo": "Esc./Plat. Especial", "forma": "escala_multiplicativa", "valor": 36, "escala": 0.5 }, { "flag": "porao_de_cabos", "rotulo": "Porão de Cabos", "forma": "escala_multiplicativa", "valor": 16, "escala": 0.5 }, { "flag": "pilotis", "rotulo": "Pilotis", "forma": "fixo", "valor": 4 } ]
+          "condicoes": [ { "flag": "esc_plat_padao_weg", "rotulo": "Esc./Plat. Padrão WEG", "forma": "escala_multiplicativa", "valor": 24, "escala": 0.5 }, { "flag": "esc_plat_especial", "rotulo": "Esc./Plat. Especial", "forma": "escala_multiplicativa", "valor": 36, "escala": 0.5 }, { "flag": "porao_de_cabos", "rotulo": "Porão de Cabos", "forma": "escala_multiplicativa", "valor": 16, "escala": 0.5 }, { "flag": "pilotis", "rotulo": "Pilotis", "forma": "fixo", "valor": 4 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 47,
+                "valor_base": 47
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
