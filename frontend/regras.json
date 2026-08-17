@@ -681,7 +681,29 @@
               }
             ]
           },
-          "condicoes": [ { "flag": "calhas_pluviais", "rotulo": "Calhas Pluviais", "forma": "fixo", "valor": 12 } ]
+          "condicoes": [ { "flag": "calhas_pluviais", "rotulo": "Calhas Pluviais", "forma": "fixo", "valor": 12 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 13.77,
+                "valor_base": 13.77
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
