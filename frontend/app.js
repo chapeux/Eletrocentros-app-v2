@@ -1564,9 +1564,8 @@
 
     var forma = base.forma;
 
-    // Se for estrutura especial (Solar ou ESSW) e estivermos calculando DUR (vH disponível ou campo DUR)
-    if (isSpecialEstrutura && (vH !== undefined || (campoObj && campoObj.H && state && state.selectedSubTab === 'DUR'))) {
-      var hValSpecial = (vH !== undefined) ? vH : (campoObj && campoObj.H ? calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, activeCtx) : 0);
+    // Se for estrutura especial (Solar ou ESSW) e vH estiver definido e positivo (calculando DUR)
+    if (isSpecialEstrutura && vH !== undefined && vH !== null && vH > 0) {
       var etapas = base.etapas;
       if (!etapas || !etapas.length) {
         etapas = [];
@@ -1576,9 +1575,11 @@
         if (base.soma) etapas.push({ tipo: 'somar', valor: base.soma });
       }
       if (etapas.length > 0) {
-        return aplicarEtapasSimples(hValSpecial, etapas);
+        return aplicarEtapasSimples(vH, etapas);
       }
-      return aplicarEtapasSimples(hValSpecial, [{ tipo: 'dividir', valor: 7.92 }, { tipo: 'arredondar', modo: 'cima' }]);
+      if (forma === 'derivado_h' || forma === 'tabela' || forma === 'constante' || forma === 'multiplicativa' || forma === 'degrau_fixo' || forma === 'aditiva') {
+        return aplicarEtapasSimples(vH, [{ tipo: 'dividir', valor: 7.92 }, { tipo: 'arredondar', modo: 'cima' }]);
+      }
     }
 
     if (forma === 'blocos') {
@@ -1755,9 +1756,9 @@
     var isSolar = (tipo === 'Container Solar');
     var isEssw = (tipo === 'ESSW (mecânica)' || tipo === 'ESSW (elétrica)' || tipo === 'ESSW');
 
-    // Se estamos calculando DUR e vH não foi explicitamente fornecido, busca no H do campo
-    if (vH === undefined && campoObj && campoObj.H && ((campoObj.DUR && analise === campoObj.DUR) || (state && state.selectedSubTab === 'DUR'))) {
-      vH = calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, activeCtx);
+    // Se estamos calculando DUR e vH não foi explicitamente fornecido, busca no H do campo (sem recursão em H)
+    if (vH === undefined && campoObj && campoObj.H && analise !== campoObj.H && ((campoObj.DUR && analise === campoObj.DUR) || (state && state.selectedSubTab === 'DUR'))) {
+      vH = calcValor(campoObj.H, mod, flagsAtivos, campoObj, 0, activeCtx);
     }
 
     var esp = getEspeciais(analise);
@@ -3596,10 +3597,10 @@
       var subTabH = campoObj ? campoObj['H'] : null;
 
       var hOrigVals = cols.map(function (col) {
-        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, undefined, col.ctx) : undefined;
+        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, 0, col.ctx) : undefined;
       });
       var hNewVals = cols.map(function (col) {
-        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, undefined, col.ctx) : undefined;
+        return (isDur && subTabH) ? calcValor(subTabH, col.m, flagsAtivos, campoObj, 0, col.ctx) : undefined;
       });
 
       var origVals = cols.map(function (col, idx) {
