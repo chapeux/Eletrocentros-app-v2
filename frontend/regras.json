@@ -1698,28 +1698,46 @@
                 "padrao": true,
                 "cond": [  ],
                 "it": [ {"t": "op", "v": "("}, {"t": "blk", "v": "b1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "lat_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "ffd_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b3"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tet_mb"}, {"t": "op", "v": "+"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b4"}, {"t": "op", "v": "*"}, {"t": "var", "v": "tlh_mb"}, {"t": "op", "v": "+"}, {"t": "blk", "v": "b5"}, {"t": "op", "v": "*"}, {"t": "var", "v": "bas_mb"}, {"t": "op", "v": ")"}, {"t": "op", "v": "/"}, {"t": "num", "v": 60}, {"t": "op", "v": "*"}, {"t": "op", "v": "("}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1}, {"t": "op", "v": ")"} ],
-                "collapsed": false
+                "collapsed": true
+              }
+            ],
+            "perfis": [
+              {
+                "id": "perfil_cs",
+                "nome": "Container Solar",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "Container Solar", "j": "E"} ],
+                "it": [ {"t": "num", "v": 16.5} ],
+                "valor": 16.5
+              },
+              {
+                "id": "perfil_essw",
+                "nome": "ESSW",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "ESSW (mecânica)", "j": "E"}, {"c": "tipoestrutura", "o": "=", "val": "ESSW (elétrica)", "j": "OU"} ],
+                "it": [ {"t": "num", "v": 12.1} ],
+                "valor": 12.1
               }
             ]
           },
           "condicoes": [  ],
           "especiais": {
             "solar": {
-              "ativo": false,
+              "ativo": true,
               "base": {
                 "forma": "constante",
-                "valor": 0
+                "valor": 16.5,
+                "valor_base": 16.5
               },
-              "herdar_condicoes": true,
+              "herdar_condicoes": false,
               "condicoes": [  ]
             },
             "essw": {
-              "ativo": false,
+              "ativo": true,
               "base": {
                 "forma": "constante",
-                "valor": 0
+                "valor": 12.1,
+                "valor_base": 12.1
               },
-              "herdar_condicoes": true,
+              "herdar_condicoes": false,
               "condicoes": [  ]
             }
           }
