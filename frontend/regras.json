@@ -579,7 +579,27 @@
             "valor": 5,
             "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "cima"} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "LAM": {
@@ -605,7 +625,29 @@
               }
             ]
           },
-          "condicoes": [ { "flag": "rede_de_dutos", "rotulo": "Rede de Dutos", "forma": "escala_multiplicativa", "valor": 48, "escala": 1 }, { "flag": "fundo_falso", "rotulo": "Fundo Falso", "forma": "escala_multiplicativa", "valor": 32, "escala": 1 }, { "flag": "dutos_bww", "rotulo": "Dutos BWW", "forma": "fixo", "valor": 20 }, { "flag": "duto_de_gases", "rotulo": "Duto de Gases", "forma": "fixo", "valor": 10.6 } ]
+          "condicoes": [ { "flag": "rede_de_dutos", "rotulo": "Rede de Dutos", "forma": "escala_multiplicativa", "valor": 48, "escala": 1 }, { "flag": "fundo_falso", "rotulo": "Fundo Falso", "forma": "escala_multiplicativa", "valor": 32, "escala": 1 }, { "flag": "dutos_bww", "rotulo": "Dutos BWW", "forma": "fixo", "valor": 20 }, { "flag": "duto_de_gases", "rotulo": "Duto de Gases", "forma": "fixo", "valor": 10.6 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 59.94,
+                "valor_base": 59.94
+              },
+              "herdar_condicoes": false,
+              "condicoes": [ {"flag": "duto_de_gases", "rotulo": "Duto de Gases", "forma": "fixo", "valor": "10,6"} ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 16.2,
+                "valor_base": 16.2
+              },
+              "herdar_condicoes": false,
+              "condicoes": [ {"flag": "duto_de_gases", "rotulo": "Duto de Gases", "forma": "fixo", "valor": "10,6"} ]
+            }
+          }
         },
         "DUR": {
           "base": {
