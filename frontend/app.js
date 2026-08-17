@@ -1541,6 +1541,8 @@
     if (!base) return 0;
 
     var activeCtx = Object.assign({}, SIM_CTX, simCtxOverride || {}, { nmod: mod });
+    var tipo = (activeCtx && activeCtx.tipoestrutura) || 'Móvel';
+    var isSpecialEstrutura = (tipo === 'Container Solar' || tipo === 'ESSW (mecânica)' || tipo === 'ESSW (elétrica)' || tipo === 'ESSW');
 
     if (base.perfis && Array.isArray(base.perfis) && base.perfis.length) {
       var perfilHit = matchedPerfil(base.perfis, activeCtx);
@@ -1561,6 +1563,24 @@
     }
 
     var forma = base.forma;
+
+    // Se for estrutura especial (Solar ou ESSW) e estivermos calculando DUR (vH disponível ou campo DUR)
+    if (isSpecialEstrutura && (vH !== undefined || (campoObj && campoObj.H && state && state.selectedSubTab === 'DUR'))) {
+      var hValSpecial = (vH !== undefined) ? vH : (campoObj && campoObj.H ? calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, activeCtx) : 0);
+      var etapas = base.etapas;
+      if (!etapas || !etapas.length) {
+        etapas = [];
+        if (base.divisao) etapas.push({ tipo: 'dividir', valor: base.divisao });
+        if (base.arredondamento) etapas.push({ tipo: 'arredondar', modo: base.arredondamento });
+        if (base.subtracao) etapas.push({ tipo: 'subtrair', valor: base.subtracao });
+        if (base.soma) etapas.push({ tipo: 'somar', valor: base.soma });
+      }
+      if (etapas.length > 0) {
+        return aplicarEtapasSimples(hValSpecial, etapas);
+      }
+      return aplicarEtapasSimples(hValSpecial, [{ tipo: 'dividir', valor: 7.92 }, { tipo: 'arredondar', modo: 'cima' }]);
+    }
+
     if (forma === 'blocos') {
       var hitM = matchedMontagem(base.montagens, activeCtx);
       var bVal = hitM ? evalChain(hitM.it, activeCtx, base.blocos) : 0;
@@ -1615,7 +1635,7 @@
     }
     if (forma === 'derivado_h') {
       var v = (vH !== undefined) ? vH : 0;
-      if (vH === undefined && campoObj && campoObj.H && state.selectedSubTab !== 'H') {
+      if (vH === undefined && campoObj && campoObj.H && state && state.selectedSubTab !== 'H') {
         v = calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, simCtxOverride);
       }
       var etapas = base.etapas;
@@ -1734,6 +1754,11 @@
     var tipo = (activeCtx && activeCtx.tipoestrutura) || 'Móvel';
     var isSolar = (tipo === 'Container Solar');
     var isEssw = (tipo === 'ESSW (mecânica)' || tipo === 'ESSW (elétrica)' || tipo === 'ESSW');
+
+    // Se estamos calculando DUR e vH não foi explicitamente fornecido, busca no H do campo
+    if (vH === undefined && campoObj && campoObj.H && ((campoObj.DUR && analise === campoObj.DUR) || (state && state.selectedSubTab === 'DUR'))) {
+      vH = calcValor(campoObj.H, mod, flagsAtivos, campoObj, undefined, activeCtx);
+    }
 
     var esp = getEspeciais(analise);
 
