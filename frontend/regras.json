@@ -822,7 +822,7 @@
                 "valor": 14.58,
                 "valor_base": 14.58
               },
-              "herdar_condicoes": false,
+              "herdar_condicoes": true,
               "condicoes": [  ]
             },
             "essw": {
