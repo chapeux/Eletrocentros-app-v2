@@ -4314,6 +4314,56 @@
       depoisLis.push('<li>Condições: <b>Nenhuma</b></li>');
     }
 
+    // 8. Regras Especiais: Container Solar & ESSW
+    var aEsp = getEspeciais(antes);
+    var dEsp = getEspeciais(depois);
+
+    // 8.1 Container Solar
+    var aCs = aEsp ? aEsp.solar : { ativo: false };
+    var dCs = dEsp ? dEsp.solar : { ativo: false };
+    if (aCs.ativo || dCs.ativo) {
+      var aCsVal = (aCs.base && (aCs.base.valor !== undefined ? aCs.base.valor : aCs.base.valor_base)) !== undefined ? (aCs.base.valor !== undefined ? aCs.base.valor : aCs.base.valor_base) : 0;
+      var dCsVal = (dCs.base && (dCs.base.valor !== undefined ? dCs.base.valor : dCs.base.valor_base)) !== undefined ? (dCs.base.valor !== undefined ? dCs.base.valor : dCs.base.valor_base) : 0;
+      var aCsConds = (aCs.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+      var dCsConds = (dCs.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+
+      var aCsSummary = aCs.ativo ? ('Base: ' + aCsVal + (aCsConds.length ? ' | Condições: ' + aCsConds.join(', ') : '')) : 'Padrão (Desativado)';
+      var dCsSummary = dCs.ativo ? ('Base: ' + dCsVal + (dCsConds.length ? ' | Condições: ' + dCsConds.join(', ') : '')) : 'Padrão (Desativado)';
+
+      var chCs = (aCs.ativo !== dCs.ativo) || (String(aCsVal) !== String(dCsVal)) || (aCsConds.join('|') !== dCsConds.join('|')) || (aCs.herdar_condicoes !== dCs.herdar_condicoes);
+
+      if (chCs) {
+        antesLis.push('<li class="changed">☀️ Container Solar: <b class="num-diff num-diff-before">' + escapeHtml(aCsSummary) + '</b></li>');
+        depoisLis.push('<li class="changed">☀️ Container Solar: <b class="num-diff num-diff-after">' + escapeHtml(dCsSummary) + '</b></li>');
+      } else {
+        antesLis.push('<li>☀️ Container Solar: <b>' + escapeHtml(aCsSummary) + '</b></li>');
+        depoisLis.push('<li>☀️ Container Solar: <b>' + escapeHtml(dCsSummary) + '</b></li>');
+      }
+    }
+
+    // 8.2 ESSW
+    var aEssw = aEsp ? aEsp.essw : { ativo: false };
+    var dEssw = dEsp ? dEsp.essw : { ativo: false };
+    if (aEssw.ativo || dEssw.ativo) {
+      var aEsswVal = (aEssw.base && (aEssw.base.valor !== undefined ? aEssw.base.valor : aEssw.base.valor_base)) !== undefined ? (aEssw.base.valor !== undefined ? aEssw.base.valor : aEssw.base.valor_base) : 0;
+      var dEsswVal = (dEssw.base && (dEssw.base.valor !== undefined ? dEssw.base.valor : dEssw.base.valor_base)) !== undefined ? (dEssw.base.valor !== undefined ? dEssw.base.valor : dEssw.base.valor_base) : 0;
+      var aEsswConds = (aEssw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+      var dEsswConds = (dEssw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+
+      var aEsswSummary = aEssw.ativo ? ('Base: ' + aEsswVal + (aEsswConds.length ? ' | Condições: ' + aEsswConds.join(', ') : '')) : 'Padrão (Desativado)';
+      var dEsswSummary = dEssw.ativo ? ('Base: ' + dEsswVal + (dEsswConds.length ? ' | Condições: ' + dEsswConds.join(', ') : '')) : 'Padrão (Desativado)';
+
+      var chEssw = (aEssw.ativo !== dEssw.ativo) || (String(aEsswVal) !== String(dEsswVal)) || (aEsswConds.join('|') !== dEsswConds.join('|')) || (aEssw.herdar_condicoes !== dEssw.herdar_condicoes);
+
+      if (chEssw) {
+        antesLis.push('<li class="changed">⚡ ESSW: <b class="num-diff num-diff-before">' + escapeHtml(aEsswSummary) + '</b></li>');
+        depoisLis.push('<li class="changed">⚡ ESSW: <b class="num-diff num-diff-after">' + escapeHtml(dEsswSummary) + '</b></li>');
+      } else {
+        antesLis.push('<li>⚡ ESSW: <b>' + escapeHtml(aEsswSummary) + '</b></li>');
+        depoisLis.push('<li>⚡ ESSW: <b>' + escapeHtml(dEsswSummary) + '</b></li>');
+      }
+    }
+
     return {
       antesListHtml: antesLis.join(''),
       depoisListHtml: depoisLis.join('')
@@ -4381,6 +4431,18 @@
       items.push('<b>Condições Adicionais (' + conds.length + '):</b><ul style="margin:4px 0 0 0;">' + condsStr + '</ul>');
     } else if (base.forma !== 'blocos') {
       items.push('<b>Condições:</b> <em>Nenhuma condição adicional</em>');
+    }
+
+    var esp = getEspeciais(rule);
+    if (esp.solar && esp.solar.ativo) {
+      var sVal = (esp.solar.base && (esp.solar.base.valor !== undefined ? esp.solar.base.valor : esp.solar.base.valor_base)) || 0;
+      var sConds = (esp.solar.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+      items.push('<b>☀️ Container Solar:</b> Base: ' + sVal + (sConds.length ? ' | Condições: ' + sConds.join(', ') : ''));
+    }
+    if (esp.essw && esp.essw.ativo) {
+      var eVal = (esp.essw.base && (esp.essw.base.valor !== undefined ? esp.essw.base.valor : esp.essw.base.valor_base)) || 0;
+      var eConds = (esp.essw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
+      items.push('<b>⚡ ESSW:</b> Base: ' + eVal + (eConds.length ? ' | Condições: ' + eConds.join(', ') : ''));
     }
 
     return items.map(function (it) { return '<div style="margin-bottom:3px;">• ' + it + '</div>'; }).join('');
