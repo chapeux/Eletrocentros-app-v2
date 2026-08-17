@@ -1070,7 +1070,7 @@
                 "valor": 6.48,
                 "valor_base": 6.48
               },
-              "herdar_condicoes": true,
+              "herdar_condicoes": false,
               "condicoes": [  ]
             },
             "essw": {
@@ -1080,7 +1080,7 @@
                 "valor": 6.48,
                 "valor_base": 6.48
               },
-              "herdar_condicoes": true,
+              "herdar_condicoes": false,
               "condicoes": [  ]
             }
           }
