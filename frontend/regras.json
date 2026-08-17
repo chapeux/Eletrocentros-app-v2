@@ -991,9 +991,47 @@
             "forma": "tabela",
             "valor": 0,
             "valor_base": 0,
-            "valores": [ 13, 21.1, 28.4, 36.5, 44.6, 52.7, 60.8, 68.9 ]
+            "valores": [ 13, 21.1, 28.4, 36.5, 44.6, 52.7, 60.8, 68.9 ],
+            "perfis": [
+              {
+                "id": "perfil_cs",
+                "nome": "Container Solar",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "Container Solar", "j": "E"} ],
+                "it": [ {"t": "num", "v": 12.96} ],
+                "valor": 12.96
+              },
+              {
+                "id": "perfil_essw",
+                "nome": "ESSW",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "ESSW (mecânica)", "j": "E"}, {"c": "tipoestrutura", "o": "=", "val": "ESSW (elétrica)", "j": "OU"} ],
+                "it": [ {"t": "num", "v": 12.96} ],
+                "valor": 12.96
+              }
+            ]
           },
-          "condicoes": [ { "flag": "incendio_c_combate", "rotulo": "Incêndio c/ combate", "forma": "escala_multiplicativa", "valor": 10, "escala": 0.48 } ]
+          "condicoes": [ { "flag": "incendio_c_combate", "rotulo": "Incêndio c/ combate", "forma": "escala_multiplicativa", "valor": "8,1", "escala": 0.48 } ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 12.96,
+                "valor_base": 12.96
+              },
+              "herdar_condicoes": false,
+              "condicoes": [ {"flag": "incendio_c_combate", "rotulo": "Incêndio c/ combate", "forma": "fixo", "valor": "8,1"} ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 12.96,
+                "valor_base": 12.96
+              },
+              "herdar_condicoes": false,
+              "condicoes": [ {"flag": "incendio_c_combate", "rotulo": "Incêndio c/ combate", "forma": "fixo", "valor": "8,1"} ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1023,7 +1061,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 6.48,
+                "valor_base": 6.48
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
