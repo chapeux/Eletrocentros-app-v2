@@ -62,7 +62,7 @@
 
   function applyTheme(theme) {
     root.setAttribute('data-theme', theme);
-    try { localStorage.setItem('eletrocentros_theme', theme); } catch (e) {}
+    try { localStorage.setItem('eletrocentros_theme', theme); } catch (e) { }
     var btn = $('themeToggle');
     if (btn) {
       var names = { dark: 'Tema: Escuro (Dark)', dim: 'Tema: Intermediário (Dim)', light: 'Tema: Claro (Light)' };
@@ -932,15 +932,15 @@
   function salvarUltimaExecucao(ctx) {
     try {
       localStorage.setItem('eletrocentros_last_execution', JSON.stringify(ctx));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function carregarUltimaExecucao() {
     var raw = null;
-    try { raw = localStorage.getItem('eletrocentros_last_execution'); } catch (e) {}
+    try { raw = localStorage.getItem('eletrocentros_last_execution'); } catch (e) { }
     var ctx = null;
     if (raw) {
-      try { ctx = JSON.parse(raw); } catch (e) {}
+      try { ctx = JSON.parse(raw); } catch (e) { }
     }
 
     if (!ctx) {
@@ -1246,8 +1246,64 @@
     });
   }
 
+  /* ==========================================================================
+     PERFIS DE ESTRUTURA (Container Solar, ESSW etc.)
+     Override universal aplicado ANTES da lógica normal de "forma" (aditiva,
+     multiplicativa, tabela, constante...). Serve para estruturas que não
+     seguem a escala por nº de módulos (ex.: "Container Solar", "ESSW
+     (mecânica)", "ESSW (elétrica)"), que na planilha original ocupam linhas
+     próprias e independentes da tabela de 1 a 8 módulos.
+     Reaproveita o mesmo mecanismo de "cond" (c/o/val/j) já usado em
+     montagens/blocos. Se nenhum perfil casar, cai no comportamento padrão
+     (100% retrocompatível — campos sem "perfis" não são afetados).
+     ========================================================================== */
+  function matchedPerfil(perfis, simCtx) {
+    if (!perfis || !Array.isArray(perfis)) return null;
+    for (var i = 0; i < perfis.length; i++) {
+      if (condOkBloco(perfis[i], simCtx)) return perfis[i];
+    }
+    return null;
+  }
+
+  function aplicarEtapasSimples(v, etapas) {
+    (etapas || []).forEach(function (step) {
+      if (!step) return;
+      var num = parseFloat(step.valor);
+      if (isNaN(num)) num = 0;
+      if (step.tipo === 'dividir') { if (num !== 0) v = v / num; }
+      else if (step.tipo === 'multiplicar') v = v * num;
+      else if (step.tipo === 'somar') v = v + num;
+      else if (step.tipo === 'subtrair') v = v - num;
+      else if (step.tipo === 'arredondar') {
+        var modo = step.modo || step.arredondamento || 'cima';
+        if (modo === 'cima') v = Math.ceil(v);
+        else if (modo === 'baixo') v = Math.floor(v);
+        else if (modo === 'padrao') v = Math.round(v);
+      } else if (step.tipo === 'limitar_max') v = Math.min(v, num);
+      else if (step.tipo === 'limitar_min') v = Math.max(v, num);
+    });
+    return v;
+  }
+
   function valorBase(base, mod, campoObj, flagsAtivos, vH) {
     if (!base) return 0;
+
+    if (base.perfis && Array.isArray(base.perfis) && base.perfis.length) {
+      var simCtxPerfil = Object.assign({}, SIM_CTX, { nmod: mod });
+      var perfilHit = matchedPerfil(base.perfis, simCtxPerfil);
+      if (perfilHit) {
+        if (perfilHit.it) {
+          var vPerfil = evalChain(perfilHit.it, simCtxPerfil, base.blocos);
+          return isFinite(vPerfil) ? vPerfil : 0;
+        }
+        if (perfilHit.etapas) {
+          var vBaseDur = (vH !== undefined) ? vH : 0;
+          return aplicarEtapasSimples(vBaseDur, perfilHit.etapas);
+        }
+        if (perfilHit.valor !== undefined) return parseFloat(perfilHit.valor) || 0;
+      }
+    }
+
     var forma = base.forma;
     if (forma === 'blocos') {
       var simCtx = Object.assign({}, SIM_CTX, { nmod: mod });
@@ -1724,7 +1780,7 @@
           i: parseInt(chip.dataset.i, 10)
         };
         e.dataTransfer.effectAllowed = 'move';
-        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) {}
+        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) { }
         chip.classList.add('dragging');
         return;
       }
@@ -1736,7 +1792,7 @@
           sc: addbtn.dataset.sc
         };
         e.dataTransfer.effectAllowed = 'copyMove';
-        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) {}
+        try { e.dataTransfer.setData('text/plain', JSON.stringify(dragSession)); } catch (err) { }
         addbtn.classList.add('dragging');
         return;
       }
@@ -2426,8 +2482,8 @@
           '<span class="ord">' + (mi + 1) + '</span>' +
           '<input class="mname" data-mn="' + m.id + '" value="' + escapeHtml(m.nome) + '">' +
           '<select class="mtype-sel" data-mtype="' + m.id + '">' +
-            '<option value="cond"' + (!m.padrao ? ' selected' : '') + '>Condicional (SE)</option>' +
-            '<option value="padrao"' + (m.padrao ? ' selected' : '') + '>Padrão (Senão)</option>' +
+          '<option value="cond"' + (!m.padrao ? ' selected' : '') + '>Condicional (SE)</option>' +
+          '<option value="padrao"' + (m.padrao ? ' selected' : '') + '>Padrão (Senão)</option>' +
           '</select>' +
           '<span class="mhead-cond-summary">' + escapeHtml(condSummary) + '</span>' +
           '<div style="margin-left:auto; display:flex; align-items:center; gap:8px;">' +
@@ -3176,13 +3232,13 @@
     currentAnexosList.forEach(function (fileObj, idx) {
       html += '<div class="anexo-item-modal">' +
         '<div class="anexo-item-name">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-          '<span>' + escapeHtml(fileObj.nome) + ' (' + formatBytes(fileObj.tamanho || 0) + ')</span>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+        '<span>' + escapeHtml(fileObj.nome) + ' (' + formatBytes(fileObj.tamanho || 0) + ')</span>' +
         '</div>' +
         '<button type="button" class="anexo-item-del" data-idx="' + idx + '" title="Remover este anexo">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
         '</button>' +
-      '</div>';
+        '</div>';
     });
     listEl.innerHTML = html;
 
@@ -3516,54 +3572,54 @@
 
       item.innerHTML =
         '<div class="hitem-row">' +
-          '<span class="htag ' + subtabClass + '">' + escapeHtml(subtab) + '</span>' +
-          '<span class="hname">' + escapeHtml(campoNome) + '</span>' +
-          '<span class="hsep">·</span>' +
-          '<span class="harea">' + escapeHtml(areaNome) + '</span>' +
-          '<span class="hmeta">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
-            ' ' + escapeHtml(dataStr) +
-            '<span class="u">' + escapeHtml(usuario) + '</span>' +
-          '</span>' +
-          '<span class="hchevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m18 15-6-6-6 6"/></svg></span>' +
+        '<span class="htag ' + subtabClass + '">' + escapeHtml(subtab) + '</span>' +
+        '<span class="hname">' + escapeHtml(campoNome) + '</span>' +
+        '<span class="hsep">·</span>' +
+        '<span class="harea">' + escapeHtml(areaNome) + '</span>' +
+        '<span class="hmeta">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
+        ' ' + escapeHtml(dataStr) +
+        '<span class="u">' + escapeHtml(usuario) + '</span>' +
+        '</span>' +
+        '<span class="hchevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m18 15-6-6-6 6"/></svg></span>' +
         '</div>' +
 
         '<div class="hdetail">' +
-          (log.motivo ? '<div class="hmotivo-box"><strong>Motivo:</strong> ' + escapeHtml(log.motivo) + '</div>' : '') +
-          (function () {
-            var anexosList = log.anexos || [];
-            if (!anexosList.length && (log.anexo_caminho || log.anexo_nome)) {
-              anexosList = [{
-                nome: log.anexo_nome || (log.anexo_caminho ? log.anexo_caminho.split(/[\\/]/).pop() : 'Anexo'),
-                caminho: log.anexo_caminho
-              }];
-            }
-            if (!anexosList.length) return '';
-            var h = '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">';
-            anexosList.forEach(function (anx) {
-              var aNome = anx.nome || (anx.caminho ? anx.caminho.split(/[\\/]/).pop() : 'Anexo');
-              h += '<div class="hanexo-box">' +
-                '<div class="hanexo-info">' +
-                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-                  '<span class="hanexo-name" title="' + escapeHtml(aNome) + '">' + escapeHtml(aNome) + '</span>' +
-                '</div>' +
-                (anx.caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(anx.caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
+        (log.motivo ? '<div class="hmotivo-box"><strong>Motivo:</strong> ' + escapeHtml(log.motivo) + '</div>' : '') +
+        (function () {
+          var anexosList = log.anexos || [];
+          if (!anexosList.length && (log.anexo_caminho || log.anexo_nome)) {
+            anexosList = [{
+              nome: log.anexo_nome || (log.anexo_caminho ? log.anexo_caminho.split(/[\\/]/).pop() : 'Anexo'),
+              caminho: log.anexo_caminho
+            }];
+          }
+          if (!anexosList.length) return '';
+          var h = '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">';
+          anexosList.forEach(function (anx) {
+            var aNome = anx.nome || (anx.caminho ? anx.caminho.split(/[\\/]/).pop() : 'Anexo');
+            h += '<div class="hanexo-box">' +
+              '<div class="hanexo-info">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+              '<span class="hanexo-name" title="' + escapeHtml(aNome) + '">' + escapeHtml(aNome) + '</span>' +
+              '</div>' +
+              (anx.caminho ? '<button type="button" class="btn-abrir-anexo" data-caminho="' + escapeHtml(anx.caminho) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir Anexo</button>' : '') +
               '</div>';
-            });
-            h += '</div>';
-            return h;
-          })() +
-          '<div class="hdetail-label">O que mudou</div>' +
-          '<div class="diff">' +
-            '<div class="diff-col before">' +
-              '<div class="diff-head"><span class="dot"></span>Antes</div>' +
-              '<ul class="diff-list">' + diffObj.antesListHtml + '</ul>' +
-            '</div>' +
-            '<div class="diff-col after">' +
-              '<div class="diff-head"><span class="dot"></span>Depois</div>' +
-              '<ul class="diff-list">' + diffObj.depoisListHtml + '</ul>' +
-            '</div>' +
-          '</div>' +
+          });
+          h += '</div>';
+          return h;
+        })() +
+        '<div class="hdetail-label">O que mudou</div>' +
+        '<div class="diff">' +
+        '<div class="diff-col before">' +
+        '<div class="diff-head"><span class="dot"></span>Antes</div>' +
+        '<ul class="diff-list">' + diffObj.antesListHtml + '</ul>' +
+        '</div>' +
+        '<div class="diff-col after">' +
+        '<div class="diff-head"><span class="dot"></span>Depois</div>' +
+        '<ul class="diff-list">' + diffObj.depoisListHtml + '</ul>' +
+        '</div>' +
+        '</div>' +
         '</div>';
 
       // Event listener para expandir/recolher
@@ -4137,7 +4193,7 @@
       closeSettings();
 
       if (isPyWebviewAvailable()) {
-        window.pywebview.api.save_config(parsedConfig).catch(function () {});
+        window.pywebview.api.save_config(parsedConfig).catch(function () { });
         if (parsedRegras) {
           window.pywebview.api.save_regras(parsedRegras).then(function (res) {
             showToast('Configurações e regras.json salvas com sucesso!');
