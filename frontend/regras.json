@@ -2992,9 +2992,47 @@
                 "it": [ {"t": "num", "v": 5}, {"t": "op", "v": "*"}, {"t": "blk", "v": "b8"}, {"t": "op", "v": "*"}, {"t": "num", "v": 2}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.8}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1} ],
                 "collapsed": true
               }
+            ],
+            "perfis": [
+              {
+                "id": "perfil_cs",
+                "nome": "Container Solar",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "Container Solar", "j": "E"} ],
+                "it": [ {"t": "num", "v": 11} ],
+                "valor": 11
+              },
+              {
+                "id": "perfil_essw",
+                "nome": "ESSW",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "ESSW (mecânica)", "j": "E"}, {"c": "tipoestrutura", "o": "=", "val": "ESSW (elétrica)", "j": "OU"} ],
+                "it": [ {"t": "num", "v": 9.9} ],
+                "valor": 9.9
+              }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 11,
+                "valor_base": 11
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 9.9,
+                "valor_base": 9.9
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
