@@ -4327,10 +4327,28 @@
       var aCsConds = (aCs.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
       var dCsConds = (dCs.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
 
-      var aCsSummary = aCs.ativo ? ('Base: ' + aCsVal + (aCsConds.length ? ' | Condições: ' + aCsConds.join(', ') : '')) : 'Padrão (Desativado)';
-      var dCsSummary = dCs.ativo ? ('Base: ' + dCsVal + (dCsConds.length ? ' | Condições: ' + dCsConds.join(', ') : '')) : 'Padrão (Desativado)';
+      var aCsHerdar = aCs.herdar_condicoes !== false;
+      var dCsHerdar = dCs.herdar_condicoes !== false;
+      var aCsHerdarTxt = aCsHerdar ? 'Aplicar cond. padrão: Sim' : 'Aplicar cond. padrão: Não';
+      var dCsHerdarTxt = dCsHerdar ? 'Aplicar cond. padrão: Sim' : 'Aplicar cond. padrão: Não';
 
-      var chCs = (aCs.ativo !== dCs.ativo) || (String(aCsVal) !== String(dCsVal)) || (aCsConds.join('|') !== dCsConds.join('|')) || (aCs.herdar_condicoes !== dCs.herdar_condicoes);
+      var aCsParts = [];
+      if (aCs.ativo) {
+        aCsParts.push('Base: ' + aCsVal);
+        aCsParts.push(aCsHerdarTxt);
+        if (aCsConds.length) aCsParts.push('Condições específicas: ' + aCsConds.join(', '));
+      }
+      var dCsParts = [];
+      if (dCs.ativo) {
+        dCsParts.push('Base: ' + dCsVal);
+        dCsParts.push(dCsHerdarTxt);
+        if (dCsConds.length) dCsParts.push('Condições específicas: ' + dCsConds.join(', '));
+      }
+
+      var aCsSummary = aCs.ativo ? aCsParts.join(' | ') : 'Padrão (Desativado)';
+      var dCsSummary = dCs.ativo ? dCsParts.join(' | ') : 'Padrão (Desativado)';
+
+      var chCs = (aCs.ativo !== dCs.ativo) || (String(aCsVal) !== String(dCsVal)) || (aCsConds.join('|') !== dCsConds.join('|')) || (aCsHerdar !== dCsHerdar);
 
       if (chCs) {
         antesLis.push('<li class="changed">☀️ Container Solar: <b class="num-diff num-diff-before">' + escapeHtml(aCsSummary) + '</b></li>');
@@ -4350,10 +4368,28 @@
       var aEsswConds = (aEssw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
       var dEsswConds = (dEssw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
 
-      var aEsswSummary = aEssw.ativo ? ('Base: ' + aEsswVal + (aEsswConds.length ? ' | Condições: ' + aEsswConds.join(', ') : '')) : 'Padrão (Desativado)';
-      var dEsswSummary = dEssw.ativo ? ('Base: ' + dEsswVal + (dEsswConds.length ? ' | Condições: ' + dEsswConds.join(', ') : '')) : 'Padrão (Desativado)';
+      var aEsswHerdar = aEssw.herdar_condicoes !== false;
+      var dEsswHerdar = dEssw.herdar_condicoes !== false;
+      var aEsswHerdarTxt = aEsswHerdar ? 'Aplicar cond. padrão: Sim' : 'Aplicar cond. padrão: Não';
+      var dEsswHerdarTxt = dEsswHerdar ? 'Aplicar cond. padrão: Sim' : 'Aplicar cond. padrão: Não';
 
-      var chEssw = (aEssw.ativo !== dEssw.ativo) || (String(aEsswVal) !== String(dEsswVal)) || (aEsswConds.join('|') !== dEsswConds.join('|')) || (aEssw.herdar_condicoes !== dEssw.herdar_condicoes);
+      var aEsswParts = [];
+      if (aEssw.ativo) {
+        aEsswParts.push('Base: ' + aEsswVal);
+        aEsswParts.push(aEsswHerdarTxt);
+        if (aEsswConds.length) aEsswParts.push('Condições específicas: ' + aEsswConds.join(', '));
+      }
+      var dEsswParts = [];
+      if (dEssw.ativo) {
+        dEsswParts.push('Base: ' + dEsswVal);
+        dEsswParts.push(dEsswHerdarTxt);
+        if (dEsswConds.length) dEsswParts.push('Condições específicas: ' + dEsswConds.join(', '));
+      }
+
+      var aEsswSummary = aEssw.ativo ? aEsswParts.join(' | ') : 'Padrão (Desativado)';
+      var dEsswSummary = dEssw.ativo ? dEsswParts.join(' | ') : 'Padrão (Desativado)';
+
+      var chEssw = (aEssw.ativo !== dEssw.ativo) || (String(aEsswVal) !== String(dEsswVal)) || (aEsswConds.join('|') !== dEsswConds.join('|')) || (aEsswHerdar !== dEsswHerdar);
 
       if (chEssw) {
         antesLis.push('<li class="changed">⚡ ESSW: <b class="num-diff num-diff-before">' + escapeHtml(aEsswSummary) + '</b></li>');
@@ -4437,12 +4473,14 @@
     if (esp.solar && esp.solar.ativo) {
       var sVal = (esp.solar.base && (esp.solar.base.valor !== undefined ? esp.solar.base.valor : esp.solar.base.valor_base)) || 0;
       var sConds = (esp.solar.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
-      items.push('<b>☀️ Container Solar:</b> Base: ' + sVal + (sConds.length ? ' | Condições: ' + sConds.join(', ') : ''));
+      var sHerdar = esp.solar.herdar_condicoes !== false ? 'Sim' : 'Não';
+      items.push('<b>☀️ Container Solar:</b> Base: ' + sVal + ' | Aplicar cond. padrão: ' + sHerdar + (sConds.length ? ' | Cond. específicas: ' + sConds.join(', ') : ''));
     }
     if (esp.essw && esp.essw.ativo) {
       var eVal = (esp.essw.base && (esp.essw.base.valor !== undefined ? esp.essw.base.valor : esp.essw.base.valor_base)) || 0;
       var eConds = (esp.essw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
-      items.push('<b>⚡ ESSW:</b> Base: ' + eVal + (eConds.length ? ' | Condições: ' + eConds.join(', ') : ''));
+      var eHerdar = esp.essw.herdar_condicoes !== false ? 'Sim' : 'Não';
+      items.push('<b>⚡ ESSW:</b> Base: ' + eVal + ' | Aplicar cond. padrão: ' + eHerdar + (eConds.length ? ' | Cond. específicas: ' + eConds.join(', ') : ''));
     }
 
     return items.map(function (it) { return '<div style="margin-bottom:3px;">• ' + it + '</div>'; }).join('');
