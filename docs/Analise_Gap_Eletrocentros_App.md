@@ -80,13 +80,13 @@ Comparação campo a campo com os cabeçalhos da planilha original:
 
 ---
 
-### Fase 1 — Exportação do resultado calculado (baixo/médio esforço, alto valor imediato)
+### Fase 1 — Exportação do resultado calculado (baixo/médio esforço, alto valor imediato) — ✅ Concluído (17/08/2026)
 **Objetivo:** permitir que o usuário leve o resultado do cálculo para fora do app.
-- [ ] Adicionar exportação do resumo de cálculo (H/DUR por campo/área) em `.xlsx` e/ou `.csv`, reaproveitando os dados já calculados no modal de resultado.
-- [ ] Manter a cópia de texto para área de transferência já existente como alternativa rápida.
-- [ ] Nomear o arquivo exportado de forma rastreável (ex.: `Resultado_<PEP ou nome>_<data>.xlsx`).
+- [x] Adicionada exportação do resumo de cálculo (H/DUR por campo/área) em `.xlsx` (com openpyxl no backend Python, tabelas estilizadas, cards de KPIs e subtotais por área) e em `.csv` (com UTF-8 BOM para Excel brasileiro).
+- [x] Mantida a cópia de texto formatado para a área de transferência como alternativa rápida.
+- [x] Nomeação automática e rastreável dos arquivos exportados: `Resultado_PEP_<codigo>_<data_hora>.xlsx` ou `Resultado_Eletrocentro_<data_hora>.xlsx`.
 
-**Critério de conclusão:** usuário consegue baixar um arquivo com o resultado do cálculo sem precisar copiar/colar manualmente.
+**Critério de conclusão:** usuário consegue baixar um arquivo com o resultado do cálculo sem precisar copiar/colar manualmente. — ✅ Concluído com sucesso.
 
 ---
 

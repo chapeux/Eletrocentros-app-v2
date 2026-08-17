@@ -899,6 +899,130 @@
     });
   }
 
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  function getExportFilename(extension) {
+    var pepVal = isFilledEl($('pep')) ? $('pep').value.trim() : '';
+    var pepClean = pepVal.replace(/[^a-zA-Z0-9_-]/g, '');
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var dateStr = y + m + d + '_' + h + min;
+    if (pepClean) {
+      return 'Resultado_PEP_' + pepClean + '_' + dateStr + '.' + extension;
+    }
+    return 'Resultado_Eletrocentro_' + dateStr + '.' + extension;
+  }
+
+  if ($('btnExportarCsv')) {
+    $('btnExportarCsv').addEventListener('click', function () {
+      var res = window._lastCalculationResult;
+      if (!res) {
+        showToast('Nenhum resultado de cálculo disponível para exportar.', true);
+        return;
+      }
+
+      var ctx = res.ctx;
+      var lines = [];
+      lines.push('ELETROCENTROS APP - RESUMO DO CALCULO DE TEMPOS;;;');
+      lines.push('Data/Hora;' + new Date().toLocaleString('pt-BR') + ';;');
+      lines.push('PEP / Ordem;' + (ctx.pep || 'Nao informado') + ';;');
+      lines.push('Tipo de Estrutura;' + (ctx.tipoestrutura || '-') + ';Quantidade Modulos;' + (ctx.nmod || 1));
+      lines.push('Dimensoes;' + ctx.comp + 'm (C) x ' + ctx.larg + 'm (L) x ' + ctx.alt + 'm (A);Plano Pintura;' + (ctx.planpin || '-'));
+      lines.push('Ar Condicionado;' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x);Complexidade;' + (ctx.complexidade || '-'));
+      lines.push('Sist. Incendio;' + (ctx.incendio || '-') + ';Sist. Seguranca;' + (ctx.seguranca || '-'));
+      lines.push(';;;');
+      lines.push('TOTAL HORAS (H);' + res.totalGeralH.toFixed(2).replace('.', ',') + ';DURACAO ESTIMADA (DUR);' + res.totalGeralDUR.toFixed(1).replace('.', ',') + ' dias');
+      lines.push(';;;');
+      lines.push('Area / Disciplina;Processo / Campo;Horas (H);Duracao (DUR em dias)');
+
+      res.resultadosAreas.forEach(function (area) {
+        area.campos.forEach(function (c) {
+          lines.push('"' + area.area.replace(/"/g, '""') + '";"' + c.chave.replace(/"/g, '""') + '";' + c.h.toFixed(2).replace('.', ',') + ';' + c.dur.toFixed(1).replace('.', ','));
+        });
+        lines.push('Subtotal ' + area.area + ';(' + area.campos.length + ' processos);' + area.totalH.toFixed(2).replace('.', ',') + ';' + area.totalDUR.toFixed(1).replace('.', ','));
+      });
+
+      lines.push('TOTAL GERAL CONSOLIDADO;Todos os processos;' + res.totalGeralH.toFixed(2).replace('.', ',') + ';' + res.totalGeralDUR.toFixed(1).replace('.', ','));
+
+      var csvContent = '\uFEFF' + lines.join('\r\n');
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var filename = getExportFilename('csv');
+      downloadBlob(blob, filename);
+      showToast('Arquivo CSV exportado com sucesso: ' + filename);
+    });
+  }
+
+  if ($('btnExportarExcel')) {
+    $('btnExportarExcel').addEventListener('click', function () {
+      var res = window._lastCalculationResult;
+      if (!res) {
+        showToast('Nenhum resultado de cálculo disponível para exportar.', true);
+        return;
+      }
+
+      var payload = {
+        pep: isFilledEl($('pep')) ? $('pep').value.trim() : '',
+        ctx: res.ctx,
+        totalGeralH: res.totalGeralH,
+        totalGeralDUR: res.totalGeralDUR,
+        resultadosAreas: res.resultadosAreas
+      };
+
+      showToast('Gerando planilha Excel (.xlsx)...');
+
+      function handleB64Download(b64, filename) {
+        var byteCharacters = atob(b64);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        var blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        downloadBlob(blob, filename);
+        showToast('Planilha Excel exportada com sucesso: ' + filename);
+      }
+
+      if (isPyWebviewAvailable()) {
+        window.pywebview.api.export_excel(payload).then(function (resp) {
+          if (resp && resp.status === 'success' && resp.base64) {
+            handleB64Download(resp.base64, resp.filename || getExportFilename('xlsx'));
+          } else {
+            showToast('Erro ao gerar Excel: ' + ((resp && resp.message) || 'Falha no backend'), true);
+          }
+        }).catch(function (err) {
+          showToast('Erro ao exportar Excel via pywebview: ' + (err.message || err), true);
+        });
+      } else {
+        apiCall('/export_excel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function (resp) {
+          if (resp && resp.status === 'success' && resp.base64) {
+            handleB64Download(resp.base64, resp.filename || getExportFilename('xlsx'));
+          } else {
+            showToast('Erro ao gerar Excel: ' + ((resp && resp.message) || 'Falha na API'), true);
+          }
+        }).catch(function (err) {
+          showToast('Erro ao exportar Excel via API: ' + (err.message || err), true);
+        });
+      }
+    });
+  }
+
   /* Footer Actions */
   if ($('btnOk')) {
     $('btnOk').addEventListener('click', function () {

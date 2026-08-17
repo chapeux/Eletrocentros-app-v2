@@ -252,6 +252,207 @@ class AppAPI:
         """Valida se a senha digitada corresponde às credenciais de mantenedor."""
         return password == self.password or password == "1234"
 
+    def export_excel(self, data: dict) -> dict:
+        """Gera e retorna a planilha Excel (.xlsx) com o resultado detalhado dos tempos."""
+        try:
+            import io
+            import base64
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Resumo de Tempos"
+            ws.views.sheetView[0].showGridLines = True
+
+            # Cores e Estilos
+            title_font = Font(name="Segoe UI", size=14, bold=True, color="FFFFFF")
+            title_fill = PatternFill("solid", fgColor="0F2C59")
+
+            section_font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
+            label_font = Font(name="Segoe UI", size=10, bold=True, color="4A5568")
+            val_font = Font(name="Segoe UI", size=10, color="1A202C")
+
+            hdr_font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+            hdr_fill = PatternFill("solid", fgColor="1E3E62")
+
+            subtotal_font = Font(name="Segoe UI", size=10, bold=True, color="1A202C")
+            subtotal_fill = PatternFill("solid", fgColor="F0F4F8")
+
+            total_font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
+            total_fill = PatternFill("solid", fgColor="D0E8FF")
+
+            thin_border = Border(
+                left=Side(style="thin", color="CBD5E0"),
+                right=Side(style="thin", color="CBD5E0"),
+                top=Side(style="thin", color="CBD5E0"),
+                bottom=Side(style="thin", color="CBD5E0")
+            )
+            double_bottom = Border(
+                left=Side(style="thin", color="CBD5E0"),
+                right=Side(style="thin", color="CBD5E0"),
+                top=Side(style="thin", color="CBD5E0"),
+                bottom=Side(style="double", color="0F2C59")
+            )
+
+            # 1. Título
+            ws.merge_cells("A1:D1")
+            ws["A1"] = "ELETROCENTROS APP — RESULTADO DO CÁLCULO DE TEMPOS"
+            ws["A1"].font = title_font
+            ws["A1"].fill = title_fill
+            ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+            ws.row_dimensions[1].height = 36
+
+            # 2. Informações Gerais do Projeto
+            ctx = data.get("ctx", {})
+            pep = data.get("pep", "") or ctx.get("pep", "") or "Não informado"
+            data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            usuario = os.getenv("USERNAME", "Usuário")
+
+            ws["A3"] = "INFORMAÇÕES DO PROJETO"
+            ws["A3"].font = section_font
+
+            meta_rows = [
+                ("Código PEP / Ordem:", pep, "Data / Hora de Cálculo:", data_hora),
+                ("Tipo de Estrutura:", str(ctx.get("tipoestrutura", "-")), "Quantidade de Módulos:", f"{ctx.get('nmod', 1)} Módulo(s)"),
+                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L) x {ctx.get('alt', 0)}m (A)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
+                ("Ar Condicionado:", f"{ctx.get('tipomaq', '-')} ({ctx.get('qtdmaq', 0)}x)", "Complexidade Elétrica:", str(ctx.get("complexidade", "-"))),
+                ("Sist. Incêndio:", str(ctx.get("incendio", "-")), "Sist. Segurança:", str(ctx.get("seguranca", "-"))),
+                ("Usuário Responsável:", usuario, "Nº Colunas Total:", str(ctx.get("nrcolunas", 0)))
+            ]
+
+            curr_row = 4
+            for label1, val1, label2, val2 in meta_rows:
+                ws[f"A{curr_row}"] = label1
+                ws[f"A{curr_row}"].font = label_font
+                ws[f"B{curr_row}"] = val1
+                ws[f"B{curr_row}"].font = val_font
+
+                ws[f"C{curr_row}"] = label2
+                ws[f"C{curr_row}"].font = label_font
+                ws[f"D{curr_row}"] = val2
+                ws[f"D{curr_row}"].font = val_font
+                curr_row += 1
+
+            # 3. KPIs de Resumo
+            curr_row += 1
+            ws[f"A{curr_row}"] = "RESUMO GERAL CONSOLIDADO"
+            ws[f"A{curr_row}"].font = section_font
+            curr_row += 1
+
+            ws[f"A{curr_row}"] = "TOTAL HORAS ORÇADAS (H):"
+            ws[f"A{curr_row}"].font = Font(name="Segoe UI", size=11, bold=True, color="107C41")
+            ws[f"B{curr_row}"] = float(data.get("totalGeralH", 0))
+            ws[f"B{curr_row}"].font = Font(name="Segoe UI", size=11, bold=True, color="107C41")
+            ws[f"B{curr_row}"].number_format = "#,##0.00 \"h\""
+
+            ws[f"C{curr_row}"] = "DURAÇÃO ESTIMADA (DUR):"
+            ws[f"C{curr_row}"].font = Font(name="Segoe UI", size=11, bold=True, color="D83B01")
+            ws[f"D{curr_row}"] = float(data.get("totalGeralDUR", 0))
+            ws[f"D{curr_row}"].font = Font(name="Segoe UI", size=11, bold=True, color="D83B01")
+            ws[f"D{curr_row}"].number_format = "#,##0.0 \"dias\""
+            curr_row += 2
+
+            # 4. Tabela de Detalhamento por Área / Processo
+            ws[f"A{curr_row}"] = "Área / Disciplina"
+            ws[f"B{curr_row}"] = "Processo / Campo"
+            ws[f"C{curr_row}"] = "Horas Orçadas (H)"
+            ws[f"D{curr_row}"] = "Duração Estimada (DUR)"
+            for col_idx, col_letter in enumerate(["A", "B", "C", "D"]):
+                cell = ws[f"{col_letter}{curr_row}"]
+                cell.font = hdr_font
+                cell.fill = hdr_fill
+                cell.alignment = Alignment(horizontal="left" if col_idx < 2 else "right", vertical="center")
+            ws.row_dimensions[curr_row].height = 24
+            curr_row += 1
+
+            for area in data.get("resultadosAreas", []):
+                nome_area = area.get("area", "Área")
+                campos = area.get("campos", [])
+                for campo in campos:
+                    ws[f"A{curr_row}"] = nome_area
+                    ws[f"B{curr_row}"] = campo.get("chave", "")
+
+                    cell_h = ws[f"C{curr_row}"]
+                    cell_h.value = float(campo.get("h", 0))
+                    cell_h.number_format = "#,##0.00"
+
+                    cell_dur = ws[f"D{curr_row}"]
+                    cell_dur.value = float(campo.get("dur", 0))
+                    cell_dur.number_format = "#,##0.0"
+
+                    for col_letter in ["A", "B", "C", "D"]:
+                        ws[f"{col_letter}{curr_row}"].border = thin_border
+                        ws[f"{col_letter}{curr_row}"].font = val_font
+                    curr_row += 1
+
+                # Subtotal da Área
+                ws[f"A{curr_row}"] = f"Subtotal — {nome_area}"
+                ws[f"B{curr_row}"] = f"({len(campos)} processos)"
+
+                cell_sub_h = ws[f"C{curr_row}"]
+                cell_sub_h.value = float(area.get("totalH", 0))
+                cell_sub_h.number_format = "#,##0.00"
+
+                cell_sub_dur = ws[f"D{curr_row}"]
+                cell_sub_dur.value = float(area.get("totalDUR", 0))
+                cell_sub_dur.number_format = "#,##0.0"
+
+                for col_letter in ["A", "B", "C", "D"]:
+                    c = ws[f"{col_letter}{curr_row}"]
+                    c.font = subtotal_font
+                    c.fill = subtotal_fill
+                    c.border = thin_border
+                curr_row += 1
+
+            # Total Geral
+            ws[f"A{curr_row}"] = "TOTAL GERAL CONSOLIDADO"
+            ws[f"B{curr_row}"] = "Todos os processos"
+
+            cell_tot_h = ws[f"C{curr_row}"]
+            cell_tot_h.value = float(data.get("totalGeralH", 0))
+            cell_tot_h.number_format = "#,##0.00"
+
+            cell_tot_dur = ws[f"D{curr_row}"]
+            cell_tot_dur.value = float(data.get("totalGeralDUR", 0))
+            cell_tot_dur.number_format = "#,##0.0"
+
+            for col_letter in ["A", "B", "C", "D"]:
+                c = ws[f"{col_letter}{curr_row}"]
+                c.font = total_font
+                c.fill = total_fill
+                c.border = double_bottom
+            ws.row_dimensions[curr_row].height = 24
+
+            # Auto-largura das colunas
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    val_str = str(cell.value or "")
+                    if cell.row == 1: continue
+                    if len(val_str) > max_len: max_len = len(val_str)
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 18)
+
+            output_stream = io.BytesIO()
+            wb.save(output_stream)
+            output_stream.seek(0)
+            b64_content = base64.b64encode(output_stream.read()).decode("utf-8")
+
+            pep_clean = "".join(c for c in pep if c.isalnum() or c in ("-", "_")).strip()
+            data_clean = datetime.now().strftime("%Y%m%d_%H%M")
+            file_name = f"Resultado_PEP_{pep_clean}_{data_clean}.xlsx" if pep_clean and pep_clean != "Nãoinformado" else f"Resultado_Eletrocentro_{data_clean}.xlsx"
+
+            return {
+                "status": "success",
+                "filename": file_name,
+                "base64": b64_content
+            }
+        except Exception as e:
+            print(f"[Backend Python] Erro ao exportar Excel: {e}")
+            return {"status": "error", "message": str(e)}
+
 
 class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Handler HTTP customizado com suporte a rotas da API /api/*."""
@@ -290,6 +491,22 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode("utf-8"))
                 result = self.api.save_regras(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/export_excel":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.export_excel(data)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
