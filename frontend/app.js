@@ -19,7 +19,11 @@
     campos: {},
     campo: null,
     dirty: null,
-    historico: []
+    historico: [],
+    seletorData: [],
+    seletorOriginal: [],
+    seletorDirty: false,
+    isSeletorActive: false
   };
 
   /* ==========================================================================
@@ -564,6 +568,9 @@
     if ($('ringText')) $('ringText').textContent = reqDone + '/' + reqTotal;
     if ($('ringWrap')) $('ringWrap').classList.toggle('complete', reqTotal > 0 && reqDone === reqTotal);
     if ($('footerMeta')) $('footerMeta').textContent = reqDone + ' / ' + reqTotal + ' obrigatórios';
+
+    /* Atualização da recomendação do Seletor de PEP */
+    atualizarSugestaoPep();
   }
 
   document.querySelectorAll('input, .acessorio').forEach(function (el) {
@@ -795,8 +802,11 @@
       });
     });
 
+    var seletorMatch = consultarSeletor(ctx);
+
     return {
       ctx: ctx,
+      seletor: seletorMatch,
       resultadosAreas: resultadosAreas,
       totalGeralH: Math.round(totalGeralH * 100) / 100,
       totalGeralDUR: Math.round(totalGeralDUR * 10) / 10
@@ -852,6 +862,46 @@
       '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
     tbody.appendChild(trGrand);
 
+    // Renderiza Seletor PEP & CTs no modal de resultado
+    var seletorMatch = res.seletor || consultarSeletor(ctx);
+    var seletorWrap = $('resSeletorWrap');
+    if (seletorWrap) {
+      if (seletorMatch) {
+        seletorWrap.style.display = 'block';
+        if ($('resSeletorPepBadge')) {
+          $('resSeletorPepBadge').textContent = 'PEP Standard: ' + (seletorMatch['PEP Standard'] || 'Sob Consulta');
+        }
+        var ctsGrid = $('resSeletorCtsGrid');
+        if (ctsGrid) {
+          ctsGrid.innerHTML = '';
+          var cts = [];
+          if (seletorMatch['DR Eng Mec']) cts.push({ label: 'Eng. Mecânica', dr: seletorMatch['DR Eng Mec'], alt: seletorMatch['Alt Eng Mec'] });
+          if (seletorMatch['DR Eng Ele']) cts.push({ label: 'Eng. Elétrica', dr: seletorMatch['DR Eng Ele'], alt: seletorMatch['Alt Eng Ele'] });
+
+          var nmodNum = parseInt(ctx.nmod || '1', 10);
+          for (var m = 1; m <= 8; m++) {
+            var drMec = seletorMatch['DR Mec ' + m] || seletorMatch['DR Mec' + m];
+            var altMec = seletorMatch['Alt Mec ' + m] || seletorMatch['Alt Mec' + m];
+            if (drMec && m <= nmodNum) {
+              cts.push({ label: 'Mecânica Módulo ' + m, dr: drMec, alt: altMec });
+            }
+          }
+          if (seletorMatch['DR Acess']) cts.push({ label: 'Acessórios', dr: seletorMatch['DR Acess'], alt: seletorMatch['Alt Acess'] });
+          if (seletorMatch['DR Eletromec']) cts.push({ label: 'Eletromecânica', dr: seletorMatch['DR Eletromec'], alt: seletorMatch['Alt Eletromec'] });
+
+          cts.forEach(function (ct) {
+            var card = document.createElement('div');
+            card.style.cssText = 'background:var(--panel-1); border:1px solid var(--border); border-radius:6px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center;';
+            card.innerHTML = '<span style="font-weight:600; color:var(--text);">' + escapeHtml(ct.label) + ':</span>' +
+              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--accent);">' + escapeHtml(ct.dr) + ' <span style="font-size:10px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
+            ctsGrid.appendChild(card);
+          });
+        }
+      } else {
+        seletorWrap.style.display = 'none';
+      }
+    }
+
     modal.classList.add('open');
     window._lastCalculationResult = res;
   }
@@ -876,6 +926,9 @@
       lines.push('Estrutura: ' + ctx.nmod + ' Módulos — ' + ctx.comp + 'm x ' + ctx.larg + 'm x ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')');
       lines.push('Plano Pintura: ' + ctx.planpin + ' | Máquina: ' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x)');
       lines.push('Complexidade: ' + ctx.complexidade + ' | Incêndio: ' + ctx.incendio + ' | Segurança: ' + ctx.seguranca);
+      if (res.seletor && res.seletor['PEP Standard']) {
+        lines.push('PEP Standard Sugerido: ' + res.seletor['PEP Standard']);
+      }
       lines.push('');
       lines.push('TOTAL HORAS (H): ' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h');
       lines.push('DURAÇÃO ESTIMADA (DUR): ' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
@@ -889,6 +942,23 @@
         lines.push(' Subtotal: ' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h | ' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
         lines.push('');
       });
+
+      if (res.seletor) {
+        lines.push('--------------------------------------------------');
+        lines.push('CENTROS DE TRABALHO SUGERIDOS (SELETOR):');
+        if (res.seletor['DR Eng Mec']) lines.push(' - Eng. Mecânica: DR ' + res.seletor['DR Eng Mec'] + ' (Alt ' + (res.seletor['Alt Eng Mec'] || '1') + ')');
+        if (res.seletor['DR Eng Ele']) lines.push(' - Eng. Elétrica: DR ' + res.seletor['DR Eng Ele'] + ' (Alt ' + (res.seletor['Alt Eng Ele'] || '1') + ')');
+        var nmodNum = parseInt(ctx.nmod || '1', 10);
+        for (var m = 1; m <= 8; m++) {
+          var drMec = res.seletor['DR Mec ' + m] || res.seletor['DR Mec' + m];
+          var altMec = res.seletor['Alt Mec ' + m] || res.seletor['Alt Mec' + m];
+          if (drMec && m <= nmodNum) {
+            lines.push(' - Mecânica Módulo ' + m + ': DR ' + drMec + ' (Alt ' + (altMec || '1') + ')');
+          }
+        }
+        if (res.seletor['DR Acess']) lines.push(' - Acessórios: DR ' + res.seletor['DR Acess'] + ' (Alt ' + (res.seletor['Alt Acess'] || '1') + ')');
+        if (res.seletor['DR Eletromec']) lines.push(' - Eletromecânica: DR ' + res.seletor['DR Eletromec'] + ' (Alt ' + (res.seletor['Alt Eletromec'] || '1') + ')');
+      }
 
       var textToCopy = lines.join('\n');
       navigator.clipboard.writeText(textToCopy).then(function () {
@@ -939,6 +1009,9 @@
       lines.push('ELETROCENTROS APP - RESUMO DO CALCULO DE TEMPOS;;;');
       lines.push('Data/Hora;' + new Date().toLocaleString('pt-BR') + ';;');
       lines.push('PEP / Ordem;' + (ctx.pep || 'Nao informado') + ';;');
+      if (res.seletor && res.seletor['PEP Standard']) {
+        lines.push('PEP Standard (Sugerido);' + res.seletor['PEP Standard'] + ';;');
+      }
       lines.push('Tipo de Estrutura;' + (ctx.tipoestrutura || '-') + ';Quantidade Modulos;' + (ctx.nmod || 1));
       lines.push('Dimensoes;' + ctx.comp + 'm (C) x ' + ctx.larg + 'm (L) x ' + ctx.alt + 'm (A);Plano Pintura;' + (ctx.planpin || '-'));
       lines.push('Ar Condicionado;' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x);Complexidade;' + (ctx.complexidade || '-'));
@@ -956,6 +1029,23 @@
       });
 
       lines.push('TOTAL GERAL CONSOLIDADO;Todos os processos;' + res.totalGeralH.toFixed(2).replace('.', ',') + ';' + res.totalGeralDUR.toFixed(1).replace('.', ','));
+
+      if (res.seletor) {
+        lines.push(';;;');
+        lines.push('SELETOR DE CENTROS DE TRABALHO (CTS);;;');
+        if (res.seletor['DR Eng Mec']) lines.push('Engenharia Mecanica;' + res.seletor['DR Eng Mec'] + ' (Alt ' + (res.seletor['Alt Eng Mec'] || '1') + ');;');
+        if (res.seletor['DR Eng Ele']) lines.push('Engenharia Eletrica;' + res.seletor['DR Eng Ele'] + ' (Alt ' + (res.seletor['Alt Eng Ele'] || '1') + ');;');
+        var nmodNum = parseInt(ctx.nmod || '1', 10);
+        for (var m = 1; m <= 8; m++) {
+          var drMec = res.seletor['DR Mec ' + m] || res.seletor['DR Mec' + m];
+          var altMec = res.seletor['Alt Mec ' + m] || res.seletor['Alt Mec' + m];
+          if (drMec && m <= nmodNum) {
+            lines.push('Mecanica Modulo ' + m + ';' + drMec + ' (Alt ' + (altMec || '1') + ');;');
+          }
+        }
+        if (res.seletor['DR Acess']) lines.push('Acessorios;' + res.seletor['DR Acess'] + ' (Alt ' + (res.seletor['Alt Acess'] || '1') + ');;');
+        if (res.seletor['DR Eletromec']) lines.push('Eletromecanica;' + res.seletor['DR Eletromec'] + ' (Alt ' + (res.seletor['Alt Eletromec'] || '1') + ');;');
+      }
 
       var csvContent = '\uFEFF' + lines.join('\r\n');
       var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -976,6 +1066,7 @@
       var payload = {
         pep: isFilledEl($('pep')) ? $('pep').value.trim() : '',
         ctx: res.ctx,
+        seletor: res.seletor,
         totalGeralH: res.totalGeralH,
         totalGeralDUR: res.totalGeralDUR,
         resultadosAreas: res.resultadosAreas
@@ -1251,7 +1342,7 @@
     nav.innerHTML = '';
     state.regrasData.forEach(function (areaObj, idx) {
       var btn = document.createElement('button');
-      btn.className = 'snav-btn' + (idx === state.selectedAreaIdx ? ' active' : '');
+      btn.className = 'snav-btn' + (!state.isSeletorActive && idx === state.selectedAreaIdx ? ' active' : '');
       var countCampos = Object.keys(areaObj.campos || {}).length;
       btn.innerHTML = areaObj.area + ' <span class="n">' + countCampos + '</span>';
       btn.addEventListener('click', function () {
@@ -1261,10 +1352,30 @@
       });
       nav.appendChild(btn);
     });
-    if (state.regrasData.length) selecionarArea(state.selectedAreaIdx || 0);
+
+    // Botão dedicado ao Seletor de PEP & Centros de Trabalho
+    var btnSeletor = document.createElement('button');
+    btnSeletor.className = 'snav-btn' + (state.isSeletorActive ? ' active' : '');
+    btnSeletor.style.borderColor = 'rgba(46,196,182,0.4)';
+    btnSeletor.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle; color:var(--accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Seletor PEP &amp; CTs <span class="n" style="background:var(--accent); color:#000; font-weight:700;">' + (state.seletorData ? state.seletorData.length : '89') + '</span>';
+    btnSeletor.addEventListener('click', function () {
+      document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) { b.classList.remove('active'); });
+      btnSeletor.classList.add('active');
+      abrirAbaSeletor();
+    });
+    nav.appendChild(btnSeletor);
+
+    if (!state.isSeletorActive && state.regrasData.length) {
+      selecionarArea(state.selectedAreaIdx || 0);
+    }
   }
 
   function selecionarArea(areaIdx) {
+    state.isSeletorActive = false;
+    if ($('maintContentRegras')) $('maintContentRegras').classList.remove('hidden');
+    if ($('maintContentSeletor')) $('maintContentSeletor').classList.add('hidden');
+    if ($('legendWrapper')) $('legendWrapper').style.display = '';
+
     state.selectedAreaIdx = areaIdx;
     var areaObj = state.regrasData[areaIdx];
     var camposKeys = Object.keys(areaObj.campos || {});
@@ -1273,6 +1384,341 @@
     prepararDirtySubTab();
     renderList();
     renderEditor();
+  }
+
+  function abrirAbaSeletor() {
+    state.isSeletorActive = true;
+    if ($('maintContentRegras')) $('maintContentRegras').classList.add('hidden');
+    if ($('maintContentSeletor')) $('maintContentSeletor').classList.remove('hidden');
+    if ($('legendWrapper')) $('legendWrapper').style.display = 'none';
+
+    if ($('maintFooterMeta')) {
+      $('maintFooterMeta').textContent = 'Seletor de PEP & Centros de Trabalho (' + (state.seletorData ? state.seletorData.length : 0) + ' combinações)';
+    }
+    if ($('btnSaveFooter')) {
+      $('btnSaveFooter').textContent = 'Salvar Seletor';
+      $('btnSaveFooter').disabled = !state.seletorDirty;
+    }
+    renderSeletorTable();
+  }
+
+  function marcarSeletorDirty() {
+    state.seletorDirty = true;
+    if ($('btnSaveFooter') && state.isSeletorActive) {
+      $('btnSaveFooter').disabled = false;
+    }
+  }
+
+  function renderSeletorTable() {
+    var tbody = $('seletorTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!state.seletorData || !state.seletorData.length) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:30px; color:var(--text-dim);">Carregando combinações do Seletor…</td></tr>';
+      return;
+    }
+
+    var term = ($('seletorSearch') ? $('seletorSearch').value.trim().toLowerCase() : '');
+    var countVisible = 0;
+
+    state.seletorData.forEach(function (row, idx) {
+      var rowText = (
+        (row['Tipo Estrutura'] || '') + ' ' +
+        (row['Nº Módulos?'] || '') + ' ' +
+        (row['Casa Máq.?'] || '') + ' ' +
+        (row['Sist. Seg.?'] || '') + ' ' +
+        (row['Teste SW?'] || '') + ' ' +
+        (row['PEP Standard'] || '') + ' ' +
+        (row['DR Eng Mec'] || '') + ' ' +
+        (row['DR Eng Ele'] || '') + ' ' +
+        (row['DR Acess'] || '') + ' ' +
+        (row['DR Eletromec'] || '')
+      ).toLowerCase();
+
+      if (term && rowText.indexOf(term) === -1) return;
+      countVisible++;
+
+      var tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--border)';
+      tr.style.transition = 'background .15s ease';
+      tr.addEventListener('mouseenter', function () { tr.style.background = 'var(--panel-3)'; });
+      tr.addEventListener('mouseleave', function () { tr.style.background = ''; });
+
+      var mecMods = [];
+      for (var m = 1; m <= 8; m++) {
+        var dr = row['DR Mec ' + m] || row['DR Mec' + m];
+        var alt = row['Alt Mec ' + m] || row['Alt Mec' + m];
+        if (dr) mecMods.push('M' + m + ': ' + dr + (alt ? ' (' + alt + ')' : ''));
+      }
+      var mecModsStr = mecMods.length ? mecMods.slice(0, 2).join(', ') + (mecMods.length > 2 ? ' +' + (mecMods.length - 2) : '') : '-';
+
+      tr.innerHTML =
+        '<td style="padding:8px 12px; font-weight:600; color:var(--text); white-space:nowrap;">' + escapeHtml(row['Tipo Estrutura'] || '-') + '</td>' +
+        '<td style="padding:8px 10px; text-align:center; font-family:\'IBM Plex Mono\'; font-weight:600;">' + escapeHtml(row['Nº Módulos?'] || '1') + '</td>' +
+        '<td style="padding:8px 10px; text-align:center;">' + (row['Casa Máq.?'] === 'Sim' ? '<span style="color:var(--amber); font-weight:600;">Sim</span>' : '<span style="color:var(--text-dim);">Não</span>') + '</td>' +
+        '<td style="padding:8px 10px; text-align:center;">' + (row['Sist. Seg.?'] === 'Sim' ? '<span style="color:var(--accent); font-weight:600;">Sim</span>' : '<span style="color:var(--text-dim);">' + (row['Sist. Seg.?'] || '-') + '</span>') + '</td>' +
+        '<td style="padding:8px 10px; text-align:center;">' + (row['Teste SW?'] === 'Sim' ? '<span style="color:var(--accent); font-weight:600;">Sim</span>' : '<span style="color:var(--text-dim);">' + (row['Teste SW?'] || '-') + '</span>') + '</td>' +
+        '<td style="padding:8px 12px; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--accent); white-space:nowrap;">' +
+          '<input type="text" class="seletor-pep-ipt" data-idx="' + idx + '" value="' + escapeHtml(row['PEP Standard'] || '') + '" style="background:var(--panel-1); border:1px solid var(--border); color:var(--accent); font-family:inherit; font-weight:bold; padding:3px 6px; border-radius:4px; width:110px; font-size:11px;">' +
+        '</td>' +
+        '<td style="padding:8px 10px; font-family:\'IBM Plex Mono\'; font-size:11px; white-space:nowrap;">' + (row['DR Eng Mec'] ? row['DR Eng Mec'] + ' <span style="color:var(--text-dim); font-size:10px;">(' + (row['Alt Eng Mec'] || '1') + ')</span>' : '-') + '</td>' +
+        '<td style="padding:8px 10px; font-family:\'IBM Plex Mono\'; font-size:11px; white-space:nowrap;">' + (row['DR Eng Ele'] ? row['DR Eng Ele'] + ' <span style="color:var(--text-dim); font-size:10px;">(' + (row['Alt Eng Ele'] || '1') + ')</span>' : '-') + '</td>' +
+        '<td style="padding:8px 10px; font-family:\'IBM Plex Mono\'; font-size:10.5px; color:var(--text-dim); white-space:nowrap;" title="' + escapeHtml(mecMods.join('\n')) + '">' + escapeHtml(mecModsStr) + '</td>' +
+        '<td style="padding:8px 10px; font-family:\'IBM Plex Mono\'; font-size:11px; white-space:nowrap;">' + (row['DR Acess'] ? row['DR Acess'] + ' <span style="color:var(--text-dim); font-size:10px;">(' + (row['Alt Acess'] || '1') + ')</span>' : '-') + '</td>' +
+        '<td style="padding:8px 10px; font-family:\'IBM Plex Mono\'; font-size:11px; white-space:nowrap;">' + (row['DR Eletromec'] ? row['DR Eletromec'] + ' <span style="color:var(--text-dim); font-size:10px;">(' + (row['Alt Eletromec'] || '1') + ')</span>' : '-') + '</td>' +
+        '<td style="padding:8px 10px; text-align:center;">' +
+          '<button type="button" class="icon-btn btn-edit-seletor-row" data-idx="' + idx + '" title="Editar Centros de Trabalho desta combinação" style="padding:3px 8px; font-size:10.5px; border-radius:4px; border:1px solid var(--border); background:var(--panel-1); color:var(--text); cursor:pointer;">Editar CTs</button>' +
+        '</td>';
+
+      tbody.appendChild(tr);
+    });
+
+    if ($('seletorCountBadge')) {
+      $('seletorCountBadge').textContent = countVisible + ' de ' + state.seletorData.length + ' combinações';
+    }
+
+    tbody.querySelectorAll('.seletor-pep-ipt').forEach(function (ipt) {
+      ipt.addEventListener('change', function () {
+        var rowIdx = parseInt(ipt.dataset.idx, 10);
+        state.seletorData[rowIdx]['PEP Standard'] = ipt.value.trim();
+        marcarSeletorDirty();
+      });
+    });
+
+    tbody.querySelectorAll('.btn-edit-seletor-row').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var rowIdx = parseInt(btn.dataset.idx, 10);
+        abrirModalEditarLinhaSeletor(rowIdx);
+      });
+    });
+  }
+
+  if ($('seletorSearch')) {
+    $('seletorSearch').addEventListener('input', renderSeletorTable);
+  }
+
+  if ($('btnRestaurarSeletor')) {
+    $('btnRestaurarSeletor').addEventListener('click', function () {
+      if (confirm('Deseja recarregar o Seletor do arquivo original?')) {
+        carregarSeletor();
+        showToast('Seletor recarregado!');
+      }
+    });
+  }
+
+  function abrirModalEditarLinhaSeletor(rowIdx) {
+    var row = state.seletorData[rowIdx];
+    if (!row) return;
+
+    var newPep = prompt('PEP Standard para ' + row['Tipo Estrutura'] + ' (' + row['Nº Módulos?'] + ' mód):', row['PEP Standard'] || '');
+    if (newPep !== null) {
+      row['PEP Standard'] = newPep.trim();
+      var drMec = prompt('DR Eng Mecânica:', row['DR Eng Mec'] || '');
+      if (drMec !== null) row['DR Eng Mec'] = drMec.trim();
+      var drEle = prompt('DR Eng Elétrica:', row['DR Eng Ele'] || '');
+      if (drEle !== null) row['DR Eng Ele'] = drEle.trim();
+      var drEletrMec = prompt('DR Eletromecânica:', row['DR Eletromec'] || '');
+      if (drEletrMec !== null) row['DR Eletromec'] = drEletrMec.trim();
+
+      marcarSeletorDirty();
+      renderSeletorTable();
+      showToast('Combinação atualizada no Seletor.');
+    }
+  }
+
+  function carregarSeletor() {
+    if (isPyWebviewAvailable()) {
+      window.pywebview.api.get_seletor().then(function (data) {
+        if (data && data.length) {
+          state.seletorData = data;
+          state.seletorOriginal = JSON.parse(JSON.stringify(data));
+          atualizarSugestaoPep();
+          if (state.isSeletorActive) renderSeletorTable();
+        } else {
+          fetchSeletorFallback();
+        }
+      }).catch(function () {
+        fetchSeletorFallback();
+      });
+    } else {
+      fetchSeletorFallback();
+    }
+  }
+
+  function fetchSeletorFallback() {
+    fetch('seletor.json').then(function (resp) {
+      if (resp.ok) return resp.json();
+      throw new Error('Status ' + resp.status);
+    }).then(function (data) {
+      if (data && data.length) {
+        state.seletorData = data;
+        state.seletorOriginal = JSON.parse(JSON.stringify(data));
+        atualizarSugestaoPep();
+        if (state.isSeletorActive) renderSeletorTable();
+      }
+    }).catch(function (err) {
+      console.warn('[Seletor] Erro ao carregar seletor.json:', err);
+    });
+  }
+
+  function consultarSeletor(ctx) {
+    if (!state.seletorData || !state.seletorData.length || !ctx) return null;
+
+    var tipo = ctx.tipoestrutura || '';
+    var nmod = String(ctx.nmod || '1');
+    var isRoofTop = ctx.tipomaq === 'Roof Top' || ctx.tipomaq === 'Self + Dutos';
+    var casaMaq = isRoofTop ? 'Sim' : 'Não';
+    var temSeg = (ctx.seguranca && ctx.seguranca !== 'Não possui' && ctx.seguranca !== 'Não aplicável') ? 'Sim' : 'Não';
+    var testeSW = ctx.testesw ? 'Sim' : 'Não';
+    var isFab1313 = ctx.fab1313 ? true : false;
+
+    var tipoSeletor = tipo;
+    if (tipo === 'Móvel' || tipo === 'Semimóvel' || tipo === 'Modular' || tipo === 'Fixo' || tipo === 'Embarcado' || tipo === 'Eletrocentro') {
+      tipoSeletor = isFab1313 ? 'EletrocentroB' : 'Eletrocentro';
+    } else if (tipo === 'Container Solar') {
+      if (ctx.progReles && ctx.diagBTI) {
+        tipoSeletor = 'Container   MarítimoBEI';
+      } else if (ctx.progReles) {
+        tipoSeletor = 'Container   MarítimoBE';
+      } else if (ctx.diagBTI) {
+        tipoSeletor = 'Container   MarítimoBI';
+      } else if (ctx.diagAgrup) {
+        tipoSeletor = 'Container   MarítimoBII';
+      } else {
+        tipoSeletor = 'Container   Marítimo';
+      }
+    } else if (tipo === 'Skid (mecânica)') {
+      tipoSeletor = isFab1313 ? 'Skid   (mecânica)B' : 'Skid   (mecânica)';
+    } else if (tipo === 'Skid (com elétrica)') {
+      tipoSeletor = isFab1313 ? 'Skid (com   elétrica)B' : 'Skid (com   elétrica)';
+    } else if (tipo === 'Pilotis') {
+      tipoSeletor = isFab1313 ? 'PilotisB' : 'Pilotis';
+    } else if (tipo === 'ESSW (mecânica)') {
+      tipoSeletor = 'ESSW   (mecânica)';
+    } else if (tipo === 'ESSW (elétrica)') {
+      tipoSeletor = 'ESSW   (elétrica)';
+    } else if (tipo === 'Serviço Engenharia') {
+      tipoSeletor = 'Serviço   Engenharia';
+    }
+
+    var cleanStr = function (s) { return (s || '').toString().replace(/\s+/g, ' ').trim().toLowerCase(); };
+    var targetTipo = cleanStr(tipoSeletor);
+
+    var bestMatch = null;
+    var bestScore = -1;
+
+    for (var i = 0; i < state.seletorData.length; i++) {
+      var row = state.seletorData[i];
+      var rowTipo = cleanStr(row['Tipo Estrutura']);
+      var rowMod = String(row['Nº Módulos?'] || '1').trim();
+      var rowCasaMaq = (row['Casa Máq.?'] || '').trim();
+      var rowSistSeg = row['Sist. Seg.?'] ? row['Sist. Seg.?'].trim() : null;
+      var rowTesteSW = (row['Teste SW?'] || '').trim();
+
+      var score = 0;
+
+      if (rowTipo === targetTipo) {
+        score += 100;
+      } else if (targetTipo.indexOf('eletrocentro') !== -1 && rowTipo.indexOf('eletrocentro') !== -1) {
+        score += 50;
+      } else if (targetTipo.indexOf('container') !== -1 && rowTipo.indexOf('container') !== -1) {
+        score += 50;
+      } else if (targetTipo.indexOf('skid') !== -1 && rowTipo.indexOf('skid') !== -1) {
+        score += 50;
+      } else {
+        continue;
+      }
+
+      if (rowMod === nmod) score += 30;
+      if (rowCasaMaq === casaMaq) score += 20;
+      if (rowSistSeg === null || rowSistSeg === temSeg) score += 15;
+      if (rowTesteSW === testeSW) score += 10;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = row;
+      }
+    }
+
+    return bestMatch;
+  }
+
+  function atualizarSugestaoPep() {
+    if (typeof coletarContextoFormulario !== 'function') return;
+    var currentCtx = coletarContextoFormulario();
+    var seletorMatch = consultarSeletor(currentCtx);
+    var seletorBadge = $('seletorPepBadge');
+    if (seletorBadge) {
+      if (seletorMatch && seletorMatch['PEP Standard']) {
+        var pepSug = seletorMatch['PEP Standard'];
+        if ($('txtSeletorPep')) $('txtSeletorPep').textContent = pepSug;
+        seletorBadge.style.display = 'inline-flex';
+      } else {
+        seletorBadge.style.display = 'none';
+      }
+    }
+  }
+
+  if ($('seletorPepBadge')) {
+    $('seletorPepBadge').addEventListener('click', function () {
+      var pepInput = $('pep');
+      var txt = $('txtSeletorPep') ? $('txtSeletorPep').textContent.trim() : '';
+      if (pepInput && txt && txt !== '-') {
+        pepInput.value = txt;
+        recomputeForm();
+        showToast('PEP Standard aplicado com sucesso: ' + txt);
+      }
+    });
+  }
+
+  function salvarSeletor(motivo, anexosPayload) {
+    var anexoBase64 = (anexosPayload && anexosPayload.length) ? anexosPayload[0].base64 : null;
+    var anexoNome = (anexosPayload && anexosPayload.length) ? anexosPayload[0].nome : null;
+
+    var payload = {
+      seletor: state.seletorData,
+      motivo: motivo,
+      anexo_base64: anexoBase64,
+      anexo_nome: anexoNome
+    };
+
+    showToast('Salvando Seletor de PEP & Centros de Trabalho...');
+
+    var afterSaveSuccess = function (res) {
+      state.seletorOriginal = JSON.parse(JSON.stringify(state.seletorData));
+      state.seletorDirty = false;
+      if ($('btnSaveFooter')) $('btnSaveFooter').disabled = true;
+      showToast('Seletor de PEP & CTs salvo com sucesso no banco e sincronizado!');
+      carregarSeletor();
+      carregarHistorico();
+    };
+
+    if (isPyWebviewAvailable()) {
+      window.pywebview.api.save_seletor(payload).then(function (res) {
+        if (res && res.status === 'success') {
+          afterSaveSuccess(res);
+        } else {
+          showToast('Erro ao salvar Seletor: ' + ((res && res.message) || 'Falha no backend'), true);
+        }
+      }).catch(function (err) {
+        showToast('Erro ao salvar Seletor via pywebview: ' + (err.message || err), true);
+      });
+    } else {
+      apiCall('/save_seletor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        if (res && res.status === 'success') {
+          afterSaveSuccess(res);
+        } else {
+          showToast('Erro ao salvar Seletor: ' + ((res && res.message) || 'Falha na API'), true);
+        }
+      }).catch(function (err) {
+        showToast('Erro ao salvar Seletor via API: ' + (err.message || err), true);
+      });
+    }
   }
 
   function prepararDirtySubTab() {
@@ -4019,7 +4465,11 @@
         return { nome: x.nome, base64: x.base64 };
       });
       if ($('modalMotivo')) $('modalMotivo').classList.remove('open');
-      saveRegrasCampo(motivo, anexosPayload);
+      if (state.isSeletorActive) {
+        salvarSeletor(motivo, anexosPayload);
+      } else {
+        saveRegrasCampo(motivo, anexosPayload);
+      }
     });
   }
 
@@ -4947,8 +5397,9 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, 3800);
   }
 
-  // Load external configuration and rules on startup
+  // Load external configuration, rules, and selector on startup
   loadExternalConfig();
   carregarDisciplinas();
+  carregarSeletor();
 
 })();

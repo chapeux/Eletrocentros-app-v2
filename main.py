@@ -26,6 +26,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 # CONFIG FILE PATHS, REGRAS, ASSETS & PASSWORDS
 CONFIG_FILE = FRONTEND_DIR / "config.json"
 REGRAS_FILE = FRONTEND_DIR / "regras.json"
+SELETOR_FILE = FRONTEND_DIR / "seletor.json"
 ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
 
@@ -252,6 +253,71 @@ class AppAPI:
         """Valida se a senha digitada corresponde às credenciais de mantenedor."""
         return password == self.password or password == "1234"
 
+    def get_seletor(self) -> list:
+        """Lê e retorna a base do seletor de PEPs e Centros de Trabalho cadastrada em seletor.json."""
+        try:
+            if SELETOR_FILE.exists():
+                with open(SELETOR_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            return []
+        except Exception as e:
+            print(f"[Backend Python] Erro ao ler seletor.json: {e}")
+            return []
+
+    def save_seletor(self, payload: dict) -> dict:
+        """Salva as alterações na base do seletor.json e registra histórico no banco MySQL."""
+        try:
+            seletor_data = payload.get("seletor", payload) if isinstance(payload, dict) and "seletor" in payload else payload
+            motivo = payload.get("motivo", "") if isinstance(payload, dict) else ""
+
+            # Trata anexo se houver
+            anexo_nome_db = None
+            anexo_caminho_db = None
+            if isinstance(payload, dict) and payload.get("anexo_base64") and payload.get("anexo_nome"):
+                try:
+                    anexo_bytes = base64.b64decode(payload["anexo_base64"])
+                    nome_limpo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{payload['anexo_nome']}"
+                    caminho_salvo = ANEXOS_DIR / nome_limpo
+                    with open(caminho_salvo, "wb") as af:
+                        af.write(anexo_bytes)
+                    anexo_nome_db = payload["anexo_nome"]
+                    anexo_caminho_db = str(caminho_salvo)
+                except Exception as ex_anexo:
+                    print(f"[Backend Python] Erro ao salvar anexo do seletor: {ex_anexo}")
+
+            # Registra no MySQL
+            total_logs = 0
+            if DB_AVAILABLE:
+                usuario = os.getenv("USERNAME", "Sistema")
+                total_linhas = len(seletor_data) if isinstance(seletor_data, list) else 0
+                registrar_log(
+                    disciplina="Seletor de PEP & CTs",
+                    campo="Tabela Seletor",
+                    tipo_alteracao="UPDATE",
+                    detalhes=f"Atualização do Seletor de PEP e Centros de Trabalho ({total_linhas} combinações cadastradas).",
+                    motivo=motivo or "Atualização dos parâmetros do Seletor de PEP/CTs",
+                    usuario=usuario,
+                    anexo_nome=anexo_nome_db,
+                    anexo_caminho=anexo_caminho_db
+                )
+                total_logs = 1
+
+            # Salva o arquivo JSON formatado
+            with open(SELETOR_FILE, "w", encoding="utf-8") as f:
+                json.dump(seletor_data, f, ensure_ascii=False, indent=2)
+
+            # Sincronização automática com GitHub
+            resumo_git = "Atualização da tabela Seletor de PEP e Centros de Trabalho"
+            if motivo:
+                resumo_git += f" - Motivo: {motivo}"
+            sync_github_async(resumo=resumo_git)
+
+            print("[Backend Python] Seletor salvo em seletor.json com sucesso!")
+            return {"status": "success", "logs_registrados": total_logs}
+        except Exception as e:
+            print(f"[Backend Python] Erro ao salvar seletor.json: {e}")
+            return {"status": "error", "message": str(e)}
+
     def export_excel(self, data: dict) -> dict:
         """Gera e retorna a planilha Excel (.xlsx) com o resultado detalhado dos tempos."""
         try:
@@ -425,6 +491,45 @@ class AppAPI:
                 c.border = double_bottom
             ws.row_dimensions[curr_row].height = 24
 
+            # 5. Seletor de PEP & Centros de Trabalho (se disponível)
+            seletor_info = data.get("seletor")
+            if seletor_info:
+                curr_row += 2
+                ws[f"A{curr_row}"] = "SELETOR DE PEP STANDARD & CENTROS DE TRABALHO (CTS)"
+                ws[f"A{curr_row}"].font = section_font
+                curr_row += 1
+
+                ws[f"A{curr_row}"] = "PEP Standard Sugerido:"
+                ws[f"A{curr_row}"].font = label_font
+                ws[f"B{curr_row}"] = str(seletor_info.get("PEP Standard", "-"))
+                ws[f"B{curr_row}"].font = Font(name="Segoe UI", size=10, bold=True, color="0F2C59")
+                curr_row += 1
+
+                ct_items = []
+                if seletor_info.get("DR Eng Mec"):
+                    ct_items.append(("Engenharia Mecânica:", f"DR {seletor_info.get('DR Eng Mec')} (Alt {seletor_info.get('Alt Eng Mec', '1')})"))
+                if seletor_info.get("DR Eng Ele"):
+                    ct_items.append(("Engenharia Elétrica:", f"DR {seletor_info.get('DR Eng Ele')} (Alt {seletor_info.get('Alt Eng Ele', '1')})"))
+
+                nmod_val = int(ctx.get("nmod", 1) or 1)
+                for m in range(1, 9):
+                    dr_m = seletor_info.get(f"DR Mec {m}") or seletor_info.get(f"DR Mec{m}")
+                    alt_m = seletor_info.get(f"Alt Mec {m}") or seletor_info.get(f"Alt Mec{m}") or "1"
+                    if dr_m and m <= nmod_val:
+                        ct_items.append((f"Mecânica Módulo {m}:", f"DR {dr_m} (Alt {alt_m})"))
+
+                if seletor_info.get("DR Acess"):
+                    ct_items.append(("Acessórios:", f"DR {seletor_info.get('DR Acess')} (Alt {seletor_info.get('Alt Acess', '1')})"))
+                if seletor_info.get("DR Eletromec"):
+                    ct_items.append(("Eletromecânica:", f"DR {seletor_info.get('DR Eletromec')} (Alt {seletor_info.get('Alt Eletromec', '1')})"))
+
+                for ct_label, ct_val in ct_items:
+                    ws[f"A{curr_row}"] = ct_label
+                    ws[f"A{curr_row}"].font = label_font
+                    ws[f"B{curr_row}"] = ct_val
+                    ws[f"B{curr_row}"].font = val_font
+                    curr_row += 1
+
             # Auto-largura das colunas
             for col in ws.columns:
                 max_len = 0
@@ -481,6 +586,13 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             config = self.api.get_config()
             self.wfile.write(json.dumps(config, ensure_ascii=False).encode("utf-8"))
             return
+        elif self.path == "/api/get_seletor":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            seletor = self.api.get_seletor()
+            self.wfile.write(json.dumps(seletor, ensure_ascii=False).encode("utf-8"))
+            return
 
         super().do_GET()
 
@@ -491,6 +603,22 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode("utf-8"))
                 result = self.api.save_regras(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/save_seletor":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.save_seletor(data)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()

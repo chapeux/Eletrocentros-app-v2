@@ -502,6 +502,10 @@
                   <div class="field">
                     <span class="field-label"><i class="led na" data-led="pep"></i><span class="txt">PEP</span></span>
                     <input type="text" id="pep" class="ipt" placeholder="XXX-XX-XXXXX-XXX" disabled>
+                    <div id="seletorPepBadge" style="display:none; font-size:11px; margin-top:4px; color:var(--accent); cursor:pointer; align-items:center; gap:4px;" title="Clique para aplicar o PEP Standard sugerido pelo Seletor">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                      <span>Sugerido: <strong id="txtSeletorPep" style="font-family:'IBM Plex Mono', monospace;">-</strong> <span style="text-decoration:underline; font-size:10px; margin-left:2px;">(Aplicar)</span></span>
+                    </div>
                   </div>
                   <div class="field">
                     <span class="field-label"><i class="led na" data-led="cliente"></i><span
@@ -582,9 +586,49 @@
       <!-- VIEW 2: PAINEL DE MANUTENÇÃO (PROTEGIDO) -->
       <div class="view-pane hidden" id="view-manutencao">
         <nav class="section-nav" id="sectionNavManutencao"></nav>
-        <div class="maint-content">
+        <div class="maint-content" id="maintContentRegras">
           <div class="col-list" id="colList"></div>
           <div class="col-editor" id="colEditor"></div>
+        </div>
+
+        <!-- Painel Seletor de PEP & Centros de Trabalho -->
+        <div class="seletor-maint-pane hidden" id="maintContentSeletor" style="flex:1; display:flex; flex-direction:column; overflow:hidden; padding:16px 20px; background:var(--panel-1);">
+          <div class="seletor-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; gap:10px; align-items:center; flex:1; min-width:280px;">
+              <div class="search-wrap" style="position:relative; flex:1;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="seletorSearch" class="ipt" placeholder="Filtrar por tipo de estrutura, módulos, PEP standard, etc…" style="padding-left:32px; font-size:12px;">
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span id="seletorCountBadge" style="font-size:11px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); padding:4px 10px; border-radius:6px;">89 combinações</span>
+              <button type="button" class="btn" id="btnRestaurarSeletor" title="Recarregar dados originais do seletor.json">Recarregar</button>
+            </div>
+          </div>
+
+          <div class="seletor-table-wrap" style="flex:1; overflow:auto; border:1px solid var(--border); border-radius:8px; background:var(--panel-2);">
+            <table class="seletor-table" style="width:100%; border-collapse:collapse; font-size:11.5px; text-align:left;">
+              <thead style="position:sticky; top:0; background:var(--panel-3); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                <tr style="border-bottom:1px solid var(--border); color:var(--text-dim); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px;">
+                  <th style="padding:9px 12px;">Estrutura</th>
+                  <th style="padding:9px 10px; text-align:center;">Mód</th>
+                  <th style="padding:9px 10px; text-align:center;">Casa Máq</th>
+                  <th style="padding:9px 10px; text-align:center;">Sist. Seg</th>
+                  <th style="padding:9px 10px; text-align:center;">Teste SW</th>
+                  <th style="padding:9px 12px; color:var(--accent);">PEP Standard</th>
+                  <th style="padding:9px 10px;">Eng Mec (DR/Alt)</th>
+                  <th style="padding:9px 10px;">Eng Ele (DR/Alt)</th>
+                  <th style="padding:9px 10px;">Mec Módulos (DR/Alt)</th>
+                  <th style="padding:9px 10px;">Acessórios</th>
+                  <th style="padding:9px 10px;">Eletromecânica</th>
+                  <th style="padding:9px 10px; text-align:center;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="seletorTableBody">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="app-footer">
@@ -906,6 +950,20 @@
               <!-- Dynamically rendered -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Seletor de PEP & Centros de Trabalho -->
+        <div id="resSeletorWrap" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              Seletor — PEP Standard &amp; Centros de Trabalho (CTs)
+            </span>
+            <span id="resSeletorPepBadge" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: var(--accent); background: rgba(46,196,182,0.15); padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(46,196,182,0.3);">PEP Standard: -</span>
+          </div>
+          <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; font-size: 11.5px;">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
 

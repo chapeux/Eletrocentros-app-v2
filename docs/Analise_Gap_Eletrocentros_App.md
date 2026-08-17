@@ -90,13 +90,13 @@ Comparação campo a campo com os cabeçalhos da planilha original:
 
 ---
 
-### Fase 2 — Seletor de PEP / Centro de Trabalho (médio esforço)
+### Fase 2 — Seletor de PEP / Centro de Trabalho (médio esforço) — ✅ Concluído (17/08/2026)
 **Objetivo:** replicar a aba "Seletor" da planilha original.
-- [ ] Modelar a tabela de combinações (Nº Módulos × Casa Máquinas × Sist. Segurança × Teste SW → PEP Standard + Centros de Trabalho por disciplina) como um novo arquivo de configuração (ex.: `seletor.json`), no mesmo espírito modular do `config.json`/`regras.json`.
-- [ ] Expor essa tabela na interface (aba de Regras/Manutenção) para edição pelo usuário mantenedor, com histórico de alterações (reaproveitando o mecanismo já existente para `regras.json`).
-- [ ] Integrar a consulta ao Seletor no fluxo principal: ao preencher os campos de estrutura, o app já sugere o PEP Standard e os Centros de Trabalho correspondentes.
+- [x] Modelada a tabela com 89 combinações (Nº Módulos × Casa Máquinas × Sist. Segurança × Teste SW → PEP Standard + Centros de Trabalho por disciplina) no arquivo modular `frontend/seletor.json`.
+- [x] Exposta a tabela na interface do Painel de Manutenção através da aba dedicada **"⚡ Seletor de PEP & CTs"**, com filtro de busca em tempo real, badges de status, edição inline de PEP Standard e edição de Centros de Trabalho com justificativa de alteração, log no MySQL e commit no Git.
+- [x] Integrada a consulta em tempo real ao Seletor no formulário de Planejamento: exibe badge dinâmico com PEP Standard sugerido (com botão de 1 clique para aplicar ao campo de PEP), e detalha os Centros de Trabalho recomendados no modal de cálculo e nas exportações (Excel/CSV).
 
-**Critério de conclusão:** dado um conjunto de opções de estrutura, o app retorna o PEP Standard e os Centros de Trabalho sem necessidade de consulta manual à planilha.
+**Critério de conclusão:** dado um conjunto de opções de estrutura, o app retorna o PEP Standard e os Centros de Trabalho sem necessidade de consulta manual à planilha. — ✅ Concluído com sucesso.
 
 ---
 
