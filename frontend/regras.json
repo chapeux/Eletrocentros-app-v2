@@ -1101,7 +1101,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 1,
+                "valor_base": 1
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 1,
+                "valor_base": 1
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PSS": {
