@@ -1019,37 +1019,6 @@
   function flagNome(key) { var f = FLAGS.find(function (x) { return x.key === key; }); return f ? f.nome : key; }
   var MULT = { 1: 1, 2: 1.5, 3: 2, 4: 2.5, 5: 3, 6: 3.5, 7: 4, 8: 4.5 };
 
-  function carregarDisciplinas() {
-    var nav = $('sectionNavManutencao');
-    if (!nav) return;
-    nav.innerHTML = '<span style="color:var(--text-faint); font-size:12px; padding:8px 4px;">Carregando disciplinas...</span>';
-
-    if (isPyWebviewAvailable()) {
-      window.pywebview.api.get_disciplinas().then(function (lista) {
-        renderDisciplinasNav(lista);
-      }).catch(function (err) {
-        showNavError(err.message);
-      });
-    } else {
-      apiCall('/manutencao/disciplinas').then(function (lista) {
-        renderDisciplinasNav(lista);
-      }).catch(function (err) {
-        // Fallback mock disciplinas if local API backend is not active yet
-        var mockLista = [
-          { disciplina: 'Mecânica — Estrutura', total_campos: 14 },
-          { disciplina: 'Elétrica & Equipamentos', total_campos: 18 },
-          { disciplina: 'Acessórios & Adicionais', total_campos: 9 }
-        ];
-        renderDisciplinasNav(mockLista);
-      });
-    }
-  }
-
-  function showNavError(msg) {
-    var nav = $('sectionNavManutencao');
-    nav.innerHTML = '<span style="color:var(--red); font-size:12px; padding:8px 4px;">Não foi possível carregar as disciplinas. ' + msg + '</span>';
-  }
-
   /* ==========================================================================
      REGRAS VIEW — ESTRUTURA DE AREAS, CAMPOS (LOM, LMM, PBS...) E SUB-ABAS H / DUR
      ========================================================================== */

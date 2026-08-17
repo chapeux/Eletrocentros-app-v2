@@ -252,57 +252,6 @@ class AppAPI:
         """Valida se a senha digitada corresponde às credenciais de mantenedor."""
         return password == self.password or password == "1234"
 
-    def get_disciplinas(self) -> list:
-        """Retorna as disciplinas cadastradas para o painel de manutenção."""
-        return [
-            {"disciplina": "Mecânica — Estrutura", "total_campos": 14},
-            {"disciplina": "Elétrica & Equipamentos", "total_campos": 18},
-            {"disciplina": "Acessórios & Adicionais", "total_campos": 5},
-            {"disciplina": "SAP & Automação", "total_campos": 6}
-        ]
-
-    def get_campos_disciplina(self, disciplina_nome: str) -> dict:
-        """Retorna a lista de campos e regras da disciplina selecionada."""
-        return {
-            "campos": {
-                "Módulo Estrutural Base": {
-                    "analise": {
-                        "base": {"forma": "aditiva", "valor_base": 40.0, "passo": 12.0},
-                        "condicoes": [
-                            {"flag": "chapa_remov", "forma": "fixo", "valor": 8.0},
-                            {"flag": "pe_direito_3_3_m", "forma": "por_modulo", "valor": 3.5}
-                        ]
-                    }
-                },
-                "Instalação de Calhas Pluviais": {
-                    "analise": {
-                        "base": {"forma": "multiplicativa", "valor_base": 15.0},
-                        "condicoes": [
-                            {"flag": "casa_maquinas", "forma": "por_modulo", "valor": 4.0}
-                        ]
-                    }
-                },
-                "Porão de Cabos & Interligações": {
-                    "analise": {
-                        "base": {"forma": "constante", "valor": 25.0},
-                        "condicoes": [
-                            {"flag": "porao_de_cabos", "forma": "fixo", "valor": 10.0}
-                        ]
-                    }
-                }
-            }
-        }
-
-    def save_campo(self, campo_nome: str, data: dict) -> dict:
-        """Salva as regras de um campo específico no backend."""
-        print(f"[Backend Python] Salvando alterações para o campo '{campo_nome}': {data}")
-        return {"status": "success", "campo": campo_nome, "analise": data}
-
-    def calculate_tempos(self, form_data: dict) -> dict:
-        """Cálculo principal de tempos de produção com base nos dados informados."""
-        print(f"[Backend Python] Executando cálculo de tempos para os dados: {form_data}")
-        return {"status": "success", "total_horas": 128.5}
-
 
 class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Handler HTTP customizado com suporte a rotas da API /api/*."""

@@ -70,13 +70,13 @@ Comparação campo a campo com os cabeçalhos da planilha original:
 
 ## 5. Plano de Implementação
 
-### Fase 0 — Limpeza e consolidação (baixo risco, quick win)
+### Fase 0 — Limpeza e consolidação (baixo risco, quick win) — ✅ Concluído (17/08/2026)
 **Objetivo:** remover ambiguidade e código morto antes de adicionar funcionalidades novas.
-- [ ] Remover ou religar `calculate_tempos()` em `main.py` para não retornar valor hardcoded — decidir se o cálculo real deve migrar para o backend Python (paridade com o motor JS) ou se a função deve ser removida por já ser feita 100% no frontend.
-- [ ] Remover ou religar `get_disciplinas()`, `get_campos_disciplina()` e `save_campo()` para refletirem os dados reais do `regras.json`, ou removê-los se não forem mais usados pela UI atual.
-- [ ] Auditar a disciplina fictícia "SAP & Automação" (6 campos) e decidir se deve virar a Fase 4 real (Seletor) ou ser removida.
+- [x] Remover stubs mortos (`calculate_tempos()`, `get_disciplinas()`, `get_campos_disciplina()`, `save_campo()`) em `main.py` e em `app.js` — eliminando dados fictícios/hardcoded desconectados de `regras.json`.
+- [x] Limpar chamadas e funções duplicadas no frontend (`carregarDisciplinas` legado).
+- [x] Auditar a disciplina fictícia "SAP & Automação" (removida do backend; o Seletor real de PEPs/CTs será implementado na Fase 2).
 
-**Critério de conclusão:** nenhum método do `AppAPI` retorna dados de exemplo/hardcoded que não reflitam o estado real do sistema.
+**Critério de conclusão:** nenhum método do `AppAPI` retorna dados de exemplo/hardcoded que não reflitam o estado real do sistema. — ✅ Concluído com sucesso.
 
 ---
 
