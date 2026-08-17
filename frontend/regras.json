@@ -863,7 +863,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 14.58,
+                "valor_base": 14.58
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 14.58,
+                "valor_base": 14.58
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
