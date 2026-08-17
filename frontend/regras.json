@@ -1135,7 +1135,27 @@
           },
           "condicoes": [ { "flag": "sist_seguranca", "rotulo": "Sist. Segurança", "forma": "tabela", "valor": 13, "escala": 0.61, "valores": [ "13", "21,1", "28,4", "36,5", "44,6", "52,7", "60,75", "68,9" ]
             }
-          ]
+          ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1146,7 +1166,27 @@
           },
           "condicoes": [ { "flag": "sist_seguranca", "rotulo": "Sist. Segurança", "forma": "tabela", "valor": 1, "valores": [ "H / 7,92", "H / 7,92", "6", "7", "8", "9", "10", "11" ]
             }
-          ]
+          ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "LMS": {
@@ -1158,7 +1198,27 @@
           },
           "condicoes": [ { "flag": "sist_seguranca", "rotulo": "Sist. Segurança", "forma": "tabela", "valor": 1, "valores": [ "6,5", "10,5", "14,6", "17,8", "21,1", "24,3", "27,54", "30,8" ]
             }
-          ]
+          ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -1168,7 +1228,27 @@
           },
           "condicoes": [ { "flag": "sist_seguranca", "rotulo": "Sist. Segurança", "forma": "tabela", "valor": 1, "valores": [ "2", "H / 7,92", "H / 7,92", "4", "5", "6", "7", "8" ]
             }
-          ]
+          ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PBA": {
@@ -1187,7 +1267,29 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 14.58,
+                "valor_base": 14.58
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 14.58,
+                "valor_base": 14.58
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
