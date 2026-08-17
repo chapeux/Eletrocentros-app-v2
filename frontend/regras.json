@@ -2437,7 +2437,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         }
       },
       "PIN": {
@@ -2455,9 +2475,47 @@
                 "cond": [  ],
                 "it": [ {"t": "num", "v": 70}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.05} ]
               }
+            ],
+            "perfis": [
+              {
+                "id": "perfil_cs",
+                "nome": "Container Solar",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "Container Solar", "j": "E"} ],
+                "it": [ {"t": "num", "v": 51.9} ],
+                "valor": 51.9
+              },
+              {
+                "id": "perfil_essw",
+                "nome": "ESSW",
+                "cond": [ {"c": "tipoestrutura", "o": "=", "val": "ESSW (mecânica)", "j": "E"}, {"c": "tipoestrutura", "o": "=", "val": "ESSW (elétrica)", "j": "OU"} ],
+                "it": [ {"t": "num", "v": 13.1} ],
+                "valor": 13.1
+              }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 51.9,
+                "valor_base": 51.9
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": true,
+              "base": {
+                "forma": "constante",
+                "valor": 13.1,
+                "valor_base": 13.1
+              },
+              "herdar_condicoes": false,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
