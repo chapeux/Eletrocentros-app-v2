@@ -1340,14 +1340,13 @@
     var nav = $('sectionNavManutencao');
     if (!nav) return;
     nav.innerHTML = '';
+
     state.regrasData.forEach(function (areaObj, idx) {
       var btn = document.createElement('button');
-      btn.className = 'snav-btn' + (!state.isSeletorActive && idx === state.selectedAreaIdx ? ' active' : '');
+      btn.className = 'snav-btn snav-btn-area' + (!state.isSeletorActive && idx === state.selectedAreaIdx ? ' active' : '');
       var countCampos = Object.keys(areaObj.campos || {}).length;
       btn.innerHTML = areaObj.area + ' <span class="n">' + countCampos + '</span>';
       btn.addEventListener('click', function () {
-        document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) { b.classList.remove('active'); });
-        btn.classList.add('active');
         selecionarArea(idx);
       });
       nav.appendChild(btn);
@@ -1355,30 +1354,40 @@
 
     // Botão dedicado ao Seletor de PEP & Centros de Trabalho
     var btnSeletor = document.createElement('button');
-    btnSeletor.className = 'snav-btn' + (state.isSeletorActive ? ' active' : '');
+    btnSeletor.className = 'snav-btn snav-btn-seletor' + (state.isSeletorActive ? ' active' : '');
     btnSeletor.style.borderColor = 'rgba(46,196,182,0.4)';
     btnSeletor.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle; color:var(--accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Seletor PEP &amp; CTs <span class="n" style="background:var(--accent); color:#000; font-weight:700;">' + (state.seletorData ? state.seletorData.length : '89') + '</span>';
     btnSeletor.addEventListener('click', function () {
-      document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) { b.classList.remove('active'); });
-      btnSeletor.classList.add('active');
       abrirAbaSeletor();
     });
     nav.appendChild(btnSeletor);
 
-    if (!state.isSeletorActive && state.regrasData.length) {
+    if (state.isSeletorActive) {
+      abrirAbaSeletor();
+    } else if (state.regrasData.length) {
       selecionarArea(state.selectedAreaIdx || 0);
     }
   }
 
   function selecionarArea(areaIdx) {
     state.isSeletorActive = false;
-    if ($('maintContentRegras')) $('maintContentRegras').classList.remove('hidden');
-    if ($('maintContentSeletor')) $('maintContentSeletor').classList.add('hidden');
+    state.selectedAreaIdx = areaIdx;
+
+    document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b, i) {
+      if (i === areaIdx) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+
+    if ($('maintContentRegras')) {
+      $('maintContentRegras').classList.remove('hidden');
+    }
+    if ($('maintContentSeletor')) {
+      $('maintContentSeletor').classList.add('hidden');
+    }
     if ($('legendWrapper')) $('legendWrapper').style.display = '';
 
-    state.selectedAreaIdx = areaIdx;
     var areaObj = state.regrasData[areaIdx];
-    var camposKeys = Object.keys(areaObj.campos || {});
+    var camposKeys = Object.keys(areaObj ? areaObj.campos || {} : {});
     state.selectedCampoKey = camposKeys.length ? camposKeys[0] : null;
     state.selectedSubTab = 'H';
     prepararDirtySubTab();
@@ -1388,8 +1397,19 @@
 
   function abrirAbaSeletor() {
     state.isSeletorActive = true;
-    if ($('maintContentRegras')) $('maintContentRegras').classList.add('hidden');
-    if ($('maintContentSeletor')) $('maintContentSeletor').classList.remove('hidden');
+
+    document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) {
+      b.classList.remove('active');
+    });
+    var btnSel = document.querySelector('#sectionNavManutencao .snav-btn-seletor');
+    if (btnSel) btnSel.classList.add('active');
+
+    if ($('maintContentRegras')) {
+      $('maintContentRegras').classList.add('hidden');
+    }
+    if ($('maintContentSeletor')) {
+      $('maintContentSeletor').classList.remove('hidden');
+    }
     if ($('legendWrapper')) $('legendWrapper').style.display = 'none';
 
     if ($('maintFooterMeta')) {
