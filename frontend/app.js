@@ -895,8 +895,52 @@
     $('btnOk').addEventListener('click', function () {
       recomputeForm();
       if (reqDone < reqTotal) {
-        showToast('Atenção: ' + (reqTotal - reqDone) + ' campo(s) obrigatório(s) pendente(s). Calculando com parâmetros padrões…', true);
+        var missingNames = [];
+        document.querySelectorAll('.csel[data-req="1"], .stepper[data-req="1"], input[data-req="1"]').forEach(function (el) {
+          if (el.dataset.filled !== '1') {
+            var fieldLabel = el.closest('.field');
+            if (fieldLabel) {
+              var txt = fieldLabel.querySelector('.field-label .txt');
+              if (txt) missingNames.push(txt.textContent.trim());
+            }
+          }
+        });
+
+        var tipo = selVal('tipoestrutura');
+        var nrmod = parseInt(selVal('nrmodulos') || '0', 10);
+        var temModulos = tipo !== '' && CONFIG.regras.estruturasSemModulo.indexOf(tipo) === -1;
+        if (temModulos && nrmod > 0) {
+          for (var i = 1; i <= nrmod; i++) {
+            var row = $('modRow' + i);
+            if (row) {
+              var comp = row.querySelector('.mod-comp');
+              var larg = row.querySelector('.mod-larg');
+              if (!comp || !comp.value.trim() || !larg || !larg.value.trim()) {
+                missingNames.push('Dimensões do Módulo ' + i);
+              }
+            }
+          }
+        }
+
+        var countMissing = reqTotal - reqDone;
+        var msg = 'Preencha todos os campos obrigatórios (' + countMissing + ' pendente' + (countMissing > 1 ? 's' : '') + ')';
+        if (missingNames.length > 0) {
+          var uniqueMissing = Array.from(new Set(missingNames));
+          msg += ': ' + uniqueMissing.slice(0, 3).join(', ') + (uniqueMissing.length > 3 ? '…' : '');
+        }
+        showToast(msg, true);
+
+        // Highlight and scroll to first missing field
+        var firstMissing = document.querySelector('.csel[data-req="1"][data-filled="0"], .stepper[data-req="1"][data-filled="0"], .led.req');
+        if (firstMissing) {
+          var targetField = firstMissing.closest('.field') || firstMissing;
+          targetField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetField.classList.add('highlighted');
+          setTimeout(function () { targetField.classList.remove('highlighted'); }, 2000);
+        }
+        return;
       }
+
       var res = executarCalculoTempos();
       if (res) {
         exibirModalResultadoCalculo(res);
