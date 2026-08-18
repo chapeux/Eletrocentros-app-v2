@@ -2961,7 +2961,11 @@
 
     if (isPyWebviewAvailable()) {
       window.pywebview.api.save_seletor(payload).then(function (res) {
-        if (res && res.status === 'success') {
+        if (res && res.status === 'conflito') {
+          showToast('⚠️ Conflito no Seletor: ' + (res.message || 'Outro usuário salvou antes.'), true);
+          alert('⚠️ Conflito de Salvamento:\n\n' + (res.message || 'Outro usuário salvou o Seletor antes.') + '\n\nOs dados do Seletor serão recarregados do servidor.');
+          carregarSeletor();
+        } else if (res && res.status === 'success') {
           afterSaveSuccess(res);
         } else {
           showToast('Erro ao salvar Seletor: ' + ((res && res.message) || 'Falha no backend'), true);
@@ -2975,7 +2979,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(function (res) {
-        if (res && res.status === 'success') {
+        if (res && res.status === 'conflito') {
+          showToast('⚠️ Conflito no Seletor: ' + (res.message || 'Outro usuário salvou antes.'), true);
+          alert('⚠️ Conflito de Salvamento:\n\n' + (res.message || 'Outro usuário salvou o Seletor antes.') + '\n\nOs dados do Seletor serão recarregados do servidor.');
+          carregarSeletor();
+        } else if (res && res.status === 'success') {
           afterSaveSuccess(res);
         } else {
           showToast('Erro ao salvar Seletor: ' + ((res && res.message) || 'Falha na API'), true);
@@ -5511,14 +5519,19 @@
 
     if (isPyWebviewAvailable()) {
       window.pywebview.api.save_regras(payload).then(function (res) {
-        if (res && res.status === 'error') {
+        if (res && res.status === 'conflito') {
+          showToast('⚠️ Conflito: ' + (res.message || 'Outro usuário salvou antes.'), true);
+          alert('⚠️ Conflito de Salvamento:\n\n' + (res.message || 'Outro usuário salvou alterações antes.') + '\n\nOs dados mais recentes serão recarregados do servidor MySQL.');
+          carregarDisciplinas();
+          resetSaveButtons();
+        } else if (res && res.status === 'error') {
           showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
           resetSaveButtons();
         } else {
           onRegrasSaveSuccess();
         }
       }).catch(function (err) {
-        showToast('Erro ao salvar em regras.json: ' + (err ? (err.message || err) : 'Erro'), true);
+        showToast('Erro ao salvar regras: ' + (err ? (err.message || err) : 'Erro'), true);
         resetSaveButtons();
       });
     } else {
@@ -5527,7 +5540,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (res) {
-        if (res && res.status === 'error') {
+        if (res && res.status === 'conflito') {
+          showToast('⚠️ Conflito: ' + (res.message || 'Outro usuário salvou antes.'), true);
+          alert('⚠️ Conflito de Salvamento:\n\n' + (res.message || 'Outro usuário salvou antes.') + '\n\nOs dados mais recentes serão recarregados do servidor MySQL.');
+          carregarDisciplinas();
+          resetSaveButtons();
+        } else if (res && res.status === 'error') {
           showToast('Erro ao salvar: ' + (res.message || 'Erro desconhecido'), true);
           resetSaveButtons();
         } else {
@@ -6635,15 +6653,32 @@
       closeSettings();
 
       if (isPyWebviewAvailable()) {
-        window.pywebview.api.save_config(parsedConfig).catch(function () { });
+        window.pywebview.api.save_config(parsedConfig).then(function (res) {
+          if (res && res.status === 'conflito') {
+            showToast('⚠️ Conflito ao salvar configurações: ' + (res.message || 'Outro usuário salvou antes.'), true);
+            alert('⚠️ Conflito de Configuração:\n\n' + (res.message || 'Outro usuário salvou alterações antes.') + '\n\nAs configurações mais recentes serão recarregadas do servidor.');
+            loadExternalConfig();
+          } else if (res && res.status === 'error') {
+            showToast('Erro ao salvar configurações: ' + (res.message || 'Erro'), true);
+          } else if (!parsedRegras) {
+            showToast('Configurações salvas com sucesso no servidor!');
+          }
+        }).catch(function () { });
+
         if (parsedRegras) {
           window.pywebview.api.save_regras(parsedRegras).then(function (res) {
-            showToast('Configurações e regras.json salvas com sucesso!');
+            if (res && res.status === 'conflito') {
+              showToast('⚠️ Conflito ao salvar regras: ' + (res.message || 'Outro usuário salvou antes.'), true);
+              alert('⚠️ Conflito de Regras:\n\n' + (res.message || 'Outro usuário salvou alterações antes.') + '\n\nAs regras mais recentes serão recarregadas do servidor.');
+              carregarDisciplinas();
+            } else if (res && res.status === 'error') {
+              showToast('Erro ao salvar regras: ' + (res.message || 'Erro'), true);
+            } else {
+              showToast('Configurações e regras salvas com sucesso no servidor!');
+            }
           }).catch(function () {
             showToast('Configurações aplicadas.');
           });
-        } else {
-          showToast('Configurações salvas em config.json!');
         }
       } else {
         showToast('Configurações e Regras aplicadas!');
