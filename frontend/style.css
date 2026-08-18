@@ -1195,15 +1195,17 @@ section.pane.disabled .check {
   padding: 11px 20px;
   background: var(--sidebar);
   border-top: 1px solid var(--hairline);
+  flex-wrap: wrap;
 }
 
 .footer-meta { font-family: "IBM Plex Mono"; font-size: 11px; color: var(--text-faint); }
-.footer-btns { display: flex; gap: 9px; }
+.footer-meta b { color: var(--text-dim); }
+.footer-btns { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
 
 .btn {
   font-size: 12.5px;
   font-weight: 600;
-  padding: 9px 18px;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   border: 1px solid var(--border-strong);
@@ -1214,6 +1216,14 @@ section.pane.disabled .check {
   align-items: center;
   gap: 7px;
   justify-content: center;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.btn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
 }
 
 .btn:hover { background: var(--panel-3); }
