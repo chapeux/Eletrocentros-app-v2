@@ -3936,7 +3936,7 @@
               "INT",
               "MCM"
             ],
-            "etapas": [ {"tipo": "multiplicar", "valor": 0.072} ]
+            "etapas": [ {"tipo": "multiplicar", "valor": 0.08} ]
           },
           "condicoes": [  ],
           "especiais": {
