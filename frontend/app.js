@@ -3226,7 +3226,7 @@
 
     var formaOptions = [
       { tipo: 'fixo', label: '＋ Valor Fixo (+V fixo)' },
-      { tipo: 'escala_multiplicativa', label: '📈 Escala Multiplicativa' },
+      { tipo: 'escala_multiplicativa', label: 'Escala Multiplicativa' },
       { tipo: 'subtrair', label: '－ Subtrair Fixo (-V fixo)' },
       { tipo: 'multiplicar', label: '× Multiplicar Fixo (× V fixo)' },
       { tipo: 'dividir', label: '÷ Dividir Fixo (÷ V fixo)' }
@@ -3257,7 +3257,7 @@
     var html = '<div class="field-block special-perfis-accordion" style="margin-top:16px; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--panel-1);">' +
       '<div class="accordion-head" id="toggleSpecialRules" style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--panel-2); cursor:pointer; user-select:none; border-bottom:1px solid var(--border);">' +
       '<div style="display:flex; align-items:center; gap:8px;">' +
-      '<span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:var(--amber-dim); color:var(--amber); font-size:12px; font-weight:700;">⚡</span>' +
+      '<span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; background:var(--accent-dim); color:var(--accent);"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>' +
       '<span style="font-size:12.5px; font-weight:700; color:var(--text);">Regras de Estruturas Especiais (Container Solar & ESSW)</span>' +
       (hasActive ? '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:var(--accent-dim); color:var(--accent);">Personalizado</span>' : '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:var(--panel-3); color:var(--text-faint);">Padrão</span>') +
       '</div>' +
@@ -3279,7 +3279,7 @@
       '<div style="display:flex; justify-content:space-between; align-items:center;">' +
       '<label style="display:flex; align-items:center; gap:7px; font-weight:700; font-size:12.5px; cursor:pointer;">' +
       '<input type="checkbox" id="chkEspSolar"' + (cs.ativo ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
-      '<span>☀️ Container Solar</span>' +
+      '<span>Container Solar</span>' +
       '</label>' +
       '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:' + (cs.ativo ? 'var(--accent-dim)' : 'var(--panel-3)') + '; color:' + (cs.ativo ? 'var(--accent)' : 'var(--text-faint)') + ';">' + (cs.ativo ? 'Ativo' : 'Desativado') + '</span>' +
       '</div>';
@@ -3333,7 +3333,7 @@
       '<div style="display:flex; justify-content:space-between; align-items:center;">' +
       '<label style="display:flex; align-items:center; gap:7px; font-weight:700; font-size:12.5px; cursor:pointer;">' +
       '<input type="checkbox" id="chkEspEssw"' + (essw.ativo ? ' checked' : '') + ' style="accent-color:var(--accent); cursor:pointer;">' +
-      '<span>⚡ ESSW (Mecânica / Elétrica)</span>' +
+      '<span>ESSW (Mecânica / Elétrica)</span>' +
       '</label>' +
       '<span class="badge" style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; background:' + (essw.ativo ? 'var(--accent-dim)' : 'var(--panel-3)') + '; color:' + (essw.ativo ? 'var(--accent)' : 'var(--text-faint)') + ';">' + (essw.ativo ? 'Ativo' : 'Desativado') + '</span>' +
       '</div>';
@@ -4873,7 +4873,7 @@
     html += '</div><button type="button" class="add-cond" id="btnAddCond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Adicionar condição</button></div>';
 
     html += '<div class="field-block"><div class="field-label">Prévia de cálculo por estrutura (' + state.selectedSubTab + ') <span class="hint">1m a 8m, Container Solar e ESSW</span></div>' +
-      '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '<th class="th-special" title="Estrutura Container Solar (Linha fixa)">☀️ Solar</th><th class="th-special" title="Estrutura ESSW (Linha fixa)">⚡ ESSW</th></tr></thead><tbody id="previewBody"></tbody></table></div>';
+      '<table class="preview-table"><thead><tr><th>Condição</th>' + [1, 2, 3, 4, 5, 6, 7, 8].map(function (m) { return '<th>' + m + 'm</th>'; }).join('') + '<th class="th-special" title="Estrutura Container Solar (Linha fixa)">Solar</th><th class="th-special" title="Estrutura ESSW (Linha fixa)">ESSW</th></tr></thead><tbody id="previewBody"></tbody></table></div>';
 
     html += '</div>';
 
@@ -4903,8 +4903,8 @@
     var formaOptions = [
       { tipo: 'fixo', label: '＋ Valor Fixo (+V fixo)' },
       { tipo: 'por_modulo', label: '＋ Adicionar por Módulo (+V × mód)' },
-      { tipo: 'escala_multiplicativa', label: '📈 Escala Multiplicativa' },
-      { tipo: 'tabela', label: '📊 Tabela por Módulo (1m a 8m)' },
+      { tipo: 'escala_multiplicativa', label: 'Escala Multiplicativa' },
+      { tipo: 'tabela', label: 'Tabela por Módulo (1m a 8m)' },
       { tipo: 'subtrair', label: '－ Subtrair Fixo (-V fixo)' },
       { tipo: 'subtrair_por_modulo', label: '－ Subtrair por Módulo (-V × mód)' },
       { tipo: 'multiplicar', label: '× Multiplicar Fixo (× V fixo)' },
@@ -6256,11 +6256,11 @@
       var chCs = (aCs.ativo !== dCs.ativo) || (String(aCsVal) !== String(dCsVal)) || (aCsConds.join('|') !== dCsConds.join('|')) || (aCsHerdar !== dCsHerdar);
 
       if (chCs) {
-        antesLis.push('<li class="changed">☀️ Container Solar: <b class="num-diff num-diff-before">' + escapeHtml(aCsSummary) + '</b></li>');
-        depoisLis.push('<li class="changed">☀️ Container Solar: <b class="num-diff num-diff-after">' + escapeHtml(dCsSummary) + '</b></li>');
+        antesLis.push('<li class="changed">Container Solar: <b class="num-diff num-diff-before">' + escapeHtml(aCsSummary) + '</b></li>');
+        depoisLis.push('<li class="changed">Container Solar: <b class="num-diff num-diff-after">' + escapeHtml(dCsSummary) + '</b></li>');
       } else {
-        antesLis.push('<li>☀️ Container Solar: <b>' + escapeHtml(aCsSummary) + '</b></li>');
-        depoisLis.push('<li>☀️ Container Solar: <b>' + escapeHtml(dCsSummary) + '</b></li>');
+        antesLis.push('<li>Container Solar: <b>' + escapeHtml(aCsSummary) + '</b></li>');
+        depoisLis.push('<li>Container Solar: <b>' + escapeHtml(dCsSummary) + '</b></li>');
       }
     }
 
@@ -6297,11 +6297,11 @@
       var chEssw = (aEssw.ativo !== dEssw.ativo) || (String(aEsswVal) !== String(dEsswVal)) || (aEsswConds.join('|') !== dEsswConds.join('|')) || (aEsswHerdar !== dEsswHerdar);
 
       if (chEssw) {
-        antesLis.push('<li class="changed">⚡ ESSW: <b class="num-diff num-diff-before">' + escapeHtml(aEsswSummary) + '</b></li>');
-        depoisLis.push('<li class="changed">⚡ ESSW: <b class="num-diff num-diff-after">' + escapeHtml(dEsswSummary) + '</b></li>');
+        antesLis.push('<li class="changed">ESSW: <b class="num-diff num-diff-before">' + escapeHtml(aEsswSummary) + '</b></li>');
+        depoisLis.push('<li class="changed">ESSW: <b class="num-diff num-diff-after">' + escapeHtml(dEsswSummary) + '</b></li>');
       } else {
-        antesLis.push('<li>⚡ ESSW: <b>' + escapeHtml(aEsswSummary) + '</b></li>');
-        depoisLis.push('<li>⚡ ESSW: <b>' + escapeHtml(dEsswSummary) + '</b></li>');
+        antesLis.push('<li>ESSW: <b>' + escapeHtml(aEsswSummary) + '</b></li>');
+        depoisLis.push('<li>ESSW: <b>' + escapeHtml(dEsswSummary) + '</b></li>');
       }
     }
 
@@ -6379,13 +6379,13 @@
       var sVal = (esp.solar.base && (esp.solar.base.valor !== undefined ? esp.solar.base.valor : esp.solar.base.valor_base)) || 0;
       var sConds = (esp.solar.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
       var sHerdar = esp.solar.herdar_condicoes !== false ? 'Sim' : 'Não';
-      items.push('<b>☀️ Container Solar:</b> Base: ' + sVal + ' | Aplicar cond. padrão: ' + sHerdar + (sConds.length ? ' | Cond. específicas: ' + sConds.join(', ') : ''));
+      items.push('<b>Container Solar:</b> Base: ' + sVal + ' | Aplicar cond. padrão: ' + sHerdar + (sConds.length ? ' | Cond. específicas: ' + sConds.join(', ') : ''));
     }
     if (esp.essw && esp.essw.ativo) {
       var eVal = (esp.essw.base && (esp.essw.base.valor !== undefined ? esp.essw.base.valor : esp.essw.base.valor_base)) || 0;
       var eConds = (esp.essw.condicoes || []).map(function (c) { return (c.rotulo || flagNome(c.flag)) + ' (' + (c.forma || 'fixo') + ': ' + (c.valor !== undefined ? c.valor : '') + ')'; });
       var eHerdar = esp.essw.herdar_condicoes !== false ? 'Sim' : 'Não';
-      items.push('<b>⚡ ESSW:</b> Base: ' + eVal + ' | Aplicar cond. padrão: ' + eHerdar + (eConds.length ? ' | Cond. específicas: ' + eConds.join(', ') : ''));
+      items.push('<b>ESSW:</b> Base: ' + eVal + ' | Aplicar cond. padrão: ' + eHerdar + (eConds.length ? ' | Cond. específicas: ' + eConds.join(', ') : ''));
     }
 
     return items.map(function (it) { return '<div style="margin-bottom:3px;">• ' + it + '</div>'; }).join('');
@@ -6411,7 +6411,7 @@
       return '<div class="hist-card" style="padding:12px;">' +
         '<div style="font-weight:700; font-size:13px;">' + escapeHtml(h.campo) + '</div>' +
         '<div style="font-size:12px;">' + escapeHtml(h.resumo) + '</div>' +
-        '<div style="font-size:11px; color:var(--text-faint); margin-top:4px;">📅 ' + escapeHtml(h.quando) + '</div>' +
+        '<div style="font-size:11px; color:var(--text-faint); margin-top:4px;">Data: ' + escapeHtml(h.quando) + '</div>' +
         '</div>';
     }).join('');
   }

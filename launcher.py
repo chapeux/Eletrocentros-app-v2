@@ -129,7 +129,7 @@ class UpdateSplash:
 
         title_lbl = tk.Label(
             self.root,
-            text="⚡ Atualizando Eletrocentros App",
+            text="Atualizando Eletrocentros App",
             font=("Segoe UI", 12, "bold"),
             fg="#f8fafc",
             bg="#0e1726"
