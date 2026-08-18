@@ -2149,37 +2149,7 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
   z-index: 2;
 }
 
-.trace-svg-result {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 36px;
-  height: 32px;
-  width: 100%;
-  z-index: 1;
-  pointer-events: none;
-  overflow: visible;
-}
 
-.trace-line-result {
-  fill: none;
-  stroke-width: 1.6;
-  stroke-dasharray: 4 4;
-  animation: flowTraceResult 1.4s linear infinite;
-}
-
-.trace-node-result {
-  fill: var(--panel);
-  stroke-width: 1.6;
-}
-
-@keyframes flowTraceResult {
-  to { stroke-dashoffset: -16; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .trace-line-result { animation: none; }
-}
 
 .kpi-card-result {
   background: var(--panel-2);
