@@ -14,8 +14,13 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# 1. Definição dos Caminhos de Rede e Cache Local
-BASE_DIR = Path(__file__).resolve().parent
+# 1. Definição correta do diretório base (funciona tanto como script quanto compilado .exe)
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+    INTERNAL_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    INTERNAL_DIR = BASE_DIR
 
 # Caminho principal na rede da WEG (com fallback para pasta local de releases)
 NETWORK_DIR_PRIMARY = Path(
@@ -26,7 +31,9 @@ NETWORK_DIR_FALLBACK = BASE_DIR / "releases"
 LOCAL_APPDATA = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
 LOCAL_CACHE_DIR = LOCAL_APPDATA / "EletrocentrosApp"
 CURRENT_VERSION_FILE = LOCAL_CACHE_DIR / "current_version.txt"
-ICON_PATH = BASE_DIR / "assets" / "icone.ico"
+ICON_PATH = INTERNAL_DIR / "assets" / "icone.ico"
+if not ICON_PATH.exists():
+    ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 
 
 def obter_pasta_releases_rede() -> Path:
@@ -159,8 +166,11 @@ class UpdateSplash:
         self.root.update()
 
     def set_status(self, text: str):
-        self.status_lbl.config(text=text)
-        self.root.update()
+        try:
+            self.status_lbl.config(text=text)
+            self.root.update()
+        except Exception:
+            pass
 
     def close(self):
         try:
@@ -171,14 +181,18 @@ class UpdateSplash:
 
 
 def copiar_arvore_com_progresso(origem: Path, destino: Path, splash: UpdateSplash | None = None):
-    """Copia a árvore de arquivos de forma atômica e resiliente."""
+    """Copia a árvore de arquivos de forma atômica e resiliente, ignorando arquivos temporários ou de build."""
     destino.mkdir(parents=True, exist_ok=True)
+    itens_ignorados = {".git", "__pycache__", "build", "dist", ".tmp"}
+    
     for item in origem.iterdir():
+        if item.name in itens_ignorados or item.name.endswith(".tmp") or item.name.endswith(".spec"):
+            continue
         dest_item = destino / item.name
         if item.is_dir():
             if splash:
                 splash.set_status(f"Copiando pasta: {item.name}...")
-            shutil.copytree(item, dest_item, dirs_exist_ok=True)
+            shutil.copytree(item, dest_item, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.tmp"))
         else:
             if splash:
                 splash.set_status(f"Copiando arquivo: {item.name}...")
@@ -192,11 +206,9 @@ def atualizar_aplicativo(releases_dir: Path, manifest: dict) -> Path:
     pasta_origem = releases_dir / nome_pasta
     pasta_destino = LOCAL_CACHE_DIR / nome_pasta
 
-    # Se a pasta de release não existir com o nome exato, verifica pasta atual do projeto
+    # Se a pasta de release não existir na pasta releases, usa a pasta raiz da rede como origem
     if not pasta_origem.exists():
-        # Se estamos rodando em ambiente dev onde a pasta releases/app-X.Y.Z ainda não foi montada,
-        # faz a montagem inicial a partir do código fonte local
-        pasta_origem = BASE_DIR
+        pasta_origem = NETWORK_DIR_PRIMARY.parent if NETWORK_DIR_PRIMARY.parent.exists() else BASE_DIR
 
     splash = UpdateSplash(versao)
 
@@ -224,6 +236,29 @@ def atualizar_aplicativo(releases_dir: Path, manifest: dict) -> Path:
         splash.close()
 
 
+def obter_python_exe() -> str:
+    """Retorna o caminho do interpretador Python para executar main.py em modo dev."""
+    if not getattr(sys, "frozen", False):
+        return sys.executable
+
+    import shutil as sh
+    py = sh.which("pythonw") or sh.which("python")
+    if py:
+        return py
+
+    candidatos = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Python" / "Python314" / "pythonw.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Python" / "Python314" / "python.exe",
+        Path(r"C:\Program Files\Python314\pythonw.exe"),
+        Path(r"C:\Program Files\Python314\python.exe"),
+        Path(r"C:\Python314\pythonw.exe"),
+    ]
+    for c in candidatos:
+        if c.exists():
+            return str(c)
+    return "python"
+
+
 def encontrar_executavel(pasta_app: Path) -> list[str]:
     """Descobre o comando correto para iniciar o executável ou script Python."""
     # 1. Executável compilado
@@ -236,10 +271,11 @@ def encontrar_executavel(pasta_app: Path) -> list[str]:
         if exe.exists():
             return [str(exe)]
 
-    # 2. Script Python main.py com o interpretador ativo
+    # 2. Script Python main.py
     main_py = pasta_app / "main.py"
     if main_py.exists():
-        return [sys.executable, str(main_py)]
+        py_bin = obter_python_exe()
+        return [py_bin, str(main_py)]
 
     return []
 
@@ -252,7 +288,7 @@ def executar_app(pasta_app: Path):
         root.withdraw()
         messagebox.showerror(
             "Erro de Inicialização",
-            f"Não foi possível localizar o executável na pasta:\n{pasta_app}\n\nEntre em contato com o suporte de TI/Processos."
+            f"Não foi possível localizar o executável ou main.py na pasta:\n{pasta_app}\n\nEntre em contato com o suporte de TI/Processos."
         )
         sys.exit(1)
 
@@ -269,47 +305,57 @@ def executar_app(pasta_app: Path):
 
 
 def main():
-    releases_dir = obter_pasta_releases_rede()
-    manifest = ler_manifesto_rede(releases_dir)
-    versao_local = ler_versao_local()
+    try:
+        releases_dir = obter_pasta_releases_rede()
+        manifest = ler_manifesto_rede(releases_dir)
+        versao_local = ler_versao_local()
 
-    print(f"[Launcher] Diretório de Releases: {releases_dir}")
-    print(f"[Launcher] Versão Local em Cache: {versao_local or 'Nenhuma'}")
+        print(f"[Launcher] Diretório de Releases: {releases_dir}")
+        print(f"[Launcher] Versão Local em Cache: {versao_local or 'Nenhuma'}")
 
-    if manifest is not None:
-        versao_remota = manifest.get("version")
-        pasta_remota = manifest.get("pasta", f"app-{versao_remota}")
-        pasta_alvo = LOCAL_CACHE_DIR / pasta_remota
+        if manifest is not None:
+            versao_remota = manifest.get("version")
+            pasta_remota = manifest.get("pasta", f"app-{versao_remota}")
+            pasta_alvo = LOCAL_CACHE_DIR / pasta_remota
 
-        # Atualiza se a versão for diferente ou se os arquivos locais ainda não existirem
-        if versao_local != versao_remota or not pasta_alvo.exists():
-            print(f"[Launcher] Nova versão detectada ({versao_remota}). Iniciando atualização...")
-            pasta_alvo = atualizar_aplicativo(releases_dir, manifest)
-            limpar_versoes_antigas(manter_ultimas=2)
+            # Atualiza se a versão for diferente ou se os arquivos locais ainda não existirem
+            if versao_local != versao_remota or not pasta_alvo.exists():
+                print(f"[Launcher] Nova versão detectada ({versao_remota}). Iniciando atualização...")
+                pasta_alvo = atualizar_aplicativo(releases_dir, manifest)
+                limpar_versoes_antigas(manter_ultimas=2)
+            else:
+                print("[Launcher] O aplicativo já está na versão mais recente.")
+
+            executar_app(pasta_alvo)
+
         else:
-            print("[Launcher] O aplicativo já está na versão mais recente.")
+            # Modo Offline / Falha de Rede: roda a última versão em cache
+            print("[Launcher] Aviso: Rede indisponível. Tentando inicializar a partir do cache local...")
+            if versao_local:
+                pasta_alvo = LOCAL_CACHE_DIR / f"app-{versao_local}"
+                if pasta_alvo.exists():
+                    executar_app(pasta_alvo)
 
-        executar_app(pasta_alvo)
+            # Se não há nada no cache local, tenta rodar da pasta base atual
+            if (BASE_DIR / "main.py").exists():
+                executar_app(BASE_DIR)
 
-    else:
-        # Modo Offline / Falha de Rede: roda a última versão em cache
-        print("[Launcher] Aviso: Rede indisponível. Tentando inicializar a partir do cache local...")
-        if versao_local:
-            pasta_alvo = LOCAL_CACHE_DIR / f"app-{versao_local}"
-            if pasta_alvo.exists():
-                executar_app(pasta_alvo)
+            # Erro fatal se não há nada para executar
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror(
+                "Conexão Indisponível",
+                "Não foi possível conectar à pasta de rede da WEG e não há nenhuma versão instalada no computador.\n\nPor favor, conecte-se à rede corporativa/VPN e tente novamente."
+            )
+            sys.exit(1)
 
-        # Se não há nada no cache local, tenta rodar da pasta base atual
-        if (BASE_DIR / "main.py").exists():
-            executar_app(BASE_DIR)
-
-        # Erro fatal se não há nada para executar
+    except Exception as e:
+        import traceback
+        err_msg = f"Ocorreu um erro inesperado ao iniciar o aplicativo:\n\n{str(e)}\n\nDetalhes:\n{traceback.format_exc()}"
+        print(f"[Launcher Erro Fatal] {err_msg}")
         root = tk.Tk()
         root.withdraw()
-        messagebox.showerror(
-            "Conexão Indisponível",
-            "Não foi possível conectar à pasta de rede da WEG e não há nenhuma versão instalada no computador.\n\nPor favor, conecte-se à rede corporativa/VPN e tente novamente."
-        )
+        messagebox.showerror("Erro no Launcher", err_msg)
         sys.exit(1)
 
 
