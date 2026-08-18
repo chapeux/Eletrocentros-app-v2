@@ -18,6 +18,7 @@ from pathlib import Path
 # Módulo Backend de Banco de Dados MySQL e Sincronização GitHub
 from backend.database import init_db, comparar_e_registrar_alteracoes, obter_logs, registrar_log
 from backend.git_sync import sync_github_async
+from backend.settings_store import get_setting, save_setting
 
 # Base Directory Setup
 BASE_DIR = Path(__file__).resolve().parent
@@ -84,46 +85,45 @@ class AppAPI:
 
     def __init__(self):
         self.password = MAINTENANCE_PASSWORD
-        # Inicializa e garante criação do BD 'bd_eletrocentros_app' e tabela 'logs_modificacoes'
+        self._versao_config = 0
+        self._versao_regras = 0
+        self._versao_seletor = 0
+        self._versao_template = 0
+        # Inicializa e garante criação do BD 'bd_eletrocentros_app' e tabelas 'logs_modificacoes' e 'app_settings'
         init_db()
 
     def get_config(self) -> dict:
-        """Lê e retorna a configuração modular do arquivo config.json."""
-        if CONFIG_FILE.exists():
-            try:
-                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"[Backend Python] Erro ao ler config.json: {e}")
-        return {}
+        """Lê e retorna a configuração modular a partir do MySQL app_settings (com fallback para config.json)."""
+        dados, versao = get_setting("config_geral", fallback_file=CONFIG_FILE)
+        self._versao_config = versao
+        return dados or {}
 
     def save_config(self, config_data: dict) -> dict:
-        """Salva a nova configuração enviada pelo usuário no arquivo config.json e sincroniza no GitHub."""
+        """Salva a nova configuração no MySQL app_settings com lock otimista e backup atômico."""
         try:
-            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-                json.dump(config_data, f, ensure_ascii=False, indent=2)
-            print("[Backend Python] Configurações salvas em config.json com sucesso!")
-            
-            # Sincronização automática com GitHub
-            sync_github_async(resumo="Atualização de config.json")
-            
-            return {"status": "success"}
+            resultado = save_setting(
+                "config_geral",
+                config_data,
+                versao_esperada=getattr(self, "_versao_config", 0),
+                backup_file=CONFIG_FILE
+            )
+            if resultado.get("status") == "success":
+                self._versao_config = resultado.get("versao", 1)
+                sync_github_async(resumo="Atualização de config_geral (MySQL)")
+                print("[Backend Python] Configurações salvas no MySQL app_settings com sucesso!")
+            return resultado
         except Exception as e:
-            print(f"[Backend Python] Erro ao salvar config.json: {e}")
+            print(f"[Backend Python] Erro ao salvar config: {e}")
             return {"status": "error", "message": str(e)}
 
     def get_regras(self) -> list:
-        """Lê e retorna a estrutura de regras do arquivo regras.json."""
-        if REGRAS_FILE.exists():
-            try:
-                with open(REGRAS_FILE, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"[Backend Python] Erro ao ler regras.json: {e}")
-        return []
+        """Lê e retorna a estrutura de regras do MySQL app_settings (com fallback para regras.json)."""
+        dados, versao = get_setting("regras_calculo", fallback_file=REGRAS_FILE)
+        self._versao_regras = versao
+        return dados or []
 
     def save_regras(self, *args, **kwargs) -> dict:
-        """Salva as regras atualizadas, copia anexos para a rede, registra histórico no MySQL e sincroniza com o GitHub."""
+        """Salva as regras atualizadas no MySQL com lock otimista, registra histórico e atualiza cache local."""
         try:
             regras_data = None
             motivo = None
@@ -210,10 +210,18 @@ class AppAPI:
             )
             print(f"[Backend Python] {total_logs} log(s) de alteração de regras registrados no banco de dados. (Motivo: {motivo})")
 
-            # 3. Salva a nova versão em regras.json usando formato compacto
-            compact_json_str = format_compact_json(regras_data)
-            with open(REGRAS_FILE, "w", encoding="utf-8") as f:
-                f.write(compact_json_str)
+            # 3. Salva a nova versão no MySQL app_settings com lock otimista
+            resultado = save_setting(
+                "regras_calculo",
+                regras_data,
+                versao_esperada=getattr(self, "_versao_regras", 0),
+                backup_file=REGRAS_FILE
+            )
+
+            if resultado.get("status") != "success":
+                return resultado
+
+            self._versao_regras = resultado.get("versao", 1)
 
             # 4. Sincronização automática com GitHub em segundo plano
             resumo_git = f"Atualização de regras ({total_logs} alteração/ões)"
@@ -221,10 +229,15 @@ class AppAPI:
                 resumo_git += f" - Motivo: {motivo}"
             sync_github_async(resumo=resumo_git)
 
-            print("[Backend Python] Regras salvas em regras.json com sucesso!")
-            return {"status": "success", "logs_registrados": total_logs, "anexos_salvos": anexos_salvos}
+            print("[Backend Python] Regras salvas no MySQL app_settings e cache atualizado!")
+            return {
+                "status": "success",
+                "versao": self._versao_regras,
+                "logs_registrados": total_logs,
+                "anexos_salvos": anexos_salvos
+            }
         except Exception as e:
-            print(f"[Backend Python] Erro ao salvar regras.json: {e}")
+            print(f"[Backend Python] Erro ao salvar regras: {e}")
             return {"status": "error", "message": str(e)}
 
     def open_attachment(self, file_path: str) -> dict:
@@ -258,18 +271,13 @@ class AppAPI:
         return password == self.password or password == "1234"
 
     def get_seletor(self) -> list:
-        """Lê e retorna a base do seletor de PEPs e Centros de Trabalho cadastrada em seletor.json."""
-        try:
-            if SELETOR_FILE.exists():
-                with open(SELETOR_FILE, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            return []
-        except Exception as e:
-            print(f"[Backend Python] Erro ao ler seletor.json: {e}")
-            return []
+        """Lê e retorna a base do seletor de PEPs e Centros de Trabalho cadastrada no MySQL app_settings."""
+        dados, versao = get_setting("seletor_pep_cts", fallback_file=SELETOR_FILE)
+        self._versao_seletor = versao
+        return dados or []
 
     def save_seletor(self, payload: dict) -> dict:
-        """Salva as alterações na base do seletor.json e registra histórico no banco MySQL."""
+        """Salva as alterações na base do seletor no MySQL app_settings com lock otimista e registra histórico."""
         try:
             seletor_data = payload.get("seletor", payload) if isinstance(payload, dict) and "seletor" in payload else payload
             motivo = payload.get("motivo", "") if isinstance(payload, dict) else ""
@@ -281,34 +289,50 @@ class AppAPI:
                 try:
                     anexo_bytes = base64.b64decode(payload["anexo_base64"])
                     nome_limpo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{payload['anexo_nome']}"
-                    caminho_salvo = ANEXOS_DIR / nome_limpo
-                    with open(caminho_salvo, "wb") as af:
+                    
+                    try:
+                        ATTACHMENTS_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
+                        dest_file = ATTACHMENTS_NETWORK_DIR / nome_limpo
+                    except Exception:
+                        fallback_dir = BASE_DIR / "anexos_historico"
+                        fallback_dir.mkdir(parents=True, exist_ok=True)
+                        dest_file = fallback_dir / nome_limpo
+
+                    with open(dest_file, "wb") as af:
                         af.write(anexo_bytes)
                     anexo_nome_db = payload["anexo_nome"]
-                    anexo_caminho_db = str(caminho_salvo)
+                    anexo_caminho_db = str(dest_file)
                 except Exception as ex_anexo:
                     print(f"[Backend Python] Erro ao salvar anexo do seletor: {ex_anexo}")
 
-            # Registra no MySQL
+            # Registra log no MySQL
             total_logs = 0
-            if DB_AVAILABLE:
-                usuario = os.getenv("USERNAME", "Sistema")
-                total_linhas = len(seletor_data) if isinstance(seletor_data, list) else 0
-                registrar_log(
-                    disciplina="Seletor de PEP & CTs",
-                    campo="Tabela Seletor",
-                    tipo_alteracao="UPDATE",
-                    detalhes=f"Atualização do Seletor de PEP e Centros de Trabalho ({total_linhas} combinações cadastradas).",
-                    motivo=motivo or "Atualização dos parâmetros do Seletor de PEP/CTs",
-                    usuario=usuario,
-                    anexo_nome=anexo_nome_db,
-                    anexo_caminho=anexo_caminho_db
-                )
-                total_logs = 1
+            usuario = os.getenv("USERNAME", "Sistema")
+            total_linhas = len(seletor_data) if isinstance(seletor_data, list) else 0
+            registrar_log(
+                disciplina="Seletor de PEP & CTs",
+                campo="Tabela Seletor",
+                tipo_alteracao="UPDATE",
+                detalhes=f"Atualização do Seletor de PEP e Centros de Trabalho ({total_linhas} combinações cadastradas).",
+                motivo=motivo or "Atualização dos parâmetros do Seletor de PEP/CTs",
+                usuario=usuario,
+                anexo_nome=anexo_nome_db,
+                anexo_caminho=anexo_caminho_db
+            )
+            total_logs = 1
 
-            # Salva o arquivo JSON formatado
-            with open(SELETOR_FILE, "w", encoding="utf-8") as f:
-                json.dump(seletor_data, f, ensure_ascii=False, indent=2)
+            # Salva no MySQL app_settings com lock otimista
+            resultado = save_setting(
+                "seletor_pep_cts",
+                seletor_data,
+                versao_esperada=getattr(self, "_versao_seletor", 0),
+                backup_file=SELETOR_FILE
+            )
+
+            if resultado.get("status") != "success":
+                return resultado
+
+            self._versao_seletor = resultado.get("versao", 1)
 
             # Sincronização automática com GitHub
             resumo_git = "Atualização da tabela Seletor de PEP e Centros de Trabalho"
@@ -316,25 +340,20 @@ class AppAPI:
                 resumo_git += f" - Motivo: {motivo}"
             sync_github_async(resumo=resumo_git)
 
-            print("[Backend Python] Seletor salvo em seletor.json com sucesso!")
-            return {"status": "success", "logs_registrados": total_logs}
+            print("[Backend Python] Seletor salvo no MySQL app_settings com sucesso!")
+            return {"status": "success", "versao": self._versao_seletor, "logs_registrados": total_logs}
         except Exception as e:
-            print(f"[Backend Python] Erro ao salvar seletor.json: {e}")
+            print(f"[Backend Python] Erro ao salvar seletor: {e}")
             return {"status": "error", "message": str(e)}
 
     def get_template_blocks(self) -> dict:
-        """Lê e retorna a base de templates de operações cadastrada em template_blocks.json."""
-        try:
-            if TEMPLATE_BLOCKS_FILE.exists():
-                with open(TEMPLATE_BLOCKS_FILE, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            return {}
-        except Exception as e:
-            print(f"[Backend Python] Erro ao ler template_blocks.json: {e}")
-            return {}
+        """Lê e retorna a base de templates de operações cadastrada no MySQL app_settings."""
+        dados, versao = get_setting("template_blocks", fallback_file=TEMPLATE_BLOCKS_FILE)
+        self._versao_template = versao
+        return dados or {}
 
     def save_template_blocks(self, payload: dict) -> dict:
-        """Salva as alterações na base de template_blocks.json e registra histórico no banco MySQL."""
+        """Salva as alterações na base de templates no MySQL app_settings com lock otimista e registra histórico."""
         try:
             tb_data = payload.get("template_blocks", payload) if isinstance(payload, dict) and "template_blocks" in payload else payload
             motivo = payload.get("motivo", "") if isinstance(payload, dict) else ""
@@ -346,43 +365,60 @@ class AppAPI:
                 try:
                     anexo_bytes = base64.b64decode(payload["anexo_base64"])
                     nome_limpo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{payload['anexo_nome']}"
-                    caminho_salvo = ANEXOS_DIR / nome_limpo
-                    with open(caminho_salvo, "wb") as af:
+                    
+                    try:
+                        ATTACHMENTS_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
+                        dest_file = ATTACHMENTS_NETWORK_DIR / nome_limpo
+                    except Exception:
+                        fallback_dir = BASE_DIR / "anexos_historico"
+                        fallback_dir.mkdir(parents=True, exist_ok=True)
+                        dest_file = fallback_dir / nome_limpo
+
+                    with open(dest_file, "wb") as af:
                         af.write(anexo_bytes)
                     anexo_nome_db = payload["anexo_nome"]
-                    anexo_caminho_db = str(caminho_salvo)
+                    anexo_caminho_db = str(dest_file)
                 except Exception as ex_anexo:
                     print(f"[Backend Python] Erro ao salvar anexo do template: {ex_anexo}")
 
-            # Registra no MySQL
+            # Registra log no MySQL
             total_logs = 0
-            if DB_AVAILABLE:
-                usuario = os.getenv("USERNAME", "Sistema")
-                cenarios_count = len(tb_data.get("cenarios", {})) if isinstance(tb_data, dict) else 0
-                registrar_log(
-                    disciplina="Templates de Operações",
-                    campo="Blocos de Operações",
-                    tipo_alteracao="UPDATE",
-                    detalhes=f"Atualização da base de templates de blocos de operações ({cenarios_count} cenários cadastrados).",
-                    motivo=motivo or "Atualização da base de templates de operações",
-                    usuario=usuario,
-                    anexo_nome=anexo_nome_db,
-                    anexo_caminho=anexo_caminho_db
-                )
-                total_logs = 1
+            usuario = os.getenv("USERNAME", "Sistema")
+            cenarios_count = len(tb_data.get("cenarios", {})) if isinstance(tb_data, dict) else 0
+            registrar_log(
+                disciplina="Templates de Operações",
+                campo="Blocos de Operações",
+                tipo_alteracao="UPDATE",
+                detalhes=f"Atualização da base de templates de blocos de operações ({cenarios_count} cenários cadastrados).",
+                motivo=motivo or "Atualização da base de templates de operações",
+                usuario=usuario,
+                anexo_nome=anexo_nome_db,
+                anexo_caminho=anexo_caminho_db
+            )
+            total_logs = 1
 
-            with open(TEMPLATE_BLOCKS_FILE, "w", encoding="utf-8") as f:
-                json.dump(tb_data, f, ensure_ascii=False, indent=2)
+            # Salva no MySQL app_settings com lock otimista
+            resultado = save_setting(
+                "template_blocks",
+                tb_data,
+                versao_esperada=getattr(self, "_versao_template", 0),
+                backup_file=TEMPLATE_BLOCKS_FILE
+            )
+
+            if resultado.get("status") != "success":
+                return resultado
+
+            self._versao_template = resultado.get("versao", 1)
 
             resumo_git = "Atualização da base de templates de blocos de operações (template_blocks.json)"
             if motivo:
                 resumo_git += f" - Motivo: {motivo}"
             sync_github_async(resumo=resumo_git)
 
-            print("[Backend Python] Templates salvos em template_blocks.json com sucesso!")
-            return {"status": "success", "logs_registrados": total_logs}
+            print("[Backend Python] Templates salvos no MySQL app_settings com sucesso!")
+            return {"status": "success", "versao": self._versao_template, "logs_registrados": total_logs}
         except Exception as e:
-            print(f"[Backend Python] Erro ao salvar template_blocks.json: {e}")
+            print(f"[Backend Python] Erro ao salvar template_blocks: {e}")
             return {"status": "error", "message": str(e)}
 
     def generate_schedule(self, payload: dict) -> dict:
