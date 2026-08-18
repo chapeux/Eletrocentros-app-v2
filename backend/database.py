@@ -89,7 +89,19 @@ def init_db() -> bool:
         """
         cursor.execute(create_table_sql)
 
-        # 3. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em tabelas existentes se necessário
+        # 3. Garante que a tabela 'app_settings' exista para centralização de dados
+        create_settings_table_sql = r"""
+        CREATE TABLE IF NOT EXISTS app_settings (
+            chave VARCHAR(64) PRIMARY KEY,
+            valor LONGTEXT NOT NULL,
+            versao INT NOT NULL DEFAULT 1,
+            atualizado_em DATETIME NOT NULL,
+            atualizado_por VARCHAR(100) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """
+        cursor.execute(create_settings_table_sql)
+
+        # 4. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em logs_modificacoes
         try:
             cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'motivo';")
             if not cursor.fetchone():
