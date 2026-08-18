@@ -1703,8 +1703,8 @@
     }
 
     // 4. KPIs da Aba de Regras & Processos (Antiga Aba 1)
-    if ($('resTotalH')) $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
-    if ($('resTotalDUR')) $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias';
+    if ($('resTotalH')) $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if ($('resTotalDUR')) $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     if ($('resEstruturaInfo')) $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm × ' + ctx.alt.toLocaleString('pt-BR') + 'm)';
     if ($('resDetagensInfo')) $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
 
@@ -1725,18 +1725,18 @@
           var trC = document.createElement('tr');
           trC.className = 'campo-row';
           trC.innerHTML =
-            '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--accent); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+            '<td style="font-weight:600; color:#FFFFFF;"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:#60A5FA; margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FFFFFF;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FBBF24;">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
           tbodyRegras.appendChild(trC);
         });
 
         var trSub = document.createElement('tr');
         trSub.className = 'area-total-row';
         trSub.innerHTML =
-          '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+          '<td style="font-weight:700; color:#CBD5E1;">Subtotal (' + escapeHtml(area.area) + ')</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#34D399;">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FBBF24;">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
         tbodyRegras.appendChild(trSub);
       });
 
@@ -1744,8 +1744,8 @@
       trGrand.className = 'grand-total-row';
       trGrand.innerHTML =
         '<td>TOTAL DAS REGRAS ORÇADAS</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent); font-size:15px;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:#34D399; font-size:15px; font-weight:800;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:#FBBF24; font-size:15px; font-weight:800;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
       tbodyRegras.appendChild(trGrand);
     }
 
@@ -1780,9 +1780,9 @@
 
           cts.forEach(function (ct) {
             var card = document.createElement('div');
-            card.style.cssText = 'background:var(--panel-1); border:1px solid var(--border); border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;';
-            card.innerHTML = '<span style="font-weight:600; color:var(--text);">' + escapeHtml(ct.label) + ':</span>' +
-              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--accent);">' + escapeHtml(ct.dr) + ' <span style="font-size:10.5px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
+            card.style.cssText = 'background:#182232; border:1px solid #2B394E; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;';
+            card.innerHTML = '<span style="font-weight:600; color:#CBD5E1;">' + escapeHtml(ct.label) + ':</span>' +
+              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:#34D399;">DR ' + escapeHtml(ct.dr) + ' <span style="font-size:11px; color:#94A3B8; font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
             ctsGrid.appendChild(card);
           });
         }

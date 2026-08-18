@@ -1253,35 +1253,46 @@
 
         <!-- PANE 4: RESUMO DETALHADO POR REGRAS & PROCESSOS (ANTIGA ABA 1) -->
         <div class="calc-modal-pane hidden" id="calcPaneResumo">
+          <p class="section-label-result">Resumo consolidado das regras orçadas</p>
           <!-- KPI Cards Summary Header -->
-          <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;">
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Total Horas Orçadas</span>
-              <span id="resTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent);">0,00 h</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Soma de todos os processos</span>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;">
+            <div class="kpi-card-result" data-d="total">
+              <div class="kpi-top-result">
+                <span class="kpi-label-result">Total Horas Orçadas</span>
+                <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+              </div>
+              <div class="kpi-value-result"><span id="resTotalH">0,00</span><span class="unit">h</span></div>
+              <p class="kpi-caption-result">Soma de todos os processos orçados</p>
             </div>
 
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Duração Estimada Total</span>
-              <span id="resTotalDUR" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--amber);">0,0 dias</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Tempo de ciclo estimado</span>
+            <div class="kpi-card-result" data-d="mec">
+              <div class="kpi-top-result">
+                <span class="kpi-label-result">Duração Estimada Total</span>
+                <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              </div>
+              <div class="kpi-value-result"><span id="resTotalDUR">0,0</span><span class="unit">dias</span></div>
+              <p class="kpi-caption-result">Tempo de ciclo produtivo estimado</p>
             </div>
 
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Especificação Estrutural</span>
-              <span id="resEstruturaInfo" style="font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
-              <span id="resDetagensInfo" style="font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+            <div class="kpi-card-result" data-d="eng">
+              <div class="kpi-top-result">
+                <span class="kpi-label-result">Especificação Estrutural</span>
+                <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+              </div>
+              <div style="font-size: 15px; font-weight: 700; color: #FFFFFF; margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="resEstruturaInfo">-</div>
+              <p class="kpi-caption-result" id="resDetagensInfo" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px;">-</p>
             </div>
           </div>
 
           <!-- Table of Results -->
-          <div class="calc-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1);">
-            <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+          <p class="section-label-result">Detalhamento dos processos &amp; fórmulas</p>
+          <div class="table-wrap-result">
+            <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
               <thead>
-                <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                  <th style="padding: 10px 14px;">Processo / Campo</th>
-                  <th style="padding: 10px 14px; text-align: right;">Horas (H)</th>
-                  <th style="padding: 10px 14px; text-align: right;">Duração (DUR)</th>
+                <tr style="background: #141C28; border-bottom: 1px solid var(--line-solid); color: #CBD5E1; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+                  <th style="padding: 12px 16px;">Processo / Campo</th>
+                  <th style="padding: 12px 16px; text-align: right; width: 150px;">Horas (H)</th>
+                  <th style="padding: 12px 16px; text-align: right; width: 160px;">Duração (DUR)</th>
                 </tr>
               </thead>
               <tbody id="resTableBody">
@@ -1293,13 +1304,13 @@
 
         <!-- PANE 2: CRONOGRAMA COMPLETO DE OPERAÇÕES (FASE 3) -->
         <div class="calc-modal-pane hidden" id="calcPaneCronograma">
-          <div class="cronograma-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+          <div class="cronograma-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
             <div style="display:flex; gap:10px; align-items:center; flex:1; min-width:300px;">
               <div class="search-wrap" style="position:relative; flex:1;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…" style="padding-left:32px; font-size:12px;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94A3B8;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…" style="padding-left:36px; font-size:12.5px; background:#151D2A; border-color:#2B394E; color:#FFFFFF;">
               </div>
-              <select id="cronogramaDisciplineFilter" class="ipt" style="max-width:180px; font-size:12px; cursor:pointer;">
+              <select id="cronogramaDisciplineFilter" class="ipt" style="max-width:200px; font-size:12.5px; cursor:pointer; background:#151D2A; border-color:#2B394E; color:#FFFFFF;">
                 <option value="ALL">Todas Disciplinas</option>
                 <option value="Engenharia Mecânica">Eng. Mecânica</option>
                 <option value="Engenharia Elétrica">Eng. Elétrica</option>
@@ -1312,32 +1323,32 @@
               </select>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <span id="cronogramaCenarioBadge" style="font-size:11px; font-weight:600; color:var(--accent); background:rgba(46,196,182,0.15); border:1px solid rgba(46,196,182,0.3); padding:4px 10px; border-radius:6px;">Cenário: -</span>
+              <span id="cronogramaCenarioBadge" style="font-size:12px; font-weight:700; color:var(--total-color); background:rgba(52,211,153,0.15); border:1px solid rgba(52,211,153,0.35); padding:5px 12px; border-radius:6px;">Cenário: -</span>
             </div>
           </div>
 
-          <div class="cronograma-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1); max-height:480px; overflow-y:auto;">
-            <table class="cronograma-table" style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
-              <thead style="position:sticky; top:0; background:var(--panel-2); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
-                <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                  <th style="padding: 9px 10px; width:45px; text-align: center;">#</th>
-                  <th style="padding: 9px 12px; width:85px; text-align: center;">Operação</th>
-                  <th style="padding: 9px 12px;">Descrição da Tarefa</th>
-                  <th style="padding: 9px 10px; width:95px; text-align: right;">Duração (dias)</th>
-                  <th style="padding: 9px 8px; width:65px; text-align: center;">Unid.</th>
-                  <th style="padding: 9px 12px; width:110px; text-align: right;">Trabalho (H)</th>
-                  <th style="padding: 9px 12px; width:150px;">Disciplina / Fase</th>
+          <div class="table-wrap-result" style="max-height:480px; overflow-y:auto; margin-bottom:0;">
+            <table class="cronograma-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+              <thead style="position:sticky; top:0; background:#141C28; z-index:2; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+                <tr style="border-bottom: 1px solid var(--line-solid); color: #CBD5E1; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
+                  <th style="padding: 11px 10px; width:45px; text-align: center;">#</th>
+                  <th style="padding: 11px 12px; width:85px; text-align: center;">Operação</th>
+                  <th style="padding: 11px 12px;">Descrição da Tarefa</th>
+                  <th style="padding: 11px 10px; width:95px; text-align: right;">Duração (dias)</th>
+                  <th style="padding: 11px 8px; width:65px; text-align: center;">Unid.</th>
+                  <th style="padding: 11px 12px; width:110px; text-align: right;">Trabalho (H)</th>
+                  <th style="padding: 11px 12px; width:150px;">Disciplina / Fase</th>
                 </tr>
               </thead>
               <tbody id="resCronogramaTableBody">
                 <!-- Dynamically rendered -->
               </tbody>
-              <tfoot style="position:sticky; bottom:0; background:var(--panel-3); font-weight:700; border-top:2px solid var(--border);">
+              <tfoot style="position:sticky; bottom:0; background:#151D2A; font-weight:700; border-top:2px solid var(--line-solid);">
                 <tr>
-                  <td colspan="3" style="padding:10px 14px;" id="cronogramaFootSummary">Total de tarefas</td>
-                  <td style="padding:10px 10px; text-align:right; font-family:'IBM Plex Mono'; color:var(--amber);" id="cronogramaFootDias">0,0 d</td>
-                  <td style="padding:10px 8px; text-align:center; font-size:11px;">DIAS</td>
-                  <td style="padding:10px 12px; text-align:right; font-family:'IBM Plex Mono'; color:var(--accent);" id="cronogramaFootHoras">0,00 h</td>
+                  <td colspan="3" style="padding:12px 14px; color:#FFFFFF;" id="cronogramaFootSummary">Total de tarefas</td>
+                  <td style="padding:12px 10px; text-align:right; font-family:'IBM Plex Mono'; color:var(--mec-color); font-size:13.5px;" id="cronogramaFootDias">0,0 d</td>
+                  <td style="padding:12px 8px; text-align:center; font-size:11.5px; color:#94A3B8;">DIAS</td>
+                  <td style="padding:12px 12px; text-align:right; font-family:'IBM Plex Mono'; color:var(--total-color); font-size:14px;" id="cronogramaFootHoras">0,00 h</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -1347,15 +1358,15 @@
 
         <!-- PANE 3: SELETOR DE PEP & CENTROS DE TRABALHO -->
         <div class="calc-modal-pane hidden" id="calcPaneSeletor">
-          <div id="resSeletorWrap" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); display: flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <div id="resSeletorWrap" class="panel-box-result" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <span style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--total-color);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 Seletor — PEP Standard &amp; Centros de Trabalho (CTs)
               </span>
-              <span id="resSeletorPepBadge" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(46,196,182,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(46,196,182,0.3);">PEP Standard: -</span>
+              <span id="resSeletorPepBadge" class="pep-chip-result">PEP Standard: -</span>
             </div>
-            <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 12px;">
+            <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; font-size: 13px;">
               <!-- Rendered dynamically -->
             </div>
           </div>
