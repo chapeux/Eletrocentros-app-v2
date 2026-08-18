@@ -25,5 +25,6 @@ wheels/
 .vscode/
 .idea/
 .DS_Store
-Thumbs.db
 *.log
+*.spec
+releases/app-*/
