@@ -23,7 +23,12 @@
     seletorData: [],
     seletorOriginal: [],
     seletorDirty: false,
-    isSeletorActive: false
+    isSeletorActive: false,
+    templateBlocksData: null,
+    templateBlocksOriginal: null,
+    templateBlocksDirty: false,
+    isTemplatesActive: false,
+    selectedTemplateScenario: 'container_solar_essw_mecanica'
   };
 
   /* ==========================================================================
@@ -635,8 +640,11 @@
     var incendio = selVal('incendio') || 'Não aplicável';
     var seguranca = selVal('seguranca') || 'Não possui';
 
-    var comp = parseFloat(($('comp') ? $('comp').value : '12').replace(',', '.')) || 12;
-    var larg = parseFloat(($('larg') ? $('larg').value : '2.4').replace(',', '.')) || 2.4;
+    var firstComp = (moduleInputs && moduleInputs[0] && moduleInputs[0].querySelector('.mod-comp')) ? parseFloat(moduleInputs[0].querySelector('.mod-comp').value.replace(',', '.')) : NaN;
+    var firstLarg = (moduleInputs && moduleInputs[0] && moduleInputs[0].querySelector('.mod-larg')) ? parseFloat(moduleInputs[0].querySelector('.mod-larg').value.replace(',', '.')) : NaN;
+
+    var comp = !isNaN(firstComp) && firstComp > 0 ? firstComp : (parseFloat(($('comp') ? $('comp').value : '10').replace(',', '.')) || 10);
+    var larg = !isNaN(firstLarg) && firstLarg > 0 ? firstLarg : (parseFloat(($('larg') ? $('larg').value : '3.6').replace(',', '.')) || 3.6);
     var alt = parseFloat(($('alt') ? $('alt').value : '2.6').replace(',', '.')) || 2.6;
     var nmod = parseInt(selVal('nrmodulos') || ($('nmod') ? $('nmod').value : '1'), 10) || 1;
     var qtdmaq = parseInt(($('qtdmaq') ? $('qtdmaq').value : '0'), 10) || 0;
@@ -697,7 +705,7 @@
 
     var sumComp = 0;
     for (var i = 1; i <= 8; i++) {
-      var mRow = document.querySelector('.mod-row[data-mod="' + i + '"]');
+      var mRow = (moduleInputs && moduleInputs[i - 1]) ? moduleInputs[i - 1] : null;
       var mCompVal = (mRow && mRow.querySelector('.mod-comp')) ? parseFloat(mRow.querySelector('.mod-comp').value.replace(',', '.')) : NaN;
       var mLargVal = (mRow && mRow.querySelector('.mod-larg')) ? parseFloat(mRow.querySelector('.mod-larg').value.replace(',', '.')) : NaN;
 
@@ -740,6 +748,531 @@
     };
   }
 
+  /* ==========================================================================
+     MOTOR DE CRONOGRAMA & TEMPLATES COM OPERAÇÕES (FASE 3)
+     ========================================================================== */
+  function classificarDisciplinaTarefa(tarefaCode, desc) {
+    var tNum = parseInt(String(tarefaCode || '').trim(), 10) || 0;
+    var descUpper = String(desc || '').toUpperCase();
+
+    if (tNum >= 500 && tNum < 600) {
+      if (descUpper.indexOf('LOM') !== -1 || descUpper.indexOf('PBS') !== -1 || descUpper.indexOf('PPA') !== -1 ||
+          descUpper.indexOf('PCI') !== -1 || descUpper.indexOf('PCE') !== -1 || descUpper.indexOf('PAC') !== -1 ||
+          descUpper.indexOf('LCA') !== -1 || descUpper.indexOf('LAA') !== -1 || descUpper.indexOf('LAM') !== -1 ||
+          descUpper.indexOf('LMA') !== -1 || descUpper.indexOf('PTR') !== -1 || descUpper.indexOf('LMT') !== -1) {
+        return 'Engenharia Mecânica';
+      }
+      if (descUpper.indexOf('PIL') !== -1 || descUpper.indexOf('PCL') !== -1 || descUpper.indexOf('LMC') !== -1 ||
+          descUpper.indexOf('PIN') !== -1 || descUpper.indexOf('LMI') !== -1 || descUpper.indexOf('PSS') !== -1 ||
+          descUpper.indexOf('LMS') !== -1 || descUpper.indexOf('DIN') !== -1 || descUpper.indexOf('LMD') !== -1 ||
+          descUpper.indexOf('PBA') !== -1 || descUpper.indexOf('LMB') !== -1 || descUpper.indexOf('PRF') !== -1) {
+        return 'Engenharia Elétrica';
+      }
+      if (descUpper.indexOf('ROM') !== -1 || descUpper.indexOf('531') !== -1 || descUpper.indexOf('551') !== -1 ||
+          descUpper.indexOf('561') !== -1 || descUpper.indexOf('581') !== -1 || descUpper.indexOf('585') !== -1 ||
+          descUpper.indexOf('589') !== -1 || descUpper.indexOf('ROTEIRO') !== -1) {
+        return 'Processos';
+      }
+      return 'Engenharia';
+    } else if (tNum >= 600 && tNum < 700) {
+      if (descUpper.indexOf('ROTEIRO') !== -1 || descUpper.indexOf('ROM') !== -1) {
+        return 'Processos';
+      }
+      return 'Engenharia Elétrica';
+    } else if (tNum >= 700 && tNum < 800) {
+      if (descUpper.indexOf('PIN') !== -1 || descUpper.indexOf('PINTURA') !== -1) {
+        return 'Pintura';
+      }
+      if (descUpper.indexOf('COR') !== -1 || descUpper.indexOf('FCH') !== -1 || descUpper.indexOf('PRB') !== -1 ||
+          descUpper.indexOf('SBA') !== -1 || descUpper.indexOf('PRE') !== -1 || descUpper.indexOf('SES') !== -1 ||
+          descUpper.indexOf('EDF') !== -1 || descUpper.indexOf('CHI') !== -1 || descUpper.indexOf('CHE') !== -1 ||
+          descUpper.indexOf('ESTRUTURA') !== -1 || descUpper.indexOf('CALDEIRARIA') !== -1) {
+        return 'Mecânica';
+      }
+      return 'Montagem Mecânica';
+    } else if (tNum >= 800 && tNum < 900) {
+      if (descUpper.indexOf('LBA') !== -1 || descUpper.indexOf('INT') !== -1 || descUpper.indexOf('TES') !== -1 ||
+          descUpper.indexOf('INS') !== -1 || descUpper.indexOf('PEE') !== -1 || descUpper.indexOf('PEM') !== -1 ||
+          descUpper.indexOf('FEC') !== -1 || descUpper.indexOf('FEA') !== -1 || descUpper.indexOf('FEQ') !== -1 ||
+          descUpper.indexOf('ELETR') !== -1) {
+        return 'Elétrica / Testes';
+      }
+      return 'Acessórios & Elétrica';
+    } else if (tNum >= 900) {
+      return 'Faturamento & Encerramento';
+    }
+    return 'Geral';
+  }
+
+  function gerarCronogramaCompleto(ctx, calcTimes, templateBlocks, seletorData) {
+    if (!templateBlocks || !templateBlocks.cenarios) {
+      return { cenario_id: 'padrao', cenario_descricao: 'Template Padrão', qtd_tarefas: 0, total_horas: 0, total_dias: 0, tarefas: [] };
+    }
+
+    var isFlagTrue = function (v) { return v === true || v === 'Sim' || v === 'true' || v === 1; };
+    var tipo = String(ctx.tipoestrutura || '');
+    var betim = isFlagTrue(ctx.Betim1310) || isFlagTrue(ctx.betim);
+    var semEng = isFlagTrue(ctx.SemEng) || isFlagTrue(ctx.sem_eng);
+    var nmodStr = String(ctx.nrmodulos || (ctx.nmod ? ctx.nmod + ' Módulo' + (ctx.nmod > 1 ? 's' : '') : '1 Módulo'));
+    var tipomaq = String(ctx.tipomaq || 'Não possui');
+    var seguranca = String(ctx.seguranca || 'Não possui');
+    var testesw = isFlagTrue(ctx.testesw) || isFlagTrue(ctx.teste_software);
+    var chkFilho = isFlagTrue(ctx.chkFilho) || isFlagTrue(ctx.item_filho);
+
+    var cenarioId = '';
+    if (tipo === 'Container Solar' || tipo === 'ESSW (mecânica)') {
+      cenarioId = 'container_solar_essw_mecanica';
+    } else if (tipo === 'Skid (mecânica)') {
+      cenarioId = betim ? 'skid_mecanica_com_betim' : 'skid_mecanica_sem_betim';
+    } else if (tipo === 'ESSW (elétrica)') {
+      cenarioId = 'essw_eletrica';
+    } else if (tipo === 'Pilotis') {
+      cenarioId = 'pilotis';
+    } else if (tipo === 'Skid (com elétrica)') {
+      cenarioId = 'skid_com_eletrica_betim_true';
+    } else if (tipo === 'Serviço Engenharia') {
+      cenarioId = 'servico_engenharia';
+    } else {
+      cenarioId = 'eletrocentro_padrao';
+    }
+
+    var cenario = templateBlocks.cenarios[cenarioId];
+    if (!cenario || !cenario.tarefas) {
+      return { cenario_id: cenarioId, cenario_descricao: 'Cenário não encontrado', qtd_tarefas: 0, total_horas: 0, total_dias: 0, tarefas: [] };
+    }
+
+    var grid = {};
+    cenario.tarefas.forEach(function (t) {
+      var r = t.linha_template + 2;
+      var durN = parseFloat(String(t.duracao).replace(',', '.')) || 0;
+      var trabN = parseFloat(String(t.trabalho).replace(',', '.')) || 0;
+      grid[r] = {
+        row: r,
+        tarefa: t.tarefa,
+        descricao_tarefa: t.descricao_tarefa,
+        duracao: durN,
+        unidade: t.unidade || 'DIA',
+        trabalho: trabN,
+        calculado: false
+      };
+    });
+
+    function getVal(k, def) {
+      var v = calcTimes ? calcTimes[k] : undefined;
+      if (v === undefined || v === null || isNaN(v)) return def !== undefined ? def : 0;
+      return parseFloat(v) || 0;
+    }
+
+    function setCell(r, hKey, dKey) {
+      if (grid[r]) {
+        if (calcTimes && hKey && calcTimes[hKey] !== undefined) {
+          grid[r].trabalho = Math.round(getVal(hKey) * 10) / 10;
+          grid[r].calculado = true;
+        }
+        if (calcTimes && dKey && calcTimes[dKey] !== undefined) {
+          grid[r].duracao = Math.round(getVal(dKey) * 10) / 10;
+          grid[r].calculado = true;
+        }
+      }
+    }
+
+    function deleteExcelRows(minR, maxR) {
+      var keys = Object.keys(grid).map(Number).sort(function (a, b) { return a - b; });
+      var numDeleted = maxR - minR + 1;
+      var newGrid = {};
+
+      keys.forEach(function (r) {
+        if (r < minR) {
+          newGrid[r] = grid[r];
+        } else if (r > maxR) {
+          var newR = r - numDeleted;
+          grid[r].row = newR;
+          newGrid[newR] = grid[r];
+        }
+      });
+      grid = newGrid;
+    }
+
+    // Aplicação por Cenário
+    if (cenarioId === 'container_solar_essw_mecanica') {
+      if (tipo === 'Container Solar' || tipo === 'ESSW (mecânica)') {
+        if (grid[10]) grid[10].descricao_tarefa = 'PEC - Projeto Estrutura Container';
+        if (grid[12]) grid[12].descricao_tarefa = 'EMC - Estagiamento Mat. Estrut. Cont.';
+        if (grid[16]) grid[16].descricao_tarefa = 'PEI - Projeto Estrutura Interna';
+        if (grid[18]) grid[18].descricao_tarefa = 'EMI - Estagiamento Mat. Estr. Interna';
+        if (grid[69]) grid[69].descricao_tarefa = 'FPC - Fabricação Peças Caldeiraria';
+        if (grid[74]) grid[74].descricao_tarefa = 'OEE - Ordens Estrutura Interna';
+        if (grid[77]) grid[77].descricao_tarefa = 'SEI - Separação Estrutura Interna';
+        if (grid[78]) grid[78].descricao_tarefa = 'MEI - Montagem Estrutura Interna';
+        if (grid[121]) grid[121].descricao_tarefa = 'OFE - Ordens Fechamento Externo';
+        if (grid[124]) grid[124].descricao_tarefa = 'SAF - Separação Almox. Fech. Externo';
+        if (grid[126]) grid[126].descricao_tarefa = 'SFE - Separação Fechamento Externo';
+        if (grid[127]) grid[127].descricao_tarefa = 'MFE - Montagem Fechamento Externo';
+      }
+
+      if (chkFilho && grid[153]) grid[153].tarefa = 899;
+      if (grid[131]) grid[131].descricao_tarefa = 'SII - Separação Almox. Instal./ Inc.';
+      if (grid[133]) grid[133].descricao_tarefa = 'MII - Montagem Instalações / Incêndio';
+      if (seguranca !== 'Não possui' && grid[142]) grid[142].descricao_tarefa = 'LBS - Leito e Bandejamento / Sist. Seg.';
+
+      setCell(4, 'HorLOM', 'DurLOM');
+      setCell(8, 'HorLMM', 'DurLMM');
+      setCell(10, 'HorPBS', 'DurPBS');
+      setCell(13, 'HorPPA', 'DurPPA');
+      setCell(16, 'HorPCI', 'DurPCI');
+      setCell(19, 'HorPCE', 'DurPCE');
+      setCell(22, 'HorPAC', 'DurPAC');
+      setCell(24, 'HorLCA', 'DurLCA');
+      setCell(27, 'HorLAA', 'DurLAA');
+      setCell(30, 'HorLAM', 'DurLAM');
+      setCell(33, 'HorLMA', 'DurLMA');
+      setCell(37, 'HorPTR', 'DurPTR');
+      setCell(41, 'HorPIL', 'DurPIL');
+      setCell(45, 'HorPCL', 'DurPCL');
+      setCell(47, 'HorLMC', 'DurLMC');
+      setCell(49, 'HorPIN', 'DurPIN');
+      setCell(51, 'HorLMI', 'DurLMI');
+
+      if (seguranca !== 'Não possui') {
+        setCell(53, 'HorPSS', 'DurPSS');
+        setCell(55, 'HorLMS', 'DurLMS');
+      }
+
+      setCell(43, 'HorLMT', 'DurLMT');
+      setCell(57, 'HorDIN', 'DurDIN');
+      setCell(59, 'HorLMD', 'DurLMD');
+      setCell(61, 'HorPBA', 'DurPBA');
+      setCell(63, 'HorLMB', 'DurLMB');
+      setCell(65, 'HorPRF', 'DurPRF');
+
+      // Processos
+      setCell(11, 'Hor531', 'Dur531');
+      setCell(17, 'Hor551', 'Dur551');
+      setCell(20, 'Hor561', 'Dur561');
+      setCell(28, 'Hor581', 'Dur581');
+      setCell(31, 'Hor585', 'Dur585');
+      setCell(34, 'Hor589', 'Dur589');
+
+      // Módulo 1
+      setCell(69, 'HorCOR1', 'DurCOR1');
+      setCell(70, 'HorFCH1', 'DurFCH1');
+      setCell(72, 'HorEDF1', 'DurEDF1');
+      setCell(75, 'HorPIN1', 'DurPIN1');
+      setCell(78, 'HorCHI1', 'DurCHI1');
+      setCell(71, 'HorCHE1', 'DurCHE1');
+
+      // Acessórios
+      setCell(120, 'HorFAC', 'DurFAC');
+      setCell(123, 'HorFCA', 'DurFCA');
+      setCell(127, 'HorMAM', 'DurMAM');
+      setCell(129, 'HorMAA', 'DurMAA');
+      setCell(132, 'HorPRM', 'DurPRM');
+      setCell(133, 'HorIST', 'DurIST');
+      setCell(135, 'HorMCL', 'DurMCL');
+
+      if (tipomaq === 'Roof Top') setCell(136, 'HorMCM', 'DurMCM');
+      if (grid[133]) {
+        grid[133].trabalho = Math.round((grid[133].trabalho + getVal('HorMIN', 0)) * 10) / 10;
+        grid[133].duracao = Math.round((grid[133].duracao + getVal('DurMIN', 0)) * 10) / 10;
+      }
+
+      setCell(140, 'HorFEQ', 'DurFEQ');
+      setCell(142, 'HorLBA', 'DurLBA');
+
+      if (seguranca !== 'Não possui' && grid[142]) {
+        grid[142].trabalho = Math.round((grid[142].trabalho + getVal('HorMSS', 0)) * 10) / 10;
+        grid[142].duracao = Math.round((grid[142].duracao + getVal('DurMSS', 0)) * 10) / 10;
+      }
+
+      setCell(145, 'HorINT', 'DurINT');
+      setCell(147, 'HorTES', 'DurTES');
+      setCell(149, 'HorINS', 'DurINS');
+      setCell(150, 'HorPEE', 'DurPEE');
+      setCell(151, 'HorPEM', 'DurPEM');
+      setCell(152, 'HorFEC', 'DurFEC');
+      setCell(130, 'HorFEA', 'DurFEA');
+
+      if (chkFilho) deleteExcelRows(154, 154);
+      if (tipo === 'ESSW (mecânica)') deleteExcelRows(131, 152);
+      if (!testesw && tipo !== 'ESSW (mecânica)') deleteExcelRows(148, 148);
+      if (!betim) deleteExcelRows(143, 143);
+      if (tipo !== 'ESSW (mecânica)') deleteExcelRows(139, 139);
+      if (tipo !== 'ESSW (mecânica)') deleteExcelRows(137, 138);
+      if (tipomaq !== 'Roof Top' && tipo !== 'ESSW (mecânica)') deleteExcelRows(136, 136);
+
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos') deleteExcelRows(107, 118);
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos') deleteExcelRows(95, 106);
+      if (nmodStr === '1 Módulo') deleteExcelRows(83, 94);
+
+      deleteExcelRows(79, 81);
+      if (seguranca === 'Não possui' || tipo === 'ESSW (mecânica)') deleteExcelRows(53, 56);
+      deleteExcelRows(25, 25);
+      deleteExcelRows(19, 21);
+      deleteExcelRows(13, 15);
+
+      if (semEng && tipo === 'Container Solar') deleteExcelRows(4, 57);
+
+    } else if (cenarioId === 'eletrocentro_padrao') {
+      if (chkFilho && grid[243]) grid[243].tarefa = 899;
+      if (grid[221]) grid[221].descricao_tarefa = 'SII - Separação Almox. Instal./ Inc.';
+      if (grid[223]) grid[223].descricao_tarefa = 'MII - Montagem Instalações / Incêndio';
+      if (seguranca !== 'Não possui' && grid[232]) grid[232].descricao_tarefa = 'LBS - Leito e Bandejamento / Sist. Seg.';
+
+      setCell(4, 'HorLOM', 'DurLOM');
+      setCell(8, 'HorLMM', 'DurLMM');
+      if (grid[10]) {
+        grid[10].trabalho = Math.round((getVal('HorPBS') + getVal('HorPPA')) * 10) / 10;
+        grid[10].duracao = Math.round((getVal('DurPBS') + getVal('DurPPA')) * 10) / 10;
+        grid[10].calculado = true;
+      }
+      setCell(13, 'HorPCI', 'DurPCI');
+      setCell(16, 'HorPCE', 'DurPCE');
+      setCell(19, 'HorPAC', 'DurPAC');
+      setCell(21, 'HorLCA', 'DurLCA');
+      setCell(24, 'HorLAA', 'DurLAA');
+      setCell(27, 'HorLAM', 'DurLAM');
+      setCell(30, 'HorLMA', 'DurLMA');
+      setCell(34, 'HorPTR', 'DurPTR');
+
+      setCell(38, 'HorPIL', 'DurPIL');
+      setCell(40, 'HorLMT', 'DurLMT');
+      setCell(42, 'HorPCL', 'DurPCL');
+      setCell(44, 'HorLMC', 'DurLMC');
+      setCell(46, 'HorPIN', 'DurPIN');
+      setCell(48, 'HorLMI', 'DurLMI');
+
+      if (seguranca !== 'Não possui') {
+        setCell(50, 'HorPSS', 'DurPSS');
+        setCell(52, 'HorLMS', 'DurLMS');
+      }
+
+      setCell(54, 'HorDIN', 'DurDIN');
+      setCell(56, 'HorLMD', 'DurLMD');
+      setCell(58, 'HorPBA', 'DurPBA');
+      setCell(60, 'HorLMB', 'DurLMB');
+      setCell(62, 'HorPRF', 'DurPRF');
+
+      // Processos
+      setCell(11, 'Hor531', 'Dur531');
+      setCell(14, 'Hor551', 'Dur551');
+      setCell(17, 'Hor561', 'Dur561');
+      setCell(25, 'Hor581', 'Dur581');
+      setCell(28, 'Hor585', 'Dur585');
+      setCell(31, 'Hor589', 'Dur589');
+
+      // Módulos 1 a 8
+      var modMap = [
+        [1, 66, 68, 69, 70, 71, 72, 73, 75, 78, 81],
+        [2, 84, 86, 87, 88, 89, 90, 91, 93, 96, 99],
+        [3, 102, 104, 105, 106, 107, 108, 109, 111, 114, 117],
+        [4, 120, 122, 123, 124, 125, 126, 127, 129, 132, 135],
+        [5, 138, 140, 141, 142, 143, 144, 145, 147, 150, 153],
+        [6, 156, 158, 159, 160, 161, 162, 163, 165, 168, 171],
+        [7, 174, 176, 177, 178, 179, 180, 181, 183, 186, 189],
+        [8, 192, 194, 195, 196, 197, 198, 199, 201, 204, 207]
+      ];
+      modMap.forEach(function (m) {
+        var mNum = m[0];
+        setCell(m[1], 'HorCOR' + mNum, 'DurCOR' + mNum);
+        setCell(m[2], 'HorFCH' + mNum, 'DurFCH' + mNum);
+        setCell(m[3], 'HorPRB' + mNum, 'DurPRB' + mNum);
+        setCell(m[4], 'HorSBA' + mNum, 'DurSBA' + mNum);
+        setCell(m[5], 'HorPRE' + mNum, 'DurPRE' + mNum);
+        setCell(m[6], 'HorSES' + mNum, 'DurSES' + mNum);
+        setCell(m[7], 'HorEDF' + mNum, 'DurEDF' + mNum);
+        setCell(m[8], 'HorPIN' + mNum, 'DurPIN' + mNum);
+        setCell(m[9], 'HorCHI' + mNum, 'DurCHI' + mNum);
+        setCell(m[10], 'HorCHE' + mNum, 'DurCHE' + mNum);
+      });
+
+      setCell(210, 'HorFAC', 'DurFAC');
+      setCell(213, 'HorFCA', 'DurFCA');
+      setCell(217, 'HorMAM', 'DurMAM');
+      setCell(219, 'HorMAA', 'DurMAA');
+      setCell(222, 'HorPRM', 'DurPRM');
+      setCell(223, 'HorIST', 'DurIST');
+      setCell(225, 'HorMCL', 'DurMCL');
+
+      if (tipomaq === 'Roof Top') setCell(226, 'HorMCM', 'DurMCM');
+      if (grid[223]) {
+        grid[223].trabalho = Math.round((grid[223].trabalho + getVal('HorMIN', 0)) * 10) / 10;
+        grid[223].duracao = Math.round((grid[223].duracao + getVal('DurMIN', 0)) * 10) / 10;
+      }
+
+      setCell(230, 'HorFEQ', 'DurFEQ');
+      setCell(232, 'HorLBA', 'DurLBA');
+
+      if (seguranca !== 'Não possui' && grid[232]) {
+        grid[232].trabalho = Math.round((grid[232].trabalho + getVal('HorMSS', 0)) * 10) / 10;
+        grid[232].duracao = Math.round((grid[232].duracao + getVal('DurMSS', 0)) * 10) / 10;
+      }
+
+      setCell(235, 'HorINT', 'DurINT');
+      setCell(237, 'HorTES', 'DurTES');
+      setCell(239, 'HorINS', 'DurINS');
+      setCell(240, 'HorPEE', 'DurPEE');
+      setCell(241, 'HorPEM', 'DurPEM');
+      setCell(242, 'HorFEC', 'DurFEC');
+      setCell(220, 'HorFEA', 'DurFEA');
+
+      // Executa deleções sequenciais ordenadas
+      var sortedKeys = Object.keys(grid).map(Number).sort(function (a, b) { return a - b; });
+      var taskList = sortedKeys.map(function (k) { return grid[k]; });
+
+      function delRows(minR, maxR) {
+        var minI = minR - 4;
+        var maxI = maxR - 4;
+        taskList = taskList.filter(function (t, i) { return i < minI || i > maxI; });
+      }
+
+      if (chkFilho) delRows(244, 244);
+      if (!testesw) delRows(238, 238);
+      if (!betim) delRows(233, 233);
+      delRows(229, 229);
+      delRows(227, 228);
+      if (tipomaq !== 'Roof Top') delRows(226, 226);
+
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos' || nmodStr === '4 Módulos' || nmodStr === '5 Módulos' || nmodStr === '6 Módulos' || nmodStr === '7 Módulos' || nmodStr === '1') {
+        delRows(191, 208);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos' || nmodStr === '4 Módulos' || nmodStr === '5 Módulos' || nmodStr === '6 Módulos' || nmodStr === '1') {
+        delRows(173, 190);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos' || nmodStr === '4 Módulos' || nmodStr === '5 Módulos' || nmodStr === '1') {
+        delRows(155, 172);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos' || nmodStr === '4 Módulos' || nmodStr === '1') {
+        delRows(137, 154);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '3 Módulos' || nmodStr === '1') {
+        delRows(119, 136);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '2 Módulos' || nmodStr === '1') {
+        delRows(101, 118);
+      }
+      if (nmodStr === '1 Módulo' || nmodStr === '1') {
+        delRows(83, 100);
+      }
+
+      delRows(82, 82);
+      if (tipo === 'Móvel') delRows(71, 72);
+      delRows(67, 67);
+      if (seguranca === 'Não possui') delRows(50, 53);
+      delRows(22, 22);
+
+      if (semEng && tipo === 'Móvel') delRows(4, 60);
+
+      // Reconstroi grid a partir da lista
+      var reconstructedGrid = {};
+      taskList.forEach(function (t, i) {
+        reconstructedGrid[i + 4] = t;
+      });
+      grid = reconstructedGrid;
+
+    } else if (cenarioId === 'skid_mecanica_sem_betim' || cenarioId === 'skid_mecanica_com_betim') {
+      if (chkFilho) {
+        var kList = Object.keys(grid).map(Number);
+        var lastR = Math.max.apply(null, kList);
+        if (grid[lastR]) grid[lastR].tarefa = 899;
+        deleteExcelRows(lastR, lastR);
+      }
+      if (semEng) deleteExcelRows(4, 15);
+
+    } else if (cenarioId === 'essw_eletrica') {
+      if (chkFilho) {
+        if (grid[15]) grid[15].tarefa = 899;
+        deleteExcelRows(16, 16);
+      }
+
+    } else if (cenarioId === 'pilotis') {
+      if (chkFilho) {
+        if (grid[8]) grid[8].tarefa = 899;
+        deleteExcelRows(9, 9);
+      }
+
+    } else if (cenarioId === 'skid_com_eletrica_betim_true') {
+      if (chkFilho) {
+        if (grid[69]) grid[69].tarefa = 899;
+        deleteExcelRows(70, 70);
+      }
+      if (semEng) deleteExcelRows(4, 37);
+
+    } else if (cenarioId === 'servico_engenharia') {
+      setCell(4, 'HorLOM', 'DurLOM');
+      setCell(8, 'HorLMM', 'DurLMM');
+      setCell(9, 'HorPBS', 'DurPBS');
+      setCell(10, 'HorPCI', 'DurPCI');
+      setCell(11, 'HorPCE', 'DurPCE');
+      setCell(12, 'HorPAC', 'DurPAC');
+      setCell(14, 'HorLCA', 'DurLCA');
+      setCell(15, 'HorLAA', 'DurLAA');
+      setCell(16, 'HorLAM', 'DurLAM');
+      setCell(17, 'HorLMA', 'DurLMA');
+      setCell(19, 'HorPTR', 'DurPTR');
+    }
+
+    // Pós-processamento e inserção de ERE
+    var finalTasks = [];
+    var sortedRows = Object.keys(grid).map(Number).sort(function (a, b) { return a - b; });
+
+    sortedRows.forEach(function (r) {
+      var item = grid[r];
+      var tCode = ('0000' + item.tarefa).slice(-4);
+      var tDesc = String(item.descricao_tarefa || '').trim();
+
+      // Inserção da ERE antes de 0760 CHI (ou após a pintura)
+      if (tCode === '0760' && cenarioId === 'eletrocentro_padrao') {
+        finalTasks.push({
+          row: 75.5,
+          tarefa: '0756',
+          tarefa_formatada: '0756',
+          descricao_tarefa: 'ERE - Emissão de Relatório',
+          duracao: 1.0,
+          unidade: 'DIA',
+          trabalho: 0.1,
+          calculado: false,
+          disciplina: 'Pintura'
+        });
+      }
+
+      if ((tCode === '0753' || tCode === '0749' || tCode === '0750') && tDesc.indexOf('PIN') === 0) {
+        if (betim) {
+          item.tarefa = '0749';
+          item.descricao_tarefa = 'ESU - Envio para Subcontratação - PIN';
+          item.duracao = 1.0;
+          item.trabalho = 0.1;
+          item.unidade = 'DIA';
+        }
+      }
+
+      item.disciplina = classificarDisciplinaTarefa(item.tarefa, item.descricao_tarefa);
+      finalTasks.push(item);
+    });
+
+    var totalH = 0;
+    var totalDUR = 0;
+    finalTasks.forEach(function (t, idx) {
+      t.ordem = idx + 1;
+      var raw = String(t.tarefa || '').trim();
+      if (/^\d+$/.test(raw)) {
+        t.tarefa_formatada = ('0000' + raw).slice(-4);
+      } else {
+        t.tarefa_formatada = raw;
+      }
+      totalH += t.trabalho;
+      totalDUR += t.duracao;
+    });
+
+    return {
+      cenario_id: cenarioId,
+      cenario_descricao: cenario.descricao || cenarioId,
+      qtd_tarefas: finalTasks.length,
+      total_horas: Math.round(totalH * 100) / 100,
+      total_dias: Math.round(totalDUR * 10) / 10,
+      tarefas: finalTasks
+    };
+  }
+
   function executarCalculoTempos() {
     if (!state.regrasData || !state.regrasData.length) {
       showToast('Nenhuma regra disponível para cálculo no momento.', true);
@@ -755,6 +1288,7 @@
     var resultadosAreas = [];
     var totalGeralH = 0;
     var totalGeralDUR = 0;
+    var calcTimes = {};
 
     state.regrasData.forEach(function (areaObj) {
       var areaNome = areaObj.area || 'Geral';
@@ -763,6 +1297,10 @@
       var areaTotalDUR = 0;
 
       var camposKeys = Object.keys(areaObj.campos || {});
+      var isMec = (areaNome.indexOf('MEC') !== -1 && areaNome.indexOf('ENG') === -1);
+      var isEngEle = (areaNome.indexOf('EL') !== -1 && areaNome.indexOf('ENG') !== -1);
+      var isEletromec = (areaNome.indexOf('ELETROMEC') !== -1);
+
       camposKeys.forEach(function (cKey) {
         var campoObj = areaObj.campos[cKey];
         var valH = 0;
@@ -784,6 +1322,48 @@
         areaTotalH += valH;
         areaTotalDUR += valDUR;
 
+        if (isEngEle) {
+          if (cKey === 'PIN') {
+            calcTimes['HorPIN_ELE'] = valH;
+            calcTimes['DurPIN_ELE'] = valDUR;
+            calcTimes['HorPIN'] = valH;
+            calcTimes['DurPIN'] = valDUR;
+          } else if (cKey === 'LBA') {
+            calcTimes['HorLMB'] = valH;
+            calcTimes['DurLMB'] = valDUR;
+            calcTimes['HorLBA_ELE'] = valH;
+            calcTimes['DurLBA_ELE'] = valDUR;
+          } else {
+            calcTimes['Hor' + cKey] = valH;
+            calcTimes['Dur' + cKey] = valDUR;
+          }
+        } else if (isMec) {
+          if (cKey === 'PIN') {
+            calcTimes['HorPIN_MEC'] = valH;
+            calcTimes['DurPIN_MEC'] = valDUR;
+            for (var mIdx = 1; mIdx <= 8; mIdx++) {
+              calcTimes['HorPIN' + mIdx] = valH;
+              calcTimes['DurPIN' + mIdx] = valDUR;
+            }
+          } else {
+            calcTimes['Hor' + cKey] = valH;
+            calcTimes['Dur' + cKey] = valDUR;
+          }
+        } else if (isEletromec) {
+          if (cKey === 'LBA') {
+            calcTimes['HorLBA_ELETR'] = valH;
+            calcTimes['DurLBA_ELETR'] = valDUR;
+            calcTimes['HorLBA'] = valH;
+            calcTimes['DurLBA'] = valDUR;
+          } else {
+            calcTimes['Hor' + cKey] = valH;
+            calcTimes['Dur' + cKey] = valDUR;
+          }
+        } else {
+          calcTimes['Hor' + cKey] = valH;
+          calcTimes['Dur' + cKey] = valDUR;
+        }
+
         camposRes.push({
           chave: cKey,
           h: valH,
@@ -802,15 +1382,232 @@
       });
     });
 
+    // Aliases e expansão de variáveis por módulo para o cronograma
+    calcTimes['HorMAM'] = calcTimes['HorMAM'] || calcTimes['HorMAM/MFE'] || calcTimes['HorMFE'] || 0;
+    calcTimes['DurMAM'] = calcTimes['DurMAM'] || calcTimes['DurMAM/MFE'] || calcTimes['DurMFE'] || 0;
+
+    for (var m = 1; m <= 8; m++) {
+      calcTimes['HorCOR' + m] = calcTimes['HorCOR' + m] || calcTimes['HorCOR/FPC'] || calcTimes['HorCOR'] || 0;
+      calcTimes['DurCOR' + m] = calcTimes['DurCOR' + m] || calcTimes['DurCOR/FPC'] || calcTimes['DurCOR'] || 0;
+
+      calcTimes['HorFCH' + m] = calcTimes['HorFCH' + m] || calcTimes['HorFCH'] || 0;
+      calcTimes['DurFCH' + m] = calcTimes['DurFCH' + m] || calcTimes['DurFCH'] || 0;
+
+      calcTimes['HorPRB' + m] = calcTimes['HorPRB' + m] || calcTimes['HorPRB'] || 0;
+      calcTimes['DurPRB' + m] = calcTimes['DurPRB' + m] || calcTimes['DurPRB'] || 0;
+
+      calcTimes['HorSBA' + m] = calcTimes['HorSBA' + m] || calcTimes['HorSBA'] || 0;
+      calcTimes['DurSBA' + m] = calcTimes['DurSBA' + m] || calcTimes['DurSBA'] || 0;
+
+      calcTimes['HorPRE' + m] = calcTimes['HorPRE' + m] || calcTimes['HorPRE'] || 0;
+      calcTimes['DurPRE' + m] = calcTimes['DurPRE' + m] || calcTimes['DurPRE'] || 0;
+
+      calcTimes['HorSES' + m] = calcTimes['HorSES' + m] || calcTimes['HorSES'] || 0;
+      calcTimes['DurSES' + m] = calcTimes['DurSES' + m] || calcTimes['DurSES'] || 0;
+
+      calcTimes['HorEDF' + m] = calcTimes['HorEDF' + m] || calcTimes['HorEDF'] || 0;
+      calcTimes['DurEDF' + m] = calcTimes['DurEDF' + m] || calcTimes['DurEDF'] || 0;
+
+      calcTimes['HorPIN' + m] = calcTimes['HorPIN' + m] || calcTimes['HorPIN'] || 0;
+      calcTimes['DurPIN' + m] = calcTimes['DurPIN' + m] || calcTimes['DurPIN'] || 0;
+
+      calcTimes['HorCHI' + m] = calcTimes['HorCHI' + m] || calcTimes['HorCHI/MEI'] || calcTimes['HorCHI'] || 0;
+      calcTimes['DurCHI' + m] = calcTimes['DurCHI' + m] || calcTimes['DurCHI/MEI'] || calcTimes['DurCHI'] || 0;
+
+      calcTimes['HorCHE' + m] = calcTimes['HorCHE' + m] || calcTimes['HorCHE/CSC'] || calcTimes['HorCHE'] || 0;
+      calcTimes['DurCHE' + m] = calcTimes['DurCHE' + m] || calcTimes['DurCHE/CSC'] || calcTimes['DurCHE'] || 0;
+    }
+
+    // Processos (Roteiros) conforme regras do VBA
+    var modNum = parseInt(ctx.nmod || 1, 10);
+    calcTimes['Hor531'] = Math.min(3.1 * modNum, 15.2);
+    calcTimes['Dur531'] = calcTimes['Hor531'] > 7.6 ? 2 : 1;
+
+    calcTimes['Hor551'] = Math.min(0.8 * modNum, 15.2);
+    calcTimes['Dur551'] = calcTimes['Hor551'] > 7.6 ? 2 : 1;
+
+    calcTimes['Hor561'] = Math.min(0.8 * modNum, 15.2);
+    calcTimes['Dur561'] = calcTimes['Hor561'] > 7.6 ? 2 : 1;
+
+    calcTimes['Hor581'] = Math.min(4.0 * modNum, 15.2);
+    calcTimes['Dur581'] = calcTimes['Hor581'] > 7.6 ? 2 : 1;
+
+    calcTimes['Hor585'] = Math.min(4.8 * modNum, 15.2);
+    calcTimes['Dur585'] = calcTimes['Hor585'] > 7.6 ? 2 : 1;
+
+    calcTimes['Hor589'] = Math.min(2.0 * modNum, 15.2);
+    calcTimes['Dur589'] = calcTimes['Hor589'] > 7.6 ? 2 : 1;
+
+    // Garantir cálculo de PRM se não preenchido ou 0
+    if (!calcTimes['HorPRM'] || calcTimes['HorPRM'] === 0) {
+      var somaEle = (calcTimes['HorIST'] || 0) + (calcTimes['HorMCL'] || 0) + (calcTimes['HorMIN'] || 0) +
+                    (calcTimes['HorMSS'] || 0) + (calcTimes['HorFEQ'] || 0) + (calcTimes['HorLBA'] || 0) +
+                    (calcTimes['HorINT'] || 0) + (calcTimes['HorMCM'] || 0);
+      calcTimes['HorPRM'] = Math.round((somaEle * 0.1 * 0.8 / 0.9) * 10) / 10;
+      calcTimes['DurPRM'] = 3.0;
+    }
+
+    // Garantir TES e INS conformes com a complexidade e fórmulas do VBA
+    var complex = String(ctx.complexidade || 'Simples');
+    var durTes = complex === 'Complexo' ? 15 : (complex === 'Médio' ? 10 : 5);
+    var durIns = complex === 'Complexo' ? 15 : 5;
+
+    if (!calcTimes['DurTES'] || calcTimes['DurTES'] < durTes) {
+      calcTimes['DurTES'] = durTes;
+    }
+    if (!calcTimes['HorTES'] || calcTimes['HorTES'] < 20) {
+      calcTimes['HorTES'] = Math.round(durTes * 7.04 * 2 * 0.9 * 1.1 * 1.05 * 0.9 * 10) / 10;
+    }
+
+    if (!calcTimes['DurINS'] || calcTimes['DurINS'] < durIns) {
+      calcTimes['DurINS'] = durIns;
+    }
+    if (!calcTimes['HorINS'] || calcTimes['HorINS'] < 20) {
+      calcTimes['HorINS'] = Math.round(durIns * 7.04 * 2 * 0.9 * 1.1 * 1.05 * 0.85 * 10) / 10;
+    }
+
     var seletorMatch = consultarSeletor(ctx);
+    var cronograma = gerarCronogramaCompleto(ctx, calcTimes, state.templateBlocksData, seletorMatch);
 
     return {
       ctx: ctx,
       seletor: seletorMatch,
       resultadosAreas: resultadosAreas,
       totalGeralH: Math.round(totalGeralH * 100) / 100,
-      totalGeralDUR: Math.round(totalGeralDUR * 10) / 10
+      totalGeralDUR: Math.round(totalGeralDUR * 10) / 10,
+      calc_times: calcTimes,
+      cronograma: cronograma
     };
+  }
+
+  function calcularTotaisDisciplinasExcel(tarefas) {
+    var engH = 0;
+    var mecH = 0;
+    var eleH = 0;
+
+    (tarefas || []).forEach(function (t) {
+      var tNum = parseInt(t.tarefa || 0, 10);
+      var trab = parseFloat(t.trabalho || 0) || 0;
+      var descUpper = String(t.descricao_tarefa || '').toUpperCase();
+
+      // Regra Engenharia: < 703, sem tempo 0.1 e sem tarefas ROM
+      if (tNum < 703 && Math.abs(trab - 0.1) > 0.001 && descUpper.indexOf('ROM') === -1) {
+        engH += trab;
+      }
+
+      // Regra Mecânica: 705 a 798 + tarefa 0894, sem tempo 0.1 e desconsiderar 754, 755, 765, 793, 794
+      if (((tNum >= 705 && tNum <= 798) || tNum === 894) && Math.abs(trab - 0.1) > 0.001) {
+        if ([754, 755, 765, 793, 794].indexOf(tNum) === -1) {
+          mecH += trab;
+        }
+      }
+
+      // Regra Elétrica: 799 a 893 + tarefa 0895, sem tempo 0.1 e desconsiderar 810, 828, 838, 858, 868
+      if (((tNum >= 799 && tNum <= 893) || tNum === 895) && Math.abs(trab - 0.1) > 0.001) {
+        if ([810, 828, 838, 858, 868].indexOf(tNum) === -1) {
+          eleH += trab;
+        }
+      }
+    });
+
+    engH = Math.round(engH * 10) / 10;
+    mecH = Math.round(mecH * 10) / 10;
+    eleH = Math.round(eleH * 10) / 10;
+    var totalH = Math.round((engH + mecH + eleH) * 10) / 10;
+
+    return {
+      eng_h: engH,
+      mec_h: mecH,
+      ele_h: eleH,
+      total_h: totalH
+    };
+  }
+
+  function initModalResultadoTabs() {
+    var tabs = [
+      { btn: $('calcTabTotais'), pane: $('calcPaneTotais') },
+      { btn: $('calcTabCronograma'), pane: $('calcPaneCronograma') },
+      { btn: $('calcTabSeletor'), pane: $('calcPaneSeletor') },
+      { btn: $('calcTabResumo'), pane: $('calcPaneResumo') }
+    ];
+
+    tabs.forEach(function (t) {
+      if (t.btn) {
+        t.btn.addEventListener('click', function () {
+          tabs.forEach(function (other) {
+            if (other.btn) other.btn.classList.remove('active');
+            if (other.pane) other.pane.classList.add('hidden');
+          });
+          t.btn.classList.add('active');
+          if (t.pane) t.pane.classList.remove('hidden');
+        });
+      }
+    });
+  }
+
+  function renderCronogramaResultado(cronograma) {
+    if (!cronograma || !cronograma.tarefas) return;
+    var tbody = $('resCronogramaTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if ($('cronogramaCenarioBadge')) {
+      $('cronogramaCenarioBadge').textContent = 'Cenário: ' + (cronograma.cenario_descricao || cronograma.cenario_id);
+    }
+    if ($('resBadgeTarefas')) {
+      $('resBadgeTarefas').textContent = String(cronograma.qtd_tarefas || cronograma.tarefas.length);
+    }
+
+    var searchTerm = ($('cronogramaSearch') ? $('cronogramaSearch').value.trim().toLowerCase() : '');
+    var discFilter = ($('cronogramaDisciplineFilter') ? $('cronogramaDisciplineFilter').value : 'ALL');
+
+    var filtered = cronograma.tarefas.filter(function (t) {
+      if (discFilter !== 'ALL' && t.disciplina !== discFilter) return false;
+      if (searchTerm) {
+        var matchCode = (t.tarefa_formatada || String(t.tarefa)).toLowerCase().indexOf(searchTerm) !== -1;
+        var matchDesc = String(t.descricao_tarefa || '').toLowerCase().indexOf(searchTerm) !== -1;
+        var matchDisc = String(t.disciplina || '').toLowerCase().indexOf(searchTerm) !== -1;
+        return matchCode || matchDesc || matchDisc;
+      }
+      return true;
+    });
+
+    var sumHoras = 0;
+    var sumDias = 0;
+
+    filtered.forEach(function (t) {
+      sumHoras += (t.trabalho || 0);
+      sumDias += (t.duracao || 0);
+
+      var tr = document.createElement('tr');
+      tr.className = 'task-row' + (t.calculado ? ' task-calc' : '');
+
+      var discClass = 'disc-mec';
+      if (t.disciplina === 'Engenharia Elétrica' || t.disciplina === 'Elétrica / Testes') discClass = 'disc-ele';
+      else if (t.disciplina === 'Pintura') discClass = 'disc-pin';
+      else if (t.disciplina === 'Processos') discClass = 'disc-pro';
+
+      tr.innerHTML =
+        '<td style="text-align:center; color:var(--text-faint); font-family:\'IBM Plex Mono\';">' + t.ordem + '</td>' +
+        '<td style="text-align:center;"><span class="cronograma-task-badge' + (t.calculado ? ' is-calc' : '') + '">' + escapeHtml(t.tarefa_formatada || t.tarefa) + '</span></td>' +
+        '<td style="font-weight:' + (t.calculado ? '600' : '400') + '; color:var(--text);">' + escapeHtml(t.descricao_tarefa) + '</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + t.duracao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '</td>' +
+        '<td style="text-align:center; font-size:10.5px; color:var(--text-dim);">' + escapeHtml(t.unidade || 'DIA') + '</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:' + (t.calculado ? 'var(--accent)' : 'var(--text)') + ';">' + t.trabalho.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+        '<td><span class="chip-disc ' + discClass + '">' + escapeHtml(t.disciplina || 'Geral') + '</span></td>';
+
+      tbody.appendChild(tr);
+    });
+
+    if ($('cronogramaFootSummary')) {
+      $('cronogramaFootSummary').textContent = filtered.length + ' de ' + cronograma.tarefas.length + ' operações';
+    }
+    if ($('cronogramaFootDias')) {
+      $('cronogramaFootDias').textContent = sumDias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d';
+    }
+    if ($('cronogramaFootHoras')) {
+      $('cronogramaFootHoras').textContent = sumHoras.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
+    }
   }
 
   function exibirModalResultadoCalculo(res) {
@@ -819,51 +1616,125 @@
     if (!modal) return;
 
     var ctx = res.ctx;
+    var seletorMatch = res.seletor || consultarSeletor(ctx);
+    var tarefas = (res.cronograma && res.cronograma.tarefas) ? res.cronograma.tarefas : [];
 
-    $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
-    $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias';
+    // Cálculo das Horas Totais por Disciplina (Padrão Excel Original)
+    var totaisDisc = calcularTotaisDisciplinasExcel(tarefas);
+    res.totaisDisciplinas = totaisDisc;
 
-    $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm × ' + ctx.alt.toLocaleString('pt-BR') + 'm)';
-    $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
+    // 1. Atualizar KPIs do Resumo Geral (Aba 1)
+    if ($('resKpiEngH')) $('resKpiEngH').textContent = totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
+    if ($('resKpiMecH')) $('resKpiMecH').textContent = totaisDisc.mec_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
+    if ($('resKpiEleH')) $('resKpiEleH').textContent = totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
+    if ($('resKpiTotalH')) $('resKpiTotalH').textContent = totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
 
-    var tbody = $('resTableBody');
-    tbody.innerHTML = '';
+    // 2. Tabela de Horas Totais por Disciplina (Aba 1)
+    var tbodyTotais = $('resTotaisTableBody');
+    if (tbodyTotais) {
+      tbodyTotais.innerHTML = '';
+      var pctEng = totaisDisc.total_h > 0 ? (totaisDisc.eng_h / totaisDisc.total_h * 100).toFixed(1) : '0.0';
+      var pctMec = totaisDisc.total_h > 0 ? (totaisDisc.mec_h / totaisDisc.total_h * 100).toFixed(1) : '0.0';
+      var pctEle = totaisDisc.total_h > 0 ? (totaisDisc.ele_h / totaisDisc.total_h * 100).toFixed(1) : '0.0';
 
-    res.resultadosAreas.forEach(function (area) {
-      var trHead = document.createElement('tr');
-      trHead.className = 'area-header-row';
-      trHead.innerHTML = '<td colspan="3">' + escapeHtml(area.area) + '</td>';
-      tbody.appendChild(trHead);
+      var rowsData = [
+        { disc: 'Engenharia (ENG)', regra: 'Tarefas < 0703 (desconsidera tempo 0,1 e tarefas ROM)', h: totaisDisc.eng_h, pct: pctEng + ' %', color: '#38bdf8' },
+        { disc: 'Mecânica (MEC)', regra: 'Tarefas 0705 a 0798 + 0894 (desconsidera tempo 0,1 e 754, 755, 765, 793, 794)', h: totaisDisc.mec_h, pct: pctMec + ' %', color: '#f59e0b' },
+        { disc: 'Elétrica (ELE)', regra: 'Tarefas 0799 a 0893 + 0895 (desconsidera tempo 0,1 e 810, 828, 838, 858, 868)', h: totaisDisc.ele_h, pct: pctEle + ' %', color: '#a855f7' }
+      ];
 
-      area.campos.forEach(function (c) {
-        var trC = document.createElement('tr');
-        trC.className = 'campo-row';
-        trC.innerHTML =
-          '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--accent); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
-        tbody.appendChild(trC);
+      rowsData.forEach(function (r) {
+        var tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border)';
+        tr.innerHTML =
+          '<td style="padding: 10px 14px; font-weight: 700; color:' + r.color + ';">' + escapeHtml(r.disc) + '</td>' +
+          '<td style="padding: 10px 14px; font-size: 11.5px; color: var(--text-dim);">' + escapeHtml(r.regra) + '</td>' +
+          '<td style="padding: 10px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-weight: 700; color:' + r.color + ';">' + r.h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+          '<td style="padding: 10px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-weight: 600; color: var(--text);">' + escapeHtml(r.pct) + '</td>';
+        tbodyTotais.appendChild(tr);
       });
 
-      var trSub = document.createElement('tr');
-      trSub.className = 'area-total-row';
-      trSub.innerHTML =
-        '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
-      tbody.appendChild(trSub);
-    });
+      var trTot = document.createElement('tr');
+      trTot.style.cssText = 'background: var(--panel-2); font-weight: 800; border-top: 2px solid var(--border);';
+      trTot.innerHTML =
+        '<td style="padding: 12px 14px; font-size: 13px; color: var(--accent);">TOTAL GERAL DO PROJETO</td>' +
+        '<td style="padding: 12px 14px; font-size: 11.5px; color: var(--text-faint);">Soma consolidada das 3 disciplinas (Engenharia + Mecânica + Elétrica)</td>' +
+        '<td style="padding: 12px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-size: 15px; font-weight: 800; color: var(--accent);">' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+        '<td style="padding: 12px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-size: 13px; font-weight: 700; color: var(--accent);">100,0 %</td>';
+      tbodyTotais.appendChild(trTot);
+    }
 
-    var trGrand = document.createElement('tr');
-    trGrand.className = 'grand-total-row';
-    trGrand.innerHTML =
-      '<td>TOTAL GERAL ORÇADO</td>' +
-      '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent); font-size:15px;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-      '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
-    tbody.appendChild(trGrand);
+    // 3. Info Estrutura e CTs no Resumo Geral
+    if ($('resTotaisEstrutura')) {
+      $('resTotaisEstrutura').textContent = ctx.nmod + ' Módulo(s) — ' + ctx.comp + 'm × ' + ctx.larg + 'm × ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')';
+    }
+    if ($('resTotaisDetalhes')) {
+      $('resTotaisDetalhes').textContent = 'Pintura: ' + ctx.planpin + ' | Ar Cond.: ' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x) | Complexidade: ' + ctx.complexidade;
+    }
+    if ($('resTotaisPepBadge')) {
+      $('resTotaisPepBadge').textContent = 'PEP: ' + (seletorMatch && seletorMatch['PEP Standard'] ? seletorMatch['PEP Standard'] : 'Sob Consulta');
+    }
+    if ($('resTotaisCtsResumo') && seletorMatch) {
+      var ctsHtml = [];
+      if (seletorMatch['DR Eng Mec']) ctsHtml.push('• <b>Eng. Mecânica:</b> DR ' + seletorMatch['DR Eng Mec'] + ' (Alt ' + (seletorMatch['Alt Eng Mec'] || '1') + ')');
+      if (seletorMatch['DR Eng Ele']) ctsHtml.push('• <b>Eng. Elétrica:</b> DR ' + seletorMatch['DR Eng Ele'] + ' (Alt ' + (seletorMatch['Alt Eng Ele'] || '1') + ')');
+      if (seletorMatch['DR Mec 1']) ctsHtml.push('• <b>Mecânica Mód. 1:</b> DR ' + seletorMatch['DR Mec 1'] + ' (Alt ' + (seletorMatch['Alt Mec 1'] || '1') + ')');
+      if (seletorMatch['DR Acess']) ctsHtml.push('• <b>Acessórios:</b> DR ' + seletorMatch['DR Acess'] + ' (Alt ' + (seletorMatch['Alt Acess'] || '1') + ')');
+      if (seletorMatch['DR Eletromec']) ctsHtml.push('• <b>Eletromecânica:</b> DR ' + seletorMatch['DR Eletromec'] + ' (Alt ' + (seletorMatch['Alt Eletromec'] || '1') + ')');
+      $('resTotaisCtsResumo').innerHTML = ctsHtml.join('<br>');
+    }
 
-    // Renderiza Seletor PEP & CTs no modal de resultado
-    var seletorMatch = res.seletor || consultarSeletor(ctx);
+    // 4. KPIs da Aba de Regras & Processos (Antiga Aba 1)
+    if ($('resTotalH')) $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h';
+    if ($('resTotalDUR')) $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias';
+    if ($('resEstruturaInfo')) $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm × ' + ctx.alt.toLocaleString('pt-BR') + 'm)';
+    if ($('resDetagensInfo')) $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
+
+    // Reset para primeira aba (Resumo Geral de Horas)
+    if ($('calcTabTotais')) $('calcTabTotais').click();
+
+    // 5. Renderiza Tabela de Regras & Processos (Aba 4)
+    var tbodyRegras = $('resTableBody');
+    if (tbodyRegras) {
+      tbodyRegras.innerHTML = '';
+      res.resultadosAreas.forEach(function (area) {
+        var trHead = document.createElement('tr');
+        trHead.className = 'area-header-row';
+        trHead.innerHTML = '<td colspan="3">' + escapeHtml(area.area) + '</td>';
+        tbodyRegras.appendChild(trHead);
+
+        area.campos.forEach(function (c) {
+          var trC = document.createElement('tr');
+          trC.className = 'campo-row';
+          trC.innerHTML =
+            '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--accent); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+          tbodyRegras.appendChild(trC);
+        });
+
+        var trSub = document.createElement('tr');
+        trSub.className = 'area-total-row';
+        trSub.innerHTML =
+          '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+        tbodyRegras.appendChild(trSub);
+      });
+
+      var trGrand = document.createElement('tr');
+      trGrand.className = 'grand-total-row';
+      trGrand.innerHTML =
+        '<td>TOTAL DAS REGRAS ORÇADAS</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--accent); font-size:15px;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
+      tbodyRegras.appendChild(trGrand);
+    }
+
+    // 6. Renderiza Cronograma de Operações (Aba 2)
+    renderCronogramaResultado(res.cronograma);
+
+    // 7. Renderiza Seletor PEP & CTs (Aba 3)
     var seletorWrap = $('resSeletorWrap');
     if (seletorWrap) {
       if (seletorMatch) {
@@ -891,9 +1762,9 @@
 
           cts.forEach(function (ct) {
             var card = document.createElement('div');
-            card.style.cssText = 'background:var(--panel-1); border:1px solid var(--border); border-radius:6px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center;';
+            card.style.cssText = 'background:var(--panel-1); border:1px solid var(--border); border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;';
             card.innerHTML = '<span style="font-weight:600; color:var(--text);">' + escapeHtml(ct.label) + ':</span>' +
-              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--accent);">' + escapeHtml(ct.dr) + ' <span style="font-size:10px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
+              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--accent);">' + escapeHtml(ct.dr) + ' <span style="font-size:10.5px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
             ctsGrid.appendChild(card);
           });
         }
@@ -914,11 +1785,34 @@
   if ($('btnCloseResultadoCalculo')) $('btnCloseResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
   if ($('btnFecharResultadoCalculo')) $('btnFecharResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
 
+  initModalResultadoTabs();
+
+  if ($('cronogramaSearch')) {
+    $('cronogramaSearch').addEventListener('input', function () {
+      if (window._lastCalculationResult && window._lastCalculationResult.cronograma) {
+        renderCronogramaResultado(window._lastCalculationResult.cronograma);
+      }
+    });
+  }
+
+  if ($('cronogramaDisciplineFilter')) {
+    $('cronogramaDisciplineFilter').addEventListener('change', function () {
+      if (window._lastCalculationResult && window._lastCalculationResult.cronograma) {
+        renderCronogramaResultado(window._lastCalculationResult.cronograma);
+      }
+    });
+  }
+
   if ($('btnCopiarResumoCalculo')) {
     $('btnCopiarResumoCalculo').addEventListener('click', function () {
       var res = window._lastCalculationResult;
       if (!res) return;
       var ctx = res.ctx;
+      var crono = res.cronograma;
+      var totalHVal = (crono && crono.total_horas) ? crono.total_horas : res.totalGeralH;
+      var totalDurVal = (crono && crono.total_dias) ? crono.total_dias : res.totalGeralDUR;
+      var totalTarefas = crono ? (crono.qtd_tarefas || crono.tarefas.length) : 0;
+
       var lines = [];
       lines.push('==================================================');
       lines.push('ELETROCENTROS APP — RESUMO DO CÁLCULO DE TEMPOS');
@@ -929,9 +1823,18 @@
       if (res.seletor && res.seletor['PEP Standard']) {
         lines.push('PEP Standard Sugerido: ' + res.seletor['PEP Standard']);
       }
-      lines.push('');
-      lines.push('TOTAL HORAS (H): ' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h');
-      lines.push('DURAÇÃO ESTIMADA (DUR): ' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
+      var totaisDisc = res.totaisDisciplinas || calcularTotaisDisciplinasExcel(crono ? crono.tarefas : []);
+
+      lines.push('--------------------------------------------------');
+      lines.push('HORAS TOTAIS POR DISCIPLINA (PADRÃO EXCEL):');
+      lines.push(' • Engenharia (ENG): ' + totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
+      lines.push(' • Mecânica (MEC):   ' + totaisDisc.mec_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
+      lines.push(' • Elétrica (ELE):   ' + totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
+      lines.push(' • TOTAL DO PROJETO: ' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
+      lines.push('--------------------------------------------------');
+      lines.push('DETALHAMENTO DE OPERAÇÕES GERADAS: ' + totalTarefas + ' tarefas');
+      lines.push('DURAÇÃO ESTIMADA (DUR): ' + totalDurVal.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' dias');
+      lines.push('TOTAL HORAS TODAS OPERAÇÕES: ' + totalHVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + ' h');
       lines.push('--------------------------------------------------');
 
       res.resultadosAreas.forEach(function (area) {
@@ -950,22 +1853,26 @@
         if (res.seletor['DR Eng Ele']) lines.push(' - Eng. Elétrica: DR ' + res.seletor['DR Eng Ele'] + ' (Alt ' + (res.seletor['Alt Eng Ele'] || '1') + ')');
         var nmodNum = parseInt(ctx.nmod || '1', 10);
         for (var m = 1; m <= 8; m++) {
-          var drMec = res.seletor['DR Mec ' + m] || res.seletor['DR Mec' + m];
-          var altMec = res.seletor['Alt Mec ' + m] || res.seletor['Alt Mec' + m];
-          if (drMec && m <= nmodNum) {
-            lines.push(' - Mecânica Módulo ' + m + ': DR ' + drMec + ' (Alt ' + (altMec || '1') + ')');
+          var drM = res.seletor['DR Mec ' + m] || res.seletor['DR Mec' + m];
+          var altM = res.seletor['Alt Mec ' + m] || res.seletor['Alt Mec' + m] || '1';
+          if (drM && m <= nmodNum) {
+            lines.push(' - Mecânica Módulo ' + m + ': DR ' + drM + ' (Alt ' + altM + ')');
           }
         }
         if (res.seletor['DR Acess']) lines.push(' - Acessórios: DR ' + res.seletor['DR Acess'] + ' (Alt ' + (res.seletor['Alt Acess'] || '1') + ')');
         if (res.seletor['DR Eletromec']) lines.push(' - Eletromecânica: DR ' + res.seletor['DR Eletromec'] + ' (Alt ' + (res.seletor['Alt Eletromec'] || '1') + ')');
       }
 
-      var textToCopy = lines.join('\n');
-      navigator.clipboard.writeText(textToCopy).then(function () {
-        showToast('Resumo do cálculo copiado para a área de transferência!');
-      }).catch(function () {
-        showToast('Não foi possível copiar automaticamente.', true);
-      });
+      var textToCopy = lines.join('\r\n');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(function () {
+          showToast('Resumo copiado para a área de transferência!');
+        }).catch(function () {
+          copyFallback(textToCopy);
+        });
+      } else {
+        copyFallback(textToCopy);
+      }
     });
   }
 
@@ -1004,47 +1911,19 @@
         return;
       }
 
-      var ctx = res.ctx;
       var lines = [];
-      lines.push('ELETROCENTROS APP - RESUMO DO CALCULO DE TEMPOS;;;');
-      lines.push('Data/Hora;' + new Date().toLocaleString('pt-BR') + ';;');
-      lines.push('PEP / Ordem;' + (ctx.pep || 'Nao informado') + ';;');
-      if (res.seletor && res.seletor['PEP Standard']) {
-        lines.push('PEP Standard (Sugerido);' + res.seletor['PEP Standard'] + ';;');
-      }
-      lines.push('Tipo de Estrutura;' + (ctx.tipoestrutura || '-') + ';Quantidade Modulos;' + (ctx.nmod || 1));
-      lines.push('Dimensoes;' + ctx.comp + 'm (C) x ' + ctx.larg + 'm (L) x ' + ctx.alt + 'm (A);Plano Pintura;' + (ctx.planpin || '-'));
-      lines.push('Ar Condicionado;' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x);Complexidade;' + (ctx.complexidade || '-'));
-      lines.push('Sist. Incendio;' + (ctx.incendio || '-') + ';Sist. Seguranca;' + (ctx.seguranca || '-'));
-      lines.push(';;;');
-      lines.push('TOTAL HORAS (H);' + res.totalGeralH.toFixed(2).replace('.', ',') + ';DURACAO ESTIMADA (DUR);' + res.totalGeralDUR.toFixed(1).replace('.', ',') + ' dias');
-      lines.push(';;;');
-      lines.push('Area / Disciplina;Processo / Campo;Horas (H);Duracao (DUR em dias)');
-
-      res.resultadosAreas.forEach(function (area) {
-        area.campos.forEach(function (c) {
-          lines.push('"' + area.area.replace(/"/g, '""') + '";"' + c.chave.replace(/"/g, '""') + '";' + c.h.toFixed(2).replace('.', ',') + ';' + c.dur.toFixed(1).replace('.', ','));
+      lines.push('Tarefa;Descricao da Tarefa;Duracao;Unidade;Trabalho;Disciplina');
+      if (res.cronograma && res.cronograma.tarefas) {
+        res.cronograma.tarefas.forEach(function (t) {
+          lines.push(
+            '"' + (t.tarefa_formatada || t.tarefa) + '";' +
+            '"' + (t.descricao_tarefa || '').replace(/"/g, '""') + '";' +
+            t.duracao.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ';' +
+            (t.unidade || 'DIA') + ';' +
+            t.trabalho.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ';' +
+            '"' + (t.disciplina || '') + '"'
+          );
         });
-        lines.push('Subtotal ' + area.area + ';(' + area.campos.length + ' processos);' + area.totalH.toFixed(2).replace('.', ',') + ';' + area.totalDUR.toFixed(1).replace('.', ','));
-      });
-
-      lines.push('TOTAL GERAL CONSOLIDADO;Todos os processos;' + res.totalGeralH.toFixed(2).replace('.', ',') + ';' + res.totalGeralDUR.toFixed(1).replace('.', ','));
-
-      if (res.seletor) {
-        lines.push(';;;');
-        lines.push('SELETOR DE CENTROS DE TRABALHO (CTS);;;');
-        if (res.seletor['DR Eng Mec']) lines.push('Engenharia Mecanica;' + res.seletor['DR Eng Mec'] + ' (Alt ' + (res.seletor['Alt Eng Mec'] || '1') + ');;');
-        if (res.seletor['DR Eng Ele']) lines.push('Engenharia Eletrica;' + res.seletor['DR Eng Ele'] + ' (Alt ' + (res.seletor['Alt Eng Ele'] || '1') + ');;');
-        var nmodNum = parseInt(ctx.nmod || '1', 10);
-        for (var m = 1; m <= 8; m++) {
-          var drMec = res.seletor['DR Mec ' + m] || res.seletor['DR Mec' + m];
-          var altMec = res.seletor['Alt Mec ' + m] || res.seletor['Alt Mec' + m];
-          if (drMec && m <= nmodNum) {
-            lines.push('Mecanica Modulo ' + m + ';' + drMec + ' (Alt ' + (altMec || '1') + ');;');
-          }
-        }
-        if (res.seletor['DR Acess']) lines.push('Acessorios;' + res.seletor['DR Acess'] + ' (Alt ' + (res.seletor['Alt Acess'] || '1') + ');;');
-        if (res.seletor['DR Eletromec']) lines.push('Eletromecanica;' + res.seletor['DR Eletromec'] + ' (Alt ' + (res.seletor['Alt Eletromec'] || '1') + ');;');
       }
 
       var csvContent = '\uFEFF' + lines.join('\r\n');
@@ -1069,7 +1948,9 @@
         seletor: res.seletor,
         totalGeralH: res.totalGeralH,
         totalGeralDUR: res.totalGeralDUR,
-        resultadosAreas: res.resultadosAreas
+        resultadosAreas: res.resultadosAreas,
+        calc_times: res.calc_times,
+        cronograma: res.cronograma
       };
 
       showToast('Gerando planilha Excel (.xlsx)...');
@@ -1086,7 +1967,7 @@
         showToast('Planilha Excel exportada com sucesso: ' + filename);
       }
 
-      if (isPyWebviewAvailable()) {
+      if (isPyWebviewAvailable() && window.pywebview.api.export_excel) {
         window.pywebview.api.export_excel(payload).then(function (resp) {
           if (resp && resp.status === 'success' && resp.base64) {
             handleB64Download(resp.base64, resp.filename || getExportFilename('xlsx'));
@@ -1204,46 +2085,66 @@
   }
 
   function carregarUltimaExecucao() {
-    var raw = null;
-    try { raw = localStorage.getItem('eletrocentros_last_execution'); } catch (e) { }
-    var ctx = null;
-    if (raw) {
-      try { ctx = JSON.parse(raw); } catch (e) { }
+    var ctx = {
+      comp: 10,
+      larg: 3.6,
+      alt: 2.6,
+      nmod: 1,
+      tipoestrutura: 'Fixo',
+      planpin: 'WAU-ELETRO-08',
+      tipomaq: 'Wall Mounted',
+      qtdmaq: 2,
+      complexidade: 'Médio',
+      incendio: 'Com instalações',
+      seguranca: 'CFTV + Controle Acesso',
+      nrcolunas: 20,
+      chapaRemovivel: 'Sim',
+      peDireito: 'Sim',
+      testesw: 'Não',
+      white_martins: 'Não',
+      trafo_oleo: 'Não',
+      casa_maquinas: 'Não',
+      acess_escada_weg: 'Sim',
+      acess_escada_esp: 'Não',
+      acess_porao: 'Não',
+      acess_pilotis: 'Não',
+      acess_dutos: 'Sim',
+      acess_fundo_falso: 'Não',
+      acess_dutos_bww: 'Não',
+      acess_calhas: 'Sim',
+      acess_dutos_gases: 'Não'
+    };
+
+    // Atualiza campos de entrada
+    if ($('comp')) $('comp').value = '10';
+    if ($('larg')) $('larg').value = '3,6';
+    if ($('alt')) $('alt').value = '2,6';
+    if ($('qtdmaq')) $('qtdmaq').value = '2';
+    if ($('nrcolunas')) $('nrcolunas').value = '20';
+
+    // Atualiza selects customizados
+    setSelectValue('tipoestrutura', 'Fixo');
+    setSelectValue('nrmodulos', '1');
+    setSelectValue('planpin', 'WAU-ELETRO-08');
+    setSelectValue('tipomaq', 'Wall Mounted');
+    setSelectValue('complexidade', 'Médio');
+    setSelectValue('incendio', 'Com instalações');
+    setSelectValue('seguranca', 'CFTV + Controle Acesso');
+
+    // Atualiza checkboxes
+    if ($('chapaRemovivel')) $('chapaRemovivel').checked = true;
+    if ($('peDireito')) $('peDireito').checked = true;
+    if ($('testesw')) $('testesw').checked = false;
+    if ($('whiteMartins')) $('whiteMartins').checked = false;
+    if ($('trafoOleo')) $('trafoOleo').checked = false;
+
+    // Atualiza inputs específicos da tabela de módulos (Módulo 1)
+    if (moduleInputs && moduleInputs[0]) {
+      var comp1 = moduleInputs[0].querySelector('.mod-comp');
+      var larg1 = moduleInputs[0].querySelector('.mod-larg');
+      if (comp1) comp1.value = '10';
+      if (larg1) larg1.value = '3,6';
     }
-
-    if (!ctx) {
-      ctx = {
-        comp: 12, larg: 2.4, alt: 2.6, nmod: 2,
-        tipoestrutura: 'Modular', planpin: 'WAU-ELETRO-08',
-        tipomaq: 'Split', qtdmaq: 2, complexidade: 'Médio',
-        incendio: 'Com combate', seguranca: 'CFTV + Controle Acesso', nrcolunas: 10,
-        chapaRemovivel: 'Sim', peDireito: 'Não', testesw: 'Não',
-        white_martins: 'Não', trafo_oleo: 'Não', casa_maquinas: 'Sim',
-        acess_escada_weg: 'Sim', acess_escada_esp: 'Não', acess_porao: 'Não',
-        acess_pilotis: 'Não', acess_dutos: 'Sim', acess_fundo_falso: 'Não',
-        acess_dutos_bww: 'Não', acess_calhas: 'Sim', acess_dutos_gases: 'Não'
-      };
-    }
-
-    if ($('comp')) $('comp').value = ctx.comp || 12;
-    if ($('larg')) $('larg').value = ctx.larg || 2.4;
-    if ($('alt')) $('alt').value = ctx.alt || 2.6;
-    if ($('qtdmaq')) $('qtdmaq').value = ctx.qtdmaq || 0;
-    if ($('nrcolunas')) $('nrcolunas').value = ctx.nrcolunas || 0;
-
-    setSelectValue('tipoestrutura', ctx.tipoestrutura || 'Modular');
-    setSelectValue('nrmodulos', String(ctx.nmod || 2));
-    setSelectValue('planpin', ctx.planpin || 'WAU-ELETRO-08');
-    setSelectValue('tipomaq', ctx.tipomaq || 'Split');
-    setSelectValue('complexidade', ctx.complexidade || 'Médio');
-    setSelectValue('incendio', ctx.incendio || 'Com combate');
-    setSelectValue('seguranca', ctx.seguranca || 'CFTV + Controle Acesso');
-
-    if ($('chapaRemovivel')) $('chapaRemovivel').checked = (ctx.chapaRemovivel === 'Sim');
-    if ($('peDireito')) $('peDireito').checked = (ctx.peDireito === 'Sim');
-    if ($('testesw')) $('testesw').checked = (ctx.testesw === 'Sim');
-    if ($('whiteMartins')) $('whiteMartins').checked = (ctx.white_martins === 'Sim');
-    if ($('trafoOleo')) $('trafoOleo').checked = (ctx.trafo_oleo === 'Sim');
 
     document.querySelectorAll('.acessorio').forEach(function (el) {
       var flag = el.dataset.flag;
@@ -1259,8 +2160,9 @@
       if (flag === 'duto_de_gases') el.checked = (ctx.acess_dutos_gases === 'Sim');
     });
 
+    salvarUltimaExecucao(ctx);
     recomputeForm();
-    showToast('Última execução carregada com sucesso no formulário!');
+    showToast('Última sessão carregada com sucesso (Fixo, 1 Mód. 10×3,6m, Wall Mounted, 20 colunas)!');
   }
 
   if ($('btnCarregar')) {
@@ -1343,7 +2245,7 @@
 
     state.regrasData.forEach(function (areaObj, idx) {
       var btn = document.createElement('button');
-      btn.className = 'snav-btn snav-btn-area' + (!state.isSeletorActive && idx === state.selectedAreaIdx ? ' active' : '');
+      btn.className = 'snav-btn snav-btn-area' + (!state.isSeletorActive && !state.isTemplatesActive && idx === state.selectedAreaIdx ? ' active' : '');
       var countCampos = Object.keys(areaObj.campos || {}).length;
       btn.innerHTML = areaObj.area + ' <span class="n">' + countCampos + '</span>';
       btn.addEventListener('click', function () {
@@ -1362,7 +2264,19 @@
     });
     nav.appendChild(btnSeletor);
 
-    if (state.isSeletorActive) {
+    // Botão dedicado aos Templates de Operações (template_blocks.json)
+    var btnTemplates = document.createElement('button');
+    btnTemplates.className = 'snav-btn snav-btn-templates' + (state.isTemplatesActive ? ' active' : '');
+    btnTemplates.style.borderColor = 'rgba(240,169,62,0.4)';
+    btnTemplates.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px; vertical-align:middle; color:var(--amber);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Templates de Operações <span class="n" style="background:var(--amber); color:#000; font-weight:700;">8</span>';
+    btnTemplates.addEventListener('click', function () {
+      abrirAbaTemplates();
+    });
+    nav.appendChild(btnTemplates);
+
+    if (state.isTemplatesActive) {
+      abrirAbaTemplates();
+    } else if (state.isSeletorActive) {
       abrirAbaSeletor();
     } else if (state.regrasData.length) {
       selecionarArea(state.selectedAreaIdx || 0);
@@ -1371,6 +2285,7 @@
 
   function selecionarArea(areaIdx) {
     state.isSeletorActive = false;
+    state.isTemplatesActive = false;
     state.selectedAreaIdx = areaIdx;
 
     document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b, i) {
@@ -1378,17 +2293,12 @@
       else b.classList.remove('active');
     });
 
-    if ($('maintContentRegras')) {
-      $('maintContentRegras').classList.remove('hidden');
-    }
-    if ($('maintContentSeletor')) {
-      $('maintContentSeletor').classList.add('hidden');
-    }
+    if ($('maintContentRegras')) $('maintContentRegras').classList.remove('hidden');
+    if ($('maintContentSeletor')) $('maintContentSeletor').classList.add('hidden');
+    if ($('maintContentTemplates')) $('maintContentTemplates').classList.add('hidden');
     if ($('legendWrapper')) $('legendWrapper').style.display = '';
 
-    if ($('btnAdicionarLinhaSeletor')) {
-      $('btnAdicionarLinhaSeletor').style.display = 'none';
-    }
+    if ($('btnAdicionarLinhaSeletor')) $('btnAdicionarLinhaSeletor').style.display = 'none';
 
     var areaObj = state.regrasData[areaIdx];
     var camposKeys = Object.keys(areaObj ? areaObj.campos || {} : {});
@@ -1401,6 +2311,7 @@
 
   function abrirAbaSeletor() {
     state.isSeletorActive = true;
+    state.isTemplatesActive = false;
 
     document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) {
       b.classList.remove('active');
@@ -1408,17 +2319,12 @@
     var btnSel = document.querySelector('#sectionNavManutencao .snav-btn-seletor');
     if (btnSel) btnSel.classList.add('active');
 
-    if ($('maintContentRegras')) {
-      $('maintContentRegras').classList.add('hidden');
-    }
-    if ($('maintContentSeletor')) {
-      $('maintContentSeletor').classList.remove('hidden');
-    }
+    if ($('maintContentRegras')) $('maintContentRegras').classList.add('hidden');
+    if ($('maintContentSeletor')) $('maintContentSeletor').classList.remove('hidden');
+    if ($('maintContentTemplates')) $('maintContentTemplates').classList.add('hidden');
     if ($('legendWrapper')) $('legendWrapper').style.display = 'none';
 
-    if ($('btnAdicionarLinhaSeletor')) {
-      $('btnAdicionarLinhaSeletor').style.display = 'inline-flex';
-    }
+    if ($('btnAdicionarLinhaSeletor')) $('btnAdicionarLinhaSeletor').style.display = 'inline-flex';
 
     if ($('maintFooterMeta')) {
       $('maintFooterMeta').textContent = 'Seletor de PEP & Centros de Trabalho (' + (state.seletorData ? state.seletorData.length : 0) + ' combinações)';
@@ -1428,6 +2334,119 @@
       $('btnSaveFooter').disabled = !state.seletorDirty;
     }
     renderSeletorTable();
+  }
+
+  function abrirAbaTemplates() {
+    state.isTemplatesActive = true;
+    state.isSeletorActive = false;
+
+    document.querySelectorAll('#sectionNavManutencao .snav-btn').forEach(function (b) {
+      b.classList.remove('active');
+    });
+    var btnTpl = document.querySelector('#sectionNavManutencao .snav-btn-templates');
+    if (btnTpl) btnTpl.classList.add('active');
+
+    if ($('maintContentRegras')) $('maintContentRegras').classList.add('hidden');
+    if ($('maintContentSeletor')) $('maintContentSeletor').classList.add('hidden');
+    if ($('maintContentTemplates')) $('maintContentTemplates').classList.remove('hidden');
+    if ($('legendWrapper')) $('legendWrapper').style.display = 'none';
+
+    if ($('btnAdicionarLinhaSeletor')) $('btnAdicionarLinhaSeletor').style.display = 'none';
+
+    if ($('maintFooterMeta')) {
+      $('maintFooterMeta').textContent = 'Templates Base de Operações (8 cenários cadastrados)';
+    }
+    if ($('btnSaveFooter')) {
+      $('btnSaveFooter').textContent = 'Salvar Alterações';
+      $('btnSaveFooter').disabled = true;
+    }
+
+    initTemplateScenarioSelect();
+    renderTemplatesTable();
+  }
+
+  function initTemplateScenarioSelect() {
+    var sel = $('templateScenarioSelect');
+    if (!sel || !state.templateBlocksData || !state.templateBlocksData.cenarios) return;
+    if (sel.options.length > 0) return;
+
+    var cenarios = state.templateBlocksData.cenarios;
+    Object.keys(cenarios).forEach(function (cKey) {
+      var opt = document.createElement('option');
+      opt.value = cKey;
+      opt.textContent = cenarios[cKey].descricao || cKey;
+      sel.appendChild(opt);
+    });
+
+    if (state.selectedTemplateScenario) {
+      sel.value = state.selectedTemplateScenario;
+    }
+
+    sel.addEventListener('change', function () {
+      state.selectedTemplateScenario = sel.value;
+      renderTemplatesTable();
+    });
+  }
+
+  function renderTemplatesTable() {
+    var tbody = $('templateTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!state.templateBlocksData || !state.templateBlocksData.cenarios) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-dim);">Carregando blocos de templates…</td></tr>';
+      return;
+    }
+
+    var selKey = state.selectedTemplateScenario || 'container_solar_essw_mecanica';
+    var cenario = state.templateBlocksData.cenarios[selKey];
+    if (!cenario || !cenario.tarefas) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-dim);">Nenhuma tarefa cadastrada neste cenário.</td></tr>';
+      return;
+    }
+
+    var term = ($('templateSearch') ? $('templateSearch').value.trim().toLowerCase() : '');
+    var filtered = cenario.tarefas.filter(function (t) {
+      if (!term) return true;
+      var matchT = String(t.tarefa || '').toLowerCase().indexOf(term) !== -1;
+      var matchD = String(t.descricao_tarefa || '').toLowerCase().indexOf(term) !== -1;
+      return matchT || matchD;
+    });
+
+    if ($('templateCountBadge')) {
+      $('templateCountBadge').textContent = filtered.length + ' de ' + cenario.tarefas.length + ' tarefas';
+    }
+
+    filtered.forEach(function (t) {
+      var tr = document.createElement('tr');
+      var tCode = String(t.tarefa || '');
+      if (/^\d+$/.test(tCode)) tCode = ('0000' + tCode).slice(-4);
+
+      tr.innerHTML =
+        '<td style="text-align:center; color:var(--text-faint); font-family:\'IBM Plex Mono\';">' + t.linha_template + '</td>' +
+        '<td style="text-align:center;"><span class="cronograma-task-badge">' + escapeHtml(tCode) + '</span></td>' +
+        '<td style="font-weight:500; color:var(--text);">' + escapeHtml(t.descricao_tarefa) + '</td>' +
+        '<td style="text-align:center; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + t.duracao + '</td>' +
+        '<td style="text-align:center; font-size:10.5px; color:var(--text-dim);">' + escapeHtml(t.unidade || 'DIA') + '</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--accent);">' + t.trabalho + ' h</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  if ($('templateSearch')) {
+    $('templateSearch').addEventListener('input', function () {
+      renderTemplatesTable();
+    });
+  }
+
+  if ($('btnRestaurarTemplates')) {
+    $('btnRestaurarTemplates').addEventListener('click', function () {
+      if (state.templateBlocksOriginal) {
+        state.templateBlocksData = JSON.parse(JSON.stringify(state.templateBlocksOriginal));
+        renderTemplatesTable();
+        showToast('Templates restaurados com sucesso.');
+      }
+    });
   }
 
   function marcarSeletorDirty() {
@@ -1719,6 +2738,59 @@
     });
   }
 
+  function carregarTemplateBlocks() {
+    if (isPyWebviewAvailable() && window.pywebview.api.get_template_blocks) {
+      window.pywebview.api.get_template_blocks().then(function (data) {
+        if (data && data.cenarios && Object.keys(data.cenarios).length) {
+          state.templateBlocksData = data;
+          state.templateBlocksOriginal = JSON.parse(JSON.stringify(data));
+          console.log('[TemplateBlocks] Carregado via pywebview (' + Object.keys(data.cenarios).length + ' cenários)');
+          if (state.isTemplatesActive) {
+            initTemplateScenarioSelect();
+            renderTemplatesTable();
+          }
+        } else {
+          fetchTemplateBlocksFallback();
+        }
+      }).catch(function (err) {
+        console.warn('[TemplateBlocks] Erro pywebview:', err);
+        fetchTemplateBlocksFallback();
+      });
+    } else {
+      fetchTemplateBlocksFallback();
+    }
+  }
+
+  function fetchTemplateBlocksFallback() {
+    fetch('template_blocks.json').then(function (resp) {
+      if (resp.ok) return resp.json();
+      throw new Error('Status ' + resp.status);
+    }).then(function (data) {
+      if (data && data.cenarios) {
+        state.templateBlocksData = data;
+        state.templateBlocksOriginal = JSON.parse(JSON.stringify(data));
+        console.log('[TemplateBlocks] Carregado via fetch (' + Object.keys(data.cenarios).length + ' cenários)');
+        if (state.isTemplatesActive) {
+          initTemplateScenarioSelect();
+          renderTemplatesTable();
+        }
+      }
+    }).catch(function (err) {
+      console.warn('[TemplateBlocks] Erro ao carregar template_blocks.json via fetch:', err);
+      apiCall('/get_template_blocks').then(function (data) {
+        if (data && data.cenarios) {
+          state.templateBlocksData = data;
+          state.templateBlocksOriginal = JSON.parse(JSON.stringify(data));
+          console.log('[TemplateBlocks] Carregado via /api/get_template_blocks');
+          if (state.isTemplatesActive) {
+            initTemplateScenarioSelect();
+            renderTemplatesTable();
+          }
+        }
+      }).catch(function () {});
+    });
+  }
+
   function consultarSeletor(ctx) {
     if (!state.seletorData || !state.seletorData.length || !ctx) return null;
 
@@ -1767,11 +2839,11 @@
 
     for (var i = 0; i < state.seletorData.length; i++) {
       var row = state.seletorData[i];
-      var rowTipo = cleanStr(row['Tipo Estrutura']);
-      var rowMod = String(row['Nº Módulos?'] || '1').trim();
-      var rowCasaMaq = (row['Casa Máq.?'] || '').trim();
-      var rowSistSeg = row['Sist. Seg.?'] ? row['Sist. Seg.?'].trim() : null;
-      var rowTesteSW = (row['Teste SW?'] || '').trim();
+      var rowTipo = cleanStr(row['Tipo_Estrutura'] || row['Tipo Estrutura']);
+      var rowMod = String(row['N_Modulos'] || row['Nº Módulos?'] || row['N Mdulos?'] || '1').trim();
+      var rowCasaMaq = String(row['Casa_Maq'] || row['Casa Máq.?'] || row['Casa Mq.?'] || '').trim();
+      var rowSistSeg = String(row['Sist_Seg'] || row['Sist. Seg.?'] || '').trim();
+      var rowTesteSW = String(row['Teste_SW'] || row['Teste SW?'] || '').trim();
 
       var score = 0;
 
@@ -1789,7 +2861,7 @@
 
       if (rowMod === nmod) score += 30;
       if (rowCasaMaq === casaMaq) score += 20;
-      if (rowSistSeg === null || rowSistSeg === temSeg) score += 15;
+      if (rowSistSeg === temSeg) score += 15;
       if (rowTesteSW === testeSW) score += 10;
 
       if (score > bestScore) {
@@ -5558,5 +6630,6 @@
   loadExternalConfig();
   carregarDisciplinas();
   carregarSeletor();
+  carregarTemplateBlocks();
 
 })();

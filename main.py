@@ -27,8 +27,12 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 CONFIG_FILE = FRONTEND_DIR / "config.json"
 REGRAS_FILE = FRONTEND_DIR / "regras.json"
 SELETOR_FILE = FRONTEND_DIR / "seletor.json"
+TEMPLATE_BLOCKS_FILE = FRONTEND_DIR / "template_blocks.json"
 ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
+
+from backend.schedule_generator import run_schedule_engine
+
 
 # Diretório de rede para armazenamento de anexos do histórico
 ATTACHMENTS_NETWORK_DIR = Path(
@@ -318,8 +322,84 @@ class AppAPI:
             print(f"[Backend Python] Erro ao salvar seletor.json: {e}")
             return {"status": "error", "message": str(e)}
 
+    def get_template_blocks(self) -> dict:
+        """Lê e retorna a base de templates de operações cadastrada em template_blocks.json."""
+        try:
+            if TEMPLATE_BLOCKS_FILE.exists():
+                with open(TEMPLATE_BLOCKS_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            return {}
+        except Exception as e:
+            print(f"[Backend Python] Erro ao ler template_blocks.json: {e}")
+            return {}
+
+    def save_template_blocks(self, payload: dict) -> dict:
+        """Salva as alterações na base de template_blocks.json e registra histórico no banco MySQL."""
+        try:
+            tb_data = payload.get("template_blocks", payload) if isinstance(payload, dict) and "template_blocks" in payload else payload
+            motivo = payload.get("motivo", "") if isinstance(payload, dict) else ""
+
+            # Trata anexo se houver
+            anexo_nome_db = None
+            anexo_caminho_db = None
+            if isinstance(payload, dict) and payload.get("anexo_base64") and payload.get("anexo_nome"):
+                try:
+                    anexo_bytes = base64.b64decode(payload["anexo_base64"])
+                    nome_limpo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{payload['anexo_nome']}"
+                    caminho_salvo = ANEXOS_DIR / nome_limpo
+                    with open(caminho_salvo, "wb") as af:
+                        af.write(anexo_bytes)
+                    anexo_nome_db = payload["anexo_nome"]
+                    anexo_caminho_db = str(caminho_salvo)
+                except Exception as ex_anexo:
+                    print(f"[Backend Python] Erro ao salvar anexo do template: {ex_anexo}")
+
+            # Registra no MySQL
+            total_logs = 0
+            if DB_AVAILABLE:
+                usuario = os.getenv("USERNAME", "Sistema")
+                cenarios_count = len(tb_data.get("cenarios", {})) if isinstance(tb_data, dict) else 0
+                registrar_log(
+                    disciplina="Templates de Operações",
+                    campo="Blocos de Operações",
+                    tipo_alteracao="UPDATE",
+                    detalhes=f"Atualização da base de templates de blocos de operações ({cenarios_count} cenários cadastrados).",
+                    motivo=motivo or "Atualização da base de templates de operações",
+                    usuario=usuario,
+                    anexo_nome=anexo_nome_db,
+                    anexo_caminho=anexo_caminho_db
+                )
+                total_logs = 1
+
+            with open(TEMPLATE_BLOCKS_FILE, "w", encoding="utf-8") as f:
+                json.dump(tb_data, f, ensure_ascii=False, indent=2)
+
+            resumo_git = "Atualização da base de templates de blocos de operações (template_blocks.json)"
+            if motivo:
+                resumo_git += f" - Motivo: {motivo}"
+            sync_github_async(resumo=resumo_git)
+
+            print("[Backend Python] Templates salvos em template_blocks.json com sucesso!")
+            return {"status": "success", "logs_registrados": total_logs}
+        except Exception as e:
+            print(f"[Backend Python] Erro ao salvar template_blocks.json: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def generate_schedule(self, payload: dict) -> dict:
+        """Gera o cronograma de operações com base nos parâmetros e tempos calculados."""
+        try:
+            form_data = payload.get("ctx", {})
+            calc_times = payload.get("calc_times", {})
+            template_blocks = self.get_template_blocks()
+            seletor_rows = self.get_seletor()
+            result = run_schedule_engine(form_data, calc_times, template_blocks, seletor_rows)
+            return {"status": "success", "data": result}
+        except Exception as e:
+            print(f"[Backend Python] Erro ao gerar cronograma: {e}")
+            return {"status": "error", "message": str(e)}
+
     def export_excel(self, data: dict) -> dict:
-        """Gera e retorna a planilha Excel (.xlsx) com o resultado detalhado dos tempos."""
+        """Gera e retorna a planilha Excel (.xlsx) com o resultado detalhado dos tempos e aba Resultado."""
         try:
             import io
             import base64
@@ -328,24 +408,17 @@ class AppAPI:
             from openpyxl.utils import get_column_letter
 
             wb = openpyxl.Workbook()
-            ws = wb.active
-            ws.title = "Resumo de Tempos"
-            ws.views.sheetView[0].showGridLines = True
-
-            # Cores e Estilos
-            title_font = Font(name="Segoe UI", size=14, bold=True, color="FFFFFF")
+            
+            # Cores e Estilos Padrão
+            title_font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
             title_fill = PatternFill("solid", fgColor="0F2C59")
-
             section_font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
             label_font = Font(name="Segoe UI", size=10, bold=True, color="4A5568")
             val_font = Font(name="Segoe UI", size=10, color="1A202C")
-
             hdr_font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
             hdr_fill = PatternFill("solid", fgColor="1E3E62")
-
             subtotal_font = Font(name="Segoe UI", size=10, bold=True, color="1A202C")
             subtotal_fill = PatternFill("solid", fgColor="F0F4F8")
-
             total_font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
             total_fill = PatternFill("solid", fgColor="D0E8FF")
 
@@ -362,15 +435,248 @@ class AppAPI:
                 bottom=Side(style="double", color="0F2C59")
             )
 
-            # 1. Título
+            # Obter ou gerar tarefas do cronograma
+            cronograma = data.get("cronograma")
+            if not cronograma and "ctx" in data:
+                try:
+                    tb = self.get_template_blocks()
+                    cronograma = run_schedule_engine(data.get("ctx", {}), data.get("calc_times", {}), tb)
+                except Exception as ex_gen:
+                    print(f"[Backend Python] Aviso ao gerar cronograma para exportação: {ex_gen}")
+
+            tarefas_list = cronograma.get("tarefas", []) if cronograma else []
+
+            # =========================================================================
+            # CÁLCULO DAS HORAS TOTAIS POR DISCIPLINA (EXCEL ORIGINAL)
+            # =========================================================================
+            eng_h = sum(float(t.get("trabalho", 0)) for t in tarefas_list 
+                        if int(str(t.get("tarefa", 0)).strip() or 0) < 703 
+                        and abs(float(t.get("trabalho", 0)) - 0.1) > 0.001 
+                        and "ROM" not in str(t.get("descricao_tarefa", "")).upper())
+            
+            mec_h = sum(float(t.get("trabalho", 0)) for t in tarefas_list 
+                        if ((705 <= int(str(t.get("tarefa", 0)).strip() or 0) <= 798) or int(str(t.get("tarefa", 0)).strip() or 0) == 894) 
+                        and abs(float(t.get("trabalho", 0)) - 0.1) > 0.001 
+                        and int(str(t.get("tarefa", 0)).strip() or 0) not in [754, 755, 765, 793, 794])
+            
+            ele_h = sum(float(t.get("trabalho", 0)) for t in tarefas_list 
+                        if ((799 <= int(str(t.get("tarefa", 0)).strip() or 0) <= 893) or int(str(t.get("tarefa", 0)).strip() or 0) == 895) 
+                        and abs(float(t.get("trabalho", 0)) - 0.1) > 0.001 
+                        and int(str(t.get("tarefa", 0)).strip() or 0) not in [810, 828, 838, 858, 868])
+            
+            tot_h = round(eng_h + mec_h + ele_h, 1)
+            eng_h = round(eng_h, 1)
+            mec_h = round(mec_h, 1)
+            ele_h = round(ele_h, 1)
+
+            # =========================================================================
+            # ABA 1: TOTAIS DO PROJETO (Resumo Consolidado das 3 Disciplinas)
+            # =========================================================================
+            ws_tot = wb.active
+            ws_tot.title = "Totais do Projeto"
+            ws_tot.views.sheetView[0].showGridLines = True
+
+            ws_tot.merge_cells("A1:D1")
+            ws_tot["A1"] = "ELETROCENTROS APP — HORAS TOTAIS DO PROJETO (PADRÃO EXCEL)"
+            ws_tot["A1"].font = title_font
+            ws_tot["A1"].fill = title_fill
+            ws_tot["A1"].alignment = Alignment(horizontal="center", vertical="center")
+            ws_tot.row_dimensions[1].height = 36
+
+            ctx = data.get("ctx", {})
+            pep = data.get("pep", "") or ctx.get("pep", "") or "Não informado"
+            data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            usuario = os.getenv("USERNAME", "Usuário")
+
+            ws_tot["A3"] = "INFORMAÇÕES GERAIS DO PROJETO"
+            ws_tot["A3"].font = section_font
+
+            meta_rows = [
+                ("Código PEP / Ordem:", pep, "Data / Hora de Cálculo:", data_hora),
+                ("Tipo de Estrutura:", str(ctx.get("tipoestrutura", "-")), "Quantidade de Módulos:", f"{ctx.get('nmod', 1)} Módulo(s)"),
+                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L) x {ctx.get('alt', 0)}m (A)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
+                ("Ar Condicionado:", f"{ctx.get('tipomaq', '-')} ({ctx.get('qtdmaq', 0)}x)", "Complexidade Elétrica:", str(ctx.get("complexidade", "-"))),
+                ("Sist. Incêndio:", str(ctx.get("incendio", "-")), "Sist. Segurança:", str(ctx.get("seguranca", "-"))),
+                ("Usuário Responsável:", usuario, "Nº Colunas Total:", str(ctx.get("nrcolunas", 0)))
+            ]
+
+            curr_r = 4
+            for label1, val1, label2, val2 in meta_rows:
+                ws_tot[f"A{curr_r}"] = label1
+                ws_tot[f"A{curr_r}"].font = label_font
+                ws_tot[f"B{curr_r}"] = val1
+                ws_tot[f"B{curr_r}"].font = val_font
+
+                ws_tot[f"C{curr_r}"] = label2
+                ws_tot[f"C{curr_r}"].font = label_font
+                ws_tot[f"D{curr_r}"] = val2
+                ws_tot[f"D{curr_r}"].font = val_font
+                curr_r += 1
+
+            curr_r += 1
+            ws_tot[f"A{curr_r}"] = "HORAS TOTAIS POR DISCIPLINA (GABARITO CONSOLIDADO)"
+            ws_tot[f"A{curr_r}"].font = section_font
+            curr_r += 1
+
+            ws_tot[f"A{curr_r}"] = "Disciplina"
+            ws_tot[f"B{curr_r}"] = "Regra de Filtro das Operações"
+            ws_tot[f"C{curr_r}"] = "Horas Totais (H)"
+            ws_tot[f"D{curr_r}"] = "Participação (%)"
+            for col_letter in ["A", "B", "C", "D"]:
+                ws_tot[f"{col_letter}{curr_r}"].font = hdr_font
+                ws_tot[f"{col_letter}{curr_r}"].fill = hdr_fill
+                ws_tot[f"{col_letter}{curr_r}"].alignment = Alignment(horizontal="center" if col_letter in ["C", "D"] else "left", vertical="center")
+            ws_tot.row_dimensions[curr_r].height = 24
+            curr_r += 1
+
+            disc_rows = [
+                ("Engenharia (ENG)", "Tarefas < 0703 (sem tempo 0,1 e sem ROM)", eng_h, round(eng_h / tot_h * 100, 1) if tot_h > 0 else 0),
+                ("Mecânica (MEC)", "Tarefas 0705 a 0798 + 0894 (sem 0,1 e sem 754, 755, 765, 793, 794)", mec_h, round(mec_h / tot_h * 100, 1) if tot_h > 0 else 0),
+                ("Elétrica (ELE)", "Tarefas 0799 a 0893 + 0895 (sem 0,1 e sem 810, 828, 838, 858, 868)", ele_h, round(ele_h / tot_h * 100, 1) if tot_h > 0 else 0),
+            ]
+
+            for d_name, d_rule, d_h, d_pct in disc_rows:
+                ws_tot[f"A{curr_r}"] = d_name
+                ws_tot[f"A{curr_r}"].font = label_font
+                ws_tot[f"A{curr_r}"].border = thin_border
+
+                ws_tot[f"B{curr_r}"] = d_rule
+                ws_tot[f"B{curr_r}"].font = val_font
+                ws_tot[f"B{curr_r}"].border = thin_border
+
+                ws_tot[f"C{curr_r}"] = d_h
+                ws_tot[f"C{curr_r}"].font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
+                ws_tot[f"C{curr_r}"].number_format = "#,##0.0 \"h\""
+                ws_tot[f"C{curr_r}"].alignment = Alignment(horizontal="right")
+                ws_tot[f"C{curr_r}"].border = thin_border
+
+                ws_tot[f"D{curr_r}"] = f"{d_pct}%"
+                ws_tot[f"D{curr_r}"].font = val_font
+                ws_tot[f"D{curr_r}"].alignment = Alignment(horizontal="center")
+                ws_tot[f"D{curr_r}"].border = thin_border
+                curr_r += 1
+
+            # Total Geral Linha
+            ws_tot[f"A{curr_r}"] = "TOTAL GERAL DO PROJETO"
+            ws_tot[f"B{curr_r}"] = "Soma consolidada (Engenharia + Mecânica + Elétrica)"
+            ws_tot[f"C{curr_r}"] = tot_h
+            ws_tot[f"C{curr_r}"].number_format = "#,##0.0 \"h\""
+            ws_tot[f"C{curr_r}"].alignment = Alignment(horizontal="right")
+            ws_tot[f"D{curr_r}"] = "100.0%"
+            ws_tot[f"D{curr_r}"].alignment = Alignment(horizontal="center")
+
+            for col_letter in ["A", "B", "C", "D"]:
+                c = ws_tot[f"{col_letter}{curr_r}"]
+                c.font = total_font
+                c.fill = total_fill
+                c.border = double_bottom
+            ws_tot.row_dimensions[curr_r].height = 24
+
+            for col in ws_tot.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    val_str = str(cell.value or "")
+                    if cell.row == 1: continue
+                    if len(val_str) > max_len: max_len = len(val_str)
+                ws_tot.column_dimensions[col_letter].width = max(max_len + 4, 16)
+
+            # =========================================================================
+            # ABA 2: RESULTADO (Cronograma Completo de Operações — Padrão VBA)
+            # =========================================================================
+            ws_res = wb.create_sheet(title="Resultado - Cronograma")
+            ws_res.views.sheetView[0].showGridLines = True
+
+            # Cabeçalho da Aba Resultado (Linha 3 no padrão original)
+            ws_res["A3"] = "Tarefa"
+            ws_res["B3"] = "Descrição da Tarefa"
+            ws_res["C3"] = "Duração"
+            ws_res["D3"] = "Unidade"
+            ws_res["E3"] = "Trabalho"
+            ws_res["F3"] = "Disciplina / Fase"
+
+            for col_idx, col_letter in enumerate(["A", "B", "C", "D", "E", "F"]):
+                cell = ws_res[f"{col_letter}3"]
+                cell.font = hdr_font
+                cell.fill = hdr_fill
+                cell.alignment = Alignment(horizontal="center" if col_idx in [0, 2, 3] else ("right" if col_idx == 4 else "left"), vertical="center")
+            ws_res.row_dimensions[3].height = 24
+
+            r_idx = 4
+            for t in tarefas_list:
+                t_code = str(t.get("tarefa_formatada") or t.get("tarefa", "")).strip()
+                t_desc = str(t.get("descricao_tarefa", "")).strip()
+                dur_val = float(t.get("duracao", 0))
+                unid_val = str(t.get("unidade", "DIA")).strip()
+                trab_val = float(t.get("trabalho", 0))
+                disc_val = str(t.get("disciplina", "Geral")).strip()
+
+                ws_res[f"A{r_idx}"] = t_code
+                ws_res[f"A{r_idx}"].alignment = Alignment(horizontal="center", vertical="center")
+                ws_res[f"A{r_idx}"].number_format = "@"
+
+                ws_res[f"B{r_idx}"] = t_desc
+                ws_res[f"B{r_idx}"].alignment = Alignment(horizontal="left", vertical="center")
+
+                ws_res[f"C{r_idx}"] = dur_val
+                ws_res[f"C{r_idx}"].alignment = Alignment(horizontal="center", vertical="center")
+                ws_res[f"C{r_idx}"].number_format = "0.0"
+
+                ws_res[f"D{r_idx}"] = unid_val
+                ws_res[f"D{r_idx}"].alignment = Alignment(horizontal="center", vertical="center")
+
+                ws_res[f"E{r_idx}"] = trab_val
+                ws_res[f"E{r_idx}"].alignment = Alignment(horizontal="right", vertical="center")
+                ws_res[f"E{r_idx}"].number_format = "0.0"
+
+                ws_res[f"F{r_idx}"] = disc_val
+                ws_res[f"F{r_idx}"].alignment = Alignment(horizontal="left", vertical="center")
+
+                for col_letter in ["A", "B", "C", "D", "E", "F"]:
+                    ws_res[f"{col_letter}{r_idx}"].border = thin_border
+                    ws_res[f"{col_letter}{r_idx}"].font = val_font
+                r_idx += 1
+
+            # Totalizador do Cronograma
+            if tarefas_list:
+                ws_res[f"A{r_idx}"] = "TOTAL"
+                ws_res[f"B{r_idx}"] = f"Total de {len(tarefas_list)} tarefas geradas"
+                ws_res[f"C{r_idx}"] = float(cronograma.get("total_dias", 0))
+                ws_res[f"C{r_idx}"].number_format = "0.0"
+                ws_res[f"D{r_idx}"] = "DIAS"
+                ws_res[f"E{r_idx}"] = float(cronograma.get("total_horas", 0))
+                ws_res[f"E{r_idx}"].number_format = "0.00"
+                ws_res[f"F{r_idx}"] = cronograma.get("cenario_descricao", "")
+
+                for col_letter in ["A", "B", "C", "D", "E", "F"]:
+                    c = ws_res[f"{col_letter}{r_idx}"]
+                    c.font = total_font
+                    c.fill = total_fill
+                    c.border = double_bottom
+                ws_res.row_dimensions[r_idx].height = 24
+
+            for col in ws_res.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    val_str = str(cell.value or "")
+                    if cell.row < 3: continue
+                    if len(val_str) > max_len: max_len = len(val_str)
+                ws_res.column_dimensions[col_letter].width = max(max_len + 4, 14)
+
+            # =========================================================================
+            # ABA 3: RESUMO DE REGRAS & PROCESSOS (Disciplinas, Processos e Parâmetros)
+            # =========================================================================
+            ws = wb.create_sheet(title="Regras & Processos")
+            ws.views.sheetView[0].showGridLines = True
+
             ws.merge_cells("A1:D1")
-            ws["A1"] = "ELETROCENTROS APP — RESULTADO DO CÁLCULO DE TEMPOS"
+            ws["A1"] = "ELETROCENTROS APP — RESUMO POR REGRAS & PROCESSOS"
             ws["A1"].font = title_font
             ws["A1"].fill = title_fill
             ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
             ws.row_dimensions[1].height = 36
 
-            # 2. Informações Gerais do Projeto
             ctx = data.get("ctx", {})
             pep = data.get("pep", "") or ctx.get("pep", "") or "Não informado"
             data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -401,7 +707,6 @@ class AppAPI:
                 ws[f"D{curr_row}"].font = val_font
                 curr_row += 1
 
-            # 3. KPIs de Resumo
             curr_row += 1
             ws[f"A{curr_row}"] = "RESUMO GERAL CONSOLIDADO"
             ws[f"A{curr_row}"].font = section_font
@@ -420,7 +725,6 @@ class AppAPI:
             ws[f"D{curr_row}"].number_format = "#,##0.0 \"dias\""
             curr_row += 2
 
-            # 4. Tabela de Detalhamento por Área / Processo
             ws[f"A{curr_row}"] = "Área / Disciplina"
             ws[f"B{curr_row}"] = "Processo / Campo"
             ws[f"C{curr_row}"] = "Horas Orçadas (H)"
@@ -453,7 +757,6 @@ class AppAPI:
                         ws[f"{col_letter}{curr_row}"].font = val_font
                     curr_row += 1
 
-                # Subtotal da Área
                 ws[f"A{curr_row}"] = f"Subtotal — {nome_area}"
                 ws[f"B{curr_row}"] = f"({len(campos)} processos)"
 
@@ -472,7 +775,6 @@ class AppAPI:
                     c.border = thin_border
                 curr_row += 1
 
-            # Total Geral
             ws[f"A{curr_row}"] = "TOTAL GERAL CONSOLIDADO"
             ws[f"B{curr_row}"] = "Todos os processos"
 
@@ -491,46 +793,6 @@ class AppAPI:
                 c.border = double_bottom
             ws.row_dimensions[curr_row].height = 24
 
-            # 5. Seletor de PEP & Centros de Trabalho (se disponível)
-            seletor_info = data.get("seletor")
-            if seletor_info:
-                curr_row += 2
-                ws[f"A{curr_row}"] = "SELETOR DE PEP STANDARD & CENTROS DE TRABALHO (CTS)"
-                ws[f"A{curr_row}"].font = section_font
-                curr_row += 1
-
-                ws[f"A{curr_row}"] = "PEP Standard Sugerido:"
-                ws[f"A{curr_row}"].font = label_font
-                ws[f"B{curr_row}"] = str(seletor_info.get("PEP Standard", "-"))
-                ws[f"B{curr_row}"].font = Font(name="Segoe UI", size=10, bold=True, color="0F2C59")
-                curr_row += 1
-
-                ct_items = []
-                if seletor_info.get("DR Eng Mec"):
-                    ct_items.append(("Engenharia Mecânica:", f"DR {seletor_info.get('DR Eng Mec')} (Alt {seletor_info.get('Alt Eng Mec', '1')})"))
-                if seletor_info.get("DR Eng Ele"):
-                    ct_items.append(("Engenharia Elétrica:", f"DR {seletor_info.get('DR Eng Ele')} (Alt {seletor_info.get('Alt Eng Ele', '1')})"))
-
-                nmod_val = int(ctx.get("nmod", 1) or 1)
-                for m in range(1, 9):
-                    dr_m = seletor_info.get(f"DR Mec {m}") or seletor_info.get(f"DR Mec{m}")
-                    alt_m = seletor_info.get(f"Alt Mec {m}") or seletor_info.get(f"Alt Mec{m}") or "1"
-                    if dr_m and m <= nmod_val:
-                        ct_items.append((f"Mecânica Módulo {m}:", f"DR {dr_m} (Alt {alt_m})"))
-
-                if seletor_info.get("DR Acess"):
-                    ct_items.append(("Acessórios:", f"DR {seletor_info.get('DR Acess')} (Alt {seletor_info.get('Alt Acess', '1')})"))
-                if seletor_info.get("DR Eletromec"):
-                    ct_items.append(("Eletromecânica:", f"DR {seletor_info.get('DR Eletromec')} (Alt {seletor_info.get('Alt Eletromec', '1')})"))
-
-                for ct_label, ct_val in ct_items:
-                    ws[f"A{curr_row}"] = ct_label
-                    ws[f"A{curr_row}"].font = label_font
-                    ws[f"B{curr_row}"] = ct_val
-                    ws[f"B{curr_row}"].font = val_font
-                    curr_row += 1
-
-            # Auto-largura das colunas
             for col in ws.columns:
                 max_len = 0
                 col_letter = get_column_letter(col[0].column)
@@ -539,6 +801,79 @@ class AppAPI:
                     if cell.row == 1: continue
                     if len(val_str) > max_len: max_len = len(val_str)
                 ws.column_dimensions[col_letter].width = max(max_len + 4, 18)
+
+            # =========================================================================
+            # ABA 3: SELETOR DE PEP & CENTROS DE TRABALHO (se houver)
+            # =========================================================================
+            seletor_info = data.get("seletor")
+            if seletor_info:
+                ws_sel = wb.create_sheet(title="Seletor PEP & CTs")
+                ws_sel.views.sheetView[0].showGridLines = True
+
+                ws_sel.merge_cells("A1:C1")
+                ws_sel["A1"] = "SELETOR DE PEP STANDARD & CENTROS DE TRABALHO"
+                ws_sel["A1"].font = title_font
+                ws_sel["A1"].fill = title_fill
+                ws_sel["A1"].alignment = Alignment(horizontal="center", vertical="center")
+                ws_sel.row_dimensions[1].height = 36
+
+                ws_sel["A3"] = "PEP Standard Sugerido:"
+                ws_sel["A3"].font = label_font
+                ws_sel["B3"] = str(seletor_info.get("PEP Standard", "-"))
+                ws_sel["B3"].font = Font(name="Segoe UI", size=11, bold=True, color="0F2C59")
+
+                ws_sel["A5"] = "Centro de Trabalho / Disciplina"
+                ws_sel["B5"] = "Diagrama de Rede (DR)"
+                ws_sel["C5"] = "Alternativa"
+                for col_letter in ["A", "B", "C"]:
+                    ws_sel[f"{col_letter}5"].font = hdr_font
+                    ws_sel[f"{col_letter}5"].fill = hdr_fill
+                    ws_sel[f"{col_letter}5"].alignment = Alignment(horizontal="center" if col_letter != "A" else "left", vertical="center")
+                ws_sel.row_dimensions[5].height = 24
+
+                sel_r = 6
+                ct_items = []
+                if seletor_info.get("DR Eng Mec"):
+                    ct_items.append(("Engenharia Mecânica", seletor_info.get("DR Eng Mec"), seletor_info.get("Alt Eng Mec", "1")))
+                if seletor_info.get("DR Eng Ele"):
+                    ct_items.append(("Engenharia Elétrica", seletor_info.get("DR Eng Ele"), seletor_info.get("Alt Eng Ele", "1")))
+
+                nmod_val = int(ctx.get("nmod", 1) or 1)
+                for m in range(1, 9):
+                    dr_m = seletor_info.get(f"DR Mec {m}") or seletor_info.get(f"DR Mec{m}")
+                    alt_m = seletor_info.get(f"Alt Mec {m}") or seletor_info.get(f"Alt Mec{m}") or "1"
+                    if dr_m and m <= nmod_val:
+                        ct_items.append((f"Mecânica Módulo {m}", dr_m, alt_m))
+
+                if seletor_info.get("DR Acess"):
+                    ct_items.append(("Acessórios", seletor_info.get("DR Acess"), seletor_info.get("Alt Acess", "1")))
+                if seletor_info.get("DR Eletromec"):
+                    ct_items.append(("Eletromecânica", seletor_info.get("DR Eletromec"), seletor_info.get("Alt Eletromec", "1")))
+
+                for ct_label, dr_v, alt_v in ct_items:
+                    ws_sel[f"A{sel_r}"] = ct_label
+                    ws_sel[f"A{sel_r}"].font = val_font
+                    ws_sel[f"A{sel_r}"].border = thin_border
+
+                    ws_sel[f"B{sel_r}"] = f"DR {dr_v}"
+                    ws_sel[f"B{sel_r}"].font = val_font
+                    ws_sel[f"B{sel_r}"].alignment = Alignment(horizontal="center")
+                    ws_sel[f"B{sel_r}"].border = thin_border
+
+                    ws_sel[f"C{sel_r}"] = f"Alt {alt_v}"
+                    ws_sel[f"C{sel_r}"].font = val_font
+                    ws_sel[f"C{sel_r}"].alignment = Alignment(horizontal="center")
+                    ws_sel[f"C{sel_r}"].border = thin_border
+                    sel_r += 1
+
+                for col in ws_sel.columns:
+                    max_len = 0
+                    col_letter = get_column_letter(col[0].column)
+                    for cell in col:
+                        val_str = str(cell.value or "")
+                        if cell.row == 1: continue
+                        if len(val_str) > max_len: max_len = len(val_str)
+                    ws_sel.column_dimensions[col_letter].width = max(max_len + 4, 18)
 
             output_stream = io.BytesIO()
             wb.save(output_stream)
@@ -593,6 +928,13 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             seletor = self.api.get_seletor()
             self.wfile.write(json.dumps(seletor, ensure_ascii=False).encode("utf-8"))
             return
+        elif self.path == "/api/get_template_blocks":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            tb = self.api.get_template_blocks()
+            self.wfile.write(json.dumps(tb, ensure_ascii=False).encode("utf-8"))
+            return
 
         super().do_GET()
 
@@ -629,6 +971,38 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
             return
+        elif self.path == "/api/save_template_blocks":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.save_template_blocks(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/generate_schedule":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.generate_schedule(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
         elif self.path == "/api/export_excel":
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
@@ -645,6 +1019,7 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
             return
+
 
         super().do_POST()
 

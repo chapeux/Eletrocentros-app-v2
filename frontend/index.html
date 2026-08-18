@@ -631,6 +631,43 @@
           </div>
         </div>
 
+        <!-- Painel Templates de Operações (template_blocks.json) -->
+        <div class="template-maint-pane hidden" id="maintContentTemplates" style="display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;">
+          <div class="template-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; gap:10px; align-items:center; flex:1; min-width:320px;">
+              <select id="templateScenarioSelect" class="ipt" style="max-width:320px; font-weight:600; cursor:pointer;">
+                <!-- Preenchido dinamicamente com os 8 cenários -->
+              </select>
+              <div class="search-wrap" style="position:relative; flex:1;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="templateSearch" class="ipt" placeholder="Pesquisar operação ou descrição no template…" style="padding-left:32px; font-size:12px;">
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span id="templateCountBadge" style="font-size:11px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); padding:4px 10px; border-radius:6px;">0 tarefas</span>
+              <button type="button" class="btn" id="btnRestaurarTemplates" title="Recarregar dados originais de template_blocks.json">Recarregar</button>
+            </div>
+          </div>
+
+          <div class="template-table-wrap" style="flex:1; overflow:auto; border:1px solid var(--border); border-radius:8px; background:var(--panel-2);">
+            <table class="template-table" style="width:100%; border-collapse:collapse; font-size:11.5px; text-align:left;">
+              <thead style="position:sticky; top:0; background:var(--panel-3); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                <tr style="border-bottom:1px solid var(--border); color:var(--text-dim); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px;">
+                  <th style="padding:9px 10px; width:50px; text-align:center;">Linha</th>
+                  <th style="padding:9px 12px; width:80px; text-align:center;">Tarefa</th>
+                  <th style="padding:9px 12px;">Descrição da Tarefa</th>
+                  <th style="padding:9px 10px; width:100px; text-align:center;">Duração (dias)</th>
+                  <th style="padding:9px 10px; width:70px; text-align:center;">Unidade</th>
+                  <th style="padding:9px 12px; width:110px; text-align:right;">Trabalho (H)</th>
+                </tr>
+              </thead>
+              <tbody id="templateTableBody">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="app-footer">
           <span class="footer-meta" id="maintFooterMeta">Selecione um campo para editar</span>
           <button class="hist-toggle" id="btnHistFooter">
@@ -1093,7 +1130,7 @@
 
   <!-- ================= MODAL RESULTADO DO CÁLCULO DE TEMPOS ================= -->
   <div class="modal-overlay" id="modalResultadoCalculo">
-    <div class="modal" style="max-width: 820px; max-height: 88vh; display: flex; flex-direction: column;">
+    <div class="modal" style="max-width: 980px; width:95vw; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="modal-head">
         <div class="ico" style="background: rgba(46, 196, 182, 0.15); color: var(--accent);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1107,63 +1144,198 @@
           </svg>
         </div>
         <div class="modal-head-text">
-          <b>Resultado do Cálculo de Tempos</b>
-          <span>Estimativa de Horas Orçadas e Duração — PCP &amp; Engenharia</span>
+          <b>Resultado do Cálculo &amp; Cronograma de Operações</b>
+          <span>Estimativa de Horas Orçadas, Duração e Operações PCP — Fase 3</span>
         </div>
         <button type="button" class="btn-close" id="btnCloseResultadoCalculo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
+      <!-- Abas do Modal de Resultados -->
+      <div class="modal-tabs" style="display:flex; border-bottom:1px solid var(--border); padding:0 20px; background:var(--panel-2); gap:6px;">
+        <button type="button" class="modal-tab active" id="calcTabTotais" data-pane="calcPaneTotais">Resumo Geral (Horas Totais)</button>
+        <button type="button" class="modal-tab" id="calcTabCronograma" data-pane="calcPaneCronograma">
+          Cronograma de Operações <span id="resBadgeTarefas" style="background:var(--accent); color:#000; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:6px;">0</span>
+        </button>
+        <button type="button" class="modal-tab" id="calcTabSeletor" data-pane="calcPaneSeletor">Seletor PEP &amp; CTs</button>
+        <button type="button" class="modal-tab" id="calcTabResumo" data-pane="calcPaneResumo">Regras &amp; Processos</button>
+      </div>
+
       <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
-        <!-- KPI Cards Summary Header -->
-        <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;">
-          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Total Horas Orçadas</span>
-            <span id="resTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent);">0,00 h</span>
-            <span style="font-size: 11px; color: var(--text-faint);">Soma de todos os processos</span>
+        <!-- PANE 1: RESUMO GERAL (HORAS TOTAIS POR DISCIPLINA) -->
+        <div class="calc-modal-pane" id="calcPaneTotais">
+          <!-- KPI Cards Summary Header -->
+          <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;">
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #38bdf8;">Engenharia (ENG)</span>
+              <span id="resKpiEngH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #38bdf8;">0,0 h</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Tarefas &lt; 0703 (sem 0,1 e ROM)</span>
+            </div>
+
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #f59e0b;">Mecânica (MEC)</span>
+              <span id="resKpiMecH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #f59e0b;">0,0 h</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Tarefas 0705–0798 + 0894</span>
+            </div>
+
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a855f7;">Elétrica (ELE)</span>
+              <span id="resKpiEleH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #a855f7;">0,0 h</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Tarefas 0799–0893 + 0895</span>
+            </div>
+
+            <div class="calc-kpi-card" style="background: rgba(46,196,182,0.08); border: 1px solid rgba(46,196,182,0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent);">Total do Projeto</span>
+              <span id="resKpiTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 800; color: var(--accent);">0,0 h</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Soma das 3 disciplinas</span>
+            </div>
           </div>
 
-          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Duração Estimada Total</span>
-            <span id="resTotalDUR" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--amber);">0,0 dias</span>
-            <span style="font-size: 11px; color: var(--text-faint);">Tempo de ciclo estimado</span>
+          <!-- Tabela Comparativa de Horas Totais por Disciplina -->
+          <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1); margin-bottom: 16px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+              <thead>
+                <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <th style="padding: 10px 14px;">Disciplina</th>
+                  <th style="padding: 10px 14px;">Regra / Intervalo de Operações</th>
+                  <th style="padding: 10px 14px; text-align: right;">Horas Totais (H)</th>
+                  <th style="padding: 10px 14px; text-align: right;">Participação (%)</th>
+                </tr>
+              </thead>
+              <tbody id="resTotaisTableBody">
+                <!-- Renderizado dinamicamente -->
+              </tbody>
+            </table>
           </div>
 
-          <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Especificação Estrutural</span>
-            <span id="resEstruturaInfo" style="font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
-            <span id="resDetagensInfo" style="font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+          <!-- Informações Estruturais & Seletor Rápido -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px;">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;">Especificação da Estrutura</div>
+              <div id="resTotaisEstrutura" style="font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px;">-</div>
+              <div id="resTotaisDetalhes" style="font-size: 11.5px; color: var(--text-faint);">-</div>
+            </div>
+
+            <div style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Centros de Trabalho (Seletor)</span>
+                <span id="resTotaisPepBadge" style="font-family:'IBM Plex Mono'; font-size:11px; font-weight:700; color:var(--accent);">-</span>
+              </div>
+              <div id="resTotaisCtsResumo" style="font-size: 11.5px; color: var(--text); display:flex; flex-direction:column; gap:4px;">
+                <!-- CTs rápidos -->
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Table of Results -->
-        <div class="calc-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1);">
-          <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
-            <thead>
-              <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                <th style="padding: 10px 14px;">Processo / Campo</th>
-                <th style="padding: 10px 14px; text-align: right;">Horas (H)</th>
-                <th style="padding: 10px 14px; text-align: right;">Duração (DUR)</th>
-              </tr>
-            </thead>
-            <tbody id="resTableBody">
-              <!-- Dynamically rendered -->
-            </tbody>
-          </table>
+        <!-- PANE 4: RESUMO DETALHADO POR REGRAS & PROCESSOS (ANTIGA ABA 1) -->
+        <div class="calc-modal-pane hidden" id="calcPaneResumo">
+          <!-- KPI Cards Summary Header -->
+          <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;">
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Total Horas Orçadas</span>
+              <span id="resTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent);">0,00 h</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Soma de todos os processos</span>
+            </div>
+
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Duração Estimada Total</span>
+              <span id="resTotalDUR" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--amber);">0,0 dias</span>
+              <span style="font-size: 11px; color: var(--text-faint);">Tempo de ciclo estimado</span>
+            </div>
+
+            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Especificação Estrutural</span>
+              <span id="resEstruturaInfo" style="font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+              <span id="resDetagensInfo" style="font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+            </div>
+          </div>
+
+          <!-- Table of Results -->
+          <div class="calc-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1);">
+            <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+              <thead>
+                <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <th style="padding: 10px 14px;">Processo / Campo</th>
+                  <th style="padding: 10px 14px; text-align: right;">Horas (H)</th>
+                  <th style="padding: 10px 14px; text-align: right;">Duração (DUR)</th>
+                </tr>
+              </thead>
+              <tbody id="resTableBody">
+                <!-- Dynamically rendered -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Seletor de PEP & Centros de Trabalho -->
-        <div id="resSeletorWrap" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); display: flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              Seletor — PEP Standard &amp; Centros de Trabalho (CTs)
-            </span>
-            <span id="resSeletorPepBadge" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: var(--accent); background: rgba(46,196,182,0.15); padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(46,196,182,0.3);">PEP Standard: -</span>
+        <!-- PANE 2: CRONOGRAMA COMPLETO DE OPERAÇÕES (FASE 3) -->
+        <div class="calc-modal-pane hidden" id="calcPaneCronograma">
+          <div class="cronograma-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+            <div style="display:flex; gap:10px; align-items:center; flex:1; min-width:300px;">
+              <div class="search-wrap" style="position:relative; flex:1;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…" style="padding-left:32px; font-size:12px;">
+              </div>
+              <select id="cronogramaDisciplineFilter" class="ipt" style="max-width:180px; font-size:12px; cursor:pointer;">
+                <option value="ALL">Todas Disciplinas</option>
+                <option value="Engenharia Mecânica">Eng. Mecânica</option>
+                <option value="Engenharia Elétrica">Eng. Elétrica</option>
+                <option value="Processos">Processos</option>
+                <option value="Mecânica">Mecânica / Caldeiraria</option>
+                <option value="Pintura">Pintura</option>
+                <option value="Elétrica / Testes">Elétrica / Testes</option>
+                <option value="Acessórios & Elétrica">Acessórios</option>
+                <option value="Faturamento & Encerramento">Faturamento</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span id="cronogramaCenarioBadge" style="font-size:11px; font-weight:600; color:var(--accent); background:rgba(46,196,182,0.15); border:1px solid rgba(46,196,182,0.3); padding:4px 10px; border-radius:6px;">Cenário: -</span>
+            </div>
           </div>
-          <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; font-size: 11.5px;">
-            <!-- Rendered dynamically -->
+
+          <div class="cronograma-table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1); max-height:480px; overflow-y:auto;">
+            <table class="cronograma-table" style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+              <thead style="position:sticky; top:0; background:var(--panel-2); z-index:2; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <th style="padding: 9px 10px; width:45px; text-align: center;">#</th>
+                  <th style="padding: 9px 12px; width:85px; text-align: center;">Operação</th>
+                  <th style="padding: 9px 12px;">Descrição da Tarefa</th>
+                  <th style="padding: 9px 10px; width:95px; text-align: right;">Duração (dias)</th>
+                  <th style="padding: 9px 8px; width:65px; text-align: center;">Unid.</th>
+                  <th style="padding: 9px 12px; width:110px; text-align: right;">Trabalho (H)</th>
+                  <th style="padding: 9px 12px; width:150px;">Disciplina / Fase</th>
+                </tr>
+              </thead>
+              <tbody id="resCronogramaTableBody">
+                <!-- Dynamically rendered -->
+              </tbody>
+              <tfoot style="position:sticky; bottom:0; background:var(--panel-3); font-weight:700; border-top:2px solid var(--border);">
+                <tr>
+                  <td colspan="3" style="padding:10px 14px;" id="cronogramaFootSummary">Total de tarefas</td>
+                  <td style="padding:10px 10px; text-align:right; font-family:'IBM Plex Mono'; color:var(--amber);" id="cronogramaFootDias">0,0 d</td>
+                  <td style="padding:10px 8px; text-align:center; font-size:11px;">DIAS</td>
+                  <td style="padding:10px 12px; text-align:right; font-family:'IBM Plex Mono'; color:var(--accent);" id="cronogramaFootHoras">0,00 h</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 3: SELETOR DE PEP & CENTROS DE TRABALHO -->
+        <div class="calc-modal-pane hidden" id="calcPaneSeletor">
+          <div id="resSeletorWrap" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Seletor — PEP Standard &amp; Centros de Trabalho (CTs)
+              </span>
+              <span id="resSeletorPepBadge" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; color: var(--accent); background: rgba(46,196,182,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(46,196,182,0.3);">PEP Standard: -</span>
+            </div>
+            <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; font-size: 12px;">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
       </div>
