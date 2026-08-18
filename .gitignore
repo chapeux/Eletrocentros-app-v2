@@ -27,4 +27,5 @@ wheels/
 .DS_Store
 *.log
 *.spec
+*.exe
 releases/app-*/

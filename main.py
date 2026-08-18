@@ -15,9 +15,8 @@ import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-# Módulo Backend de Banco de Dados MySQL e Sincronização GitHub
+# Módulo Backend de Banco de Dados MySQL
 from backend.database import init_db, comparar_e_registrar_alteracoes, obter_logs, registrar_log
-from backend.git_sync import sync_github_async
 from backend.settings_store import get_setting, save_setting
 
 # Base Directory Setup
@@ -109,7 +108,6 @@ class AppAPI:
             )
             if resultado.get("status") == "success":
                 self._versao_config = resultado.get("versao", 1)
-                sync_github_async(resumo="Atualização de config_geral (MySQL)")
                 print("[Backend Python] Configurações salvas no MySQL app_settings com sucesso!")
             return resultado
         except Exception as e:
@@ -222,13 +220,6 @@ class AppAPI:
                 return resultado
 
             self._versao_regras = resultado.get("versao", 1)
-
-            # 4. Sincronização automática com GitHub em segundo plano
-            resumo_git = f"Atualização de regras ({total_logs} alteração/ões)"
-            if motivo:
-                resumo_git += f" - Motivo: {motivo}"
-            sync_github_async(resumo=resumo_git)
-
             print("[Backend Python] Regras salvas no MySQL app_settings e cache atualizado!")
             return {
                 "status": "success",
@@ -333,13 +324,6 @@ class AppAPI:
                 return resultado
 
             self._versao_seletor = resultado.get("versao", 1)
-
-            # Sincronização automática com GitHub
-            resumo_git = "Atualização da tabela Seletor de PEP e Centros de Trabalho"
-            if motivo:
-                resumo_git += f" - Motivo: {motivo}"
-            sync_github_async(resumo=resumo_git)
-
             print("[Backend Python] Seletor salvo no MySQL app_settings com sucesso!")
             return {"status": "success", "versao": self._versao_seletor, "logs_registrados": total_logs}
         except Exception as e:
@@ -409,12 +393,6 @@ class AppAPI:
                 return resultado
 
             self._versao_template = resultado.get("versao", 1)
-
-            resumo_git = "Atualização da base de templates de blocos de operações (template_blocks.json)"
-            if motivo:
-                resumo_git += f" - Motivo: {motivo}"
-            sync_github_async(resumo=resumo_git)
-
             print("[Backend Python] Templates salvos no MySQL app_settings com sucesso!")
             return {"status": "success", "versao": self._versao_template, "logs_registrados": total_logs}
         except Exception as e:
