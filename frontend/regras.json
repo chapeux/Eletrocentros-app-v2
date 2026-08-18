@@ -4553,35 +4553,40 @@
                 "nome": "Cálculo por Colunas e Interligação",
                 "padrao": true,
                 "cond": [  ],
-                "it": [ {"t": "op", "v": "("}, {"t": "num", "v": 10}, {"t": "op", "v": "*"}, {"t": "var", "v": "nrcolunas"}, {"t": "op", "v": "+"}, {"t": "num", "v": 30}, {"t": "op", "v": "*"}, {"t": "var", "v": "paineis_interlig"}, {"t": "op", "v": ")"}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.8}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.05}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.4} ],
-                "collapsed": true
+                "it": [ {"t": "op", "v": "("}, {"t": "num", "v": 10}, {"t": "op", "v": "*"}, {"t": "var", "v": "nrcolunas"}, {"t": "op", "v": "+"}, {"t": "num", "v": 30}, {"t": "op", "v": ")"}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.8}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 0.9}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.1}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.05}, {"t": "op", "v": "*"}, {"t": "num", "v": 1.4} ],
+                "collapsed": false
               }
             ],
             "blocos": [
               {
                 "id": "b1",
                 "nome": "Lateral",
-                "it": [ {"t": "var", "v": "lat_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "num", "v": 4} ]
+                "it": [ {"t": "var", "v": "lat_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "num", "v": 4} ],
+                "collapsed": false
               },
               {
                 "id": "b2",
                 "nome": "Frente/Fundo",
-                "it": [ {"t": "var", "v": "ffd_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "num", "v": 4} ]
+                "it": [ {"t": "var", "v": "ffd_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "num", "v": 4} ],
+                "collapsed": true
               },
               {
                 "id": "b3",
                 "nome": "Teto",
-                "it": [ {"t": "var", "v": "tet_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "tet_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ]
+                "it": [ {"t": "var", "v": "tet_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "tet_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ],
+                "collapsed": true
               },
               {
                 "id": "b4",
                 "nome": "Telhado",
-                "it": [ {"t": "var", "v": "tlh_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "tlh_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ]
+                "it": [ {"t": "var", "v": "tlh_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "tlh_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ],
+                "collapsed": true
               },
               {
                 "id": "b5",
                 "nome": "Base",
-                "it": [ {"t": "var", "v": "bas_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "bas_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ]
+                "it": [ {"t": "var", "v": "bas_f1"}, {"t": "op", "v": "*"}, {"t": "var", "v": "comp"}, {"t": "op", "v": "+"}, {"t": "var", "v": "bas_f2"}, {"t": "op", "v": "*"}, {"t": "var", "v": "larg"} ],
+                "collapsed": true
               }
             ]
           },
