@@ -12,7 +12,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from backend.database import get_current_user, get_db_connection, HAS_MYSQL
+try:
+    from backend.database import get_current_user, get_db_connection, HAS_MYSQL
+except ImportError:
+    from database import get_current_user, get_db_connection, HAS_MYSQL
 
 
 def _salvar_arquivo_atomico(caminho: Path, conteudo_dict: Dict[str, Any]) -> bool:
@@ -176,3 +179,17 @@ def save_setting(
             "status": "error",
             "message": f"Erro de banco de dados ao salvar: {str(e)}"
         }
+
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print(" [SETTINGS STORE] Teste de Conexão e Leitura no MySQL")
+    print("=" * 60)
+    chaves_teste = ["config_geral", "regras_calculo", "seletor_pep_cts", "template_blocks"]
+    for k in chaves_teste:
+        val, ver = get_setting(k)
+        tipo = type(val).__name__
+        tam = len(val) if isinstance(val, (dict, list)) else 0
+        print(f"  Chave: {k:18} | Versao: {ver:2} | Tipo: {tipo:4} | Qtd: {tam}")
+    print("=" * 60)
+    print(" [OK] Teste de settings_store concluído com sucesso!")
