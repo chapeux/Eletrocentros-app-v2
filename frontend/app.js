@@ -1538,7 +1538,7 @@
       { btn: $('calcTabTotais'), pane: $('calcPaneTotais') },
       { btn: $('calcTabCronograma'), pane: $('calcPaneCronograma') },
       { btn: $('calcTabSeletor'), pane: $('calcPaneSeletor') },
-      { btn: $('calcTabResumo'), pane: $('calcPaneResumo') }
+      { btn: $('calcTabResumo'), pane: $('calcPaneRegras') }
     ];
 
     tabs.forEach(function (t) {
@@ -1598,19 +1598,19 @@
       else if (t.disciplina === 'Processos') discClass = 'disc-pro';
 
       tr.innerHTML =
-        '<td style="text-align:center; color:var(--text-faint); font-family:\'IBM Plex Mono\';">' + t.ordem + '</td>' +
-        '<td style="text-align:center;"><span class="cronograma-task-badge' + (t.calculado ? ' is-calc' : '') + '">' + escapeHtml(t.tarefa_formatada || t.tarefa) + '</span></td>' +
+        '<td class="mono" style="text-align:center; color:var(--text-faint);">' + t.ordem + '</td>' +
+        '<td style="text-align:center;"><span class="task-badge' + (t.calculado ? ' is-calc' : '') + '">' + escapeHtml(t.tarefa_formatada || t.tarefa) + '</span></td>' +
         '<td style="font-weight:' + (t.calculado ? '600' : '400') + '; color:var(--text);">' + escapeHtml(t.descricao_tarefa) + '</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:600; color:var(--amber);">' + t.duracao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '</td>' +
-        '<td style="text-align:center; font-size:10.5px; color:var(--text-dim);">' + escapeHtml(t.unidade || 'DIA') + '</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:' + (t.calculado ? 'var(--accent)' : 'var(--text)') + ';">' + t.trabalho.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+        '<td class="num" style="color:var(--amber); font-weight:600;">' + t.duracao.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>' +
+        '<td style="text-align:center; font-size:10.5px; color:var(--text-faint);">' + escapeHtml(t.unidade || 'DIA') + '</td>' +
+        '<td class="num" style="font-weight:700; color:' + (t.calculado ? 'var(--accent)' : 'var(--text)') + ';">' + t.trabalho.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
         '<td><span class="chip-disc ' + discClass + '">' + escapeHtml(t.disciplina || 'Geral') + '</span></td>';
 
       tbody.appendChild(tr);
     });
 
     if ($('cronogramaFootSummary')) {
-      $('cronogramaFootSummary').textContent = filtered.length + ' de ' + cronograma.tarefas.length + ' operações';
+      $('cronogramaFootSummary').innerHTML = 'Mostrando ' + filtered.length + ' de <b>' + cronograma.tarefas.length + '</b> operações';
     }
     if ($('cronogramaFootDias')) {
       $('cronogramaFootDias').textContent = sumDias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d';
@@ -1630,6 +1630,15 @@
     // Cálculo das Horas Totais por Diagrama (Padrão Excel Original)
     var totaisDisc = calcularTotaisDisciplinasExcel(tarefas);
     res.totaisDisciplinas = totaisDisc;
+
+    var pepStr = (seletorMatch && seletorMatch['PEP Standard']) ? seletorMatch['PEP Standard'] : (ctx.pep || 'Sob Consulta');
+
+    // Header Legend & Meta
+    if ($('resHeaderPep')) $('resHeaderPep').innerHTML = 'PEP <b>' + escapeHtml(pepStr) + '</b>';
+    if ($('resHeaderTarefasCount')) $('resHeaderTarefasCount').innerHTML = '<b>' + tarefas.length + '</b> operações processadas';
+    if ($('resFooterMeta')) {
+      $('resFooterMeta').innerHTML = '<b>' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</b> totais · <b>' + tarefas.length + '</b> operações · PEP <b>' + escapeHtml(pepStr) + '</b>';
+    }
 
     // 1. Atualizar KPIs do Resumo Geral (Aba 1)
     if ($('resKpiEngH')) $('resKpiEngH').textContent = totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -1686,7 +1695,7 @@
         (ctx.seguranca ? '<span class="tag-result">Segurança <b>' + escapeHtml(ctx.seguranca) + '</b></span>' : '');
     }
     if ($('resTotaisPepBadge')) {
-      $('resTotaisPepBadge').textContent = 'PEP ' + (seletorMatch && seletorMatch['PEP Standard'] ? seletorMatch['PEP Standard'] : 'Sob Consulta');
+      $('resTotaisPepBadge').textContent = 'PEP ' + pepStr;
     }
     if ($('resTotaisCtsResumo') && seletorMatch) {
       var ctList = [];
@@ -1710,11 +1719,11 @@
       $('resTotaisCtsResumo').innerHTML = ctHtml;
     }
 
-    // 4. KPIs da Aba de Regras & Processos (Antiga Aba 1)
+    // 4. KPIs da Aba de Regras & Processos (Aba 4)
     if ($('resTotalH')) $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if ($('resTotalDUR')) $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     if ($('resEstruturaInfo')) $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm)';
-    if ($('resDetagensInfo')) $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
+    if ($('resDetagensInfo')) $('resDetagensInfo').textContent = ctx.tipoestrutura + ' · ' + ctx.planpin + ' · ' + ctx.tipomaq;
 
     // Reset para primeira aba (Resumo Geral de Horas)
     if ($('calcTabTotais')) $('calcTabTotais').click();
@@ -1725,35 +1734,34 @@
       tbodyRegras.innerHTML = '';
       res.resultadosAreas.forEach(function (area) {
         var trHead = document.createElement('tr');
-        trHead.className = 'area-header-row';
+        trHead.className = 'group-row';
         trHead.innerHTML = '<td colspan="3">' + escapeHtml(area.area) + '</td>';
         tbodyRegras.appendChild(trHead);
 
         area.campos.forEach(function (c) {
           var trC = document.createElement('tr');
-          trC.className = 'campo-row';
           trC.innerHTML =
-            '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--eng-color); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--text);">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+            '<td>' + escapeHtml(c.chave) + '</td>' +
+            '<td class="num">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+            '<td class="num" style="color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
           tbodyRegras.appendChild(trC);
         });
 
         var trSub = document.createElement('tr');
-        trSub.className = 'area-total-row';
+        trSub.className = 'subtotal-row';
         trSub.innerHTML =
-          '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--total-color);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+          '<td>Subtotal (' + escapeHtml(area.area) + ')</td>' +
+          '<td class="num">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+          '<td class="num">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
         tbodyRegras.appendChild(trSub);
       });
 
       var trGrand = document.createElement('tr');
-      trGrand.className = 'grand-total-row';
+      trGrand.className = 'total-row';
       trGrand.innerHTML =
-        '<td>TOTAL DAS REGRAS ORÇADAS</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--total-color); font-size:15px; font-weight:800;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px; font-weight:800;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
+        '<td><span class="disc-name-result"><span class="disc-dot-result"></span>TOTAL DAS REGRAS ORÇADAS</span></td>' +
+        '<td class="num">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+        '<td class="num" style="color:var(--amber);">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
       tbodyRegras.appendChild(trGrand);
     }
 
@@ -1761,41 +1769,42 @@
     renderCronogramaResultado(res.cronograma);
 
     // 7. Renderiza Seletor PEP & CTs (Aba 3)
-    var seletorWrap = $('resSeletorWrap');
-    if (seletorWrap) {
+    var ctsGrid = $('resSeletorCtsGrid');
+    if (ctsGrid) {
+      ctsGrid.innerHTML = '';
+      if ($('resSeletorPepBadge')) {
+        $('resSeletorPepBadge').textContent = 'PEP Standard: ' + (seletorMatch && seletorMatch['PEP Standard'] ? seletorMatch['PEP Standard'] : 'Sob Consulta');
+      }
       if (seletorMatch) {
-        seletorWrap.style.display = 'block';
-        if ($('resSeletorPepBadge')) {
-          $('resSeletorPepBadge').textContent = 'PEP Standard: ' + (seletorMatch['PEP Standard'] || 'Sob Consulta');
-        }
-        var ctsGrid = $('resSeletorCtsGrid');
-        if (ctsGrid) {
-          ctsGrid.innerHTML = '';
-          var cts = [];
-          if (seletorMatch['DR Eng Mec']) cts.push({ label: 'Eng. Mecânica', dr: seletorMatch['DR Eng Mec'], alt: seletorMatch['Alt Eng Mec'] });
-          if (seletorMatch['DR Eng Ele']) cts.push({ label: 'Eng. Elétrica', dr: seletorMatch['DR Eng Ele'], alt: seletorMatch['Alt Eng Ele'] });
+        var cts = [];
+        if (seletorMatch['DR Eng Mec']) cts.push({ label: 'Eng. Mecânica', dr: seletorMatch['DR Eng Mec'], alt: seletorMatch['Alt Eng Mec'] });
+        if (seletorMatch['DR Eng Ele']) cts.push({ label: 'Eng. Elétrica', dr: seletorMatch['DR Eng Ele'], alt: seletorMatch['Alt Eng Ele'] });
 
-          var nmodNum = parseInt(ctx.nmod || '1', 10);
-          for (var m = 1; m <= 8; m++) {
-            var drMec = seletorMatch['DR Mec ' + m] || seletorMatch['DR Mec' + m];
-            var altMec = seletorMatch['Alt Mec ' + m] || seletorMatch['Alt Mec' + m];
-            if (drMec && m <= nmodNum) {
-              cts.push({ label: 'Mecânica Módulo ' + m, dr: drMec, alt: altMec });
-            }
+        var nmodNum = parseInt(ctx.nmod || '1', 10);
+        for (var m = 1; m <= 8; m++) {
+          var drMec = seletorMatch['DR Mec ' + m] || seletorMatch['DR Mec' + m];
+          var altMec = seletorMatch['Alt Mec ' + m] || seletorMatch['Alt Mec' + m];
+          if (drMec && m <= nmodNum) {
+            cts.push({ label: 'Mecânica Módulo ' + m, dr: drMec, alt: altMec });
           }
-          if (seletorMatch['DR Acess']) cts.push({ label: 'Acessórios', dr: seletorMatch['DR Acess'], alt: seletorMatch['Alt Acess'] });
-          if (seletorMatch['DR Eletromec']) cts.push({ label: 'Eletromecânica', dr: seletorMatch['DR Eletromec'], alt: seletorMatch['Alt Eletromec'] });
-
-          cts.forEach(function (ct) {
-            var card = document.createElement('div');
-            card.style.cssText = 'background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;';
-            card.innerHTML = '<span style="font-weight:600; color:var(--text);">' + escapeHtml(ct.label) + ':</span>' +
-              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--total-color);">' + escapeHtml(ct.dr) + ' <span style="font-size:11px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
-            ctsGrid.appendChild(card);
-          });
         }
-      } else {
-        seletorWrap.style.display = 'none';
+        if (seletorMatch['DR Acess']) cts.push({ label: 'Acessórios', dr: seletorMatch['DR Acess'], alt: seletorMatch['Alt Acess'] });
+        if (seletorMatch['DR Eletromec']) cts.push({ label: 'Eletromecânica', dr: seletorMatch['DR Eletromec'], alt: seletorMatch['Alt Eletromec'] });
+
+        cts.forEach(function (ct) {
+          var card = document.createElement('div');
+          card.className = 'ct-card';
+          card.innerHTML = '<div class="role">' + escapeHtml(ct.label) + '</div>' +
+            '<div class="code">' + escapeHtml(ct.dr) + ' <span class="alt">/ Alt ' + escapeHtml(ct.alt || '1') + '</span></div>';
+          ctsGrid.appendChild(card);
+        });
+
+        if (ctx.nmod) {
+          var modCard = document.createElement('div');
+          modCard.className = 'ct-card';
+          modCard.innerHTML = '<div class="role">Nº de módulos</div><div class="code">' + escapeHtml(ctx.nmod) + '</div>';
+          ctsGrid.appendChild(modCard);
+        }
       }
     }
 

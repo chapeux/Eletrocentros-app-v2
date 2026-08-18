@@ -591,55 +591,57 @@
 
       <!-- VIEW 3: RESULTADO DO CÁLCULO & CRONOGRAMA DE OPERAÇÕES -->
       <div class="view-pane hidden" id="view-resultados">
-        <div class="resultados-view-container">
-          <div class="resultados-toolbar">
-            <div class="resultados-title-box">
-              <h1 class="resultados-title" id="modalTitle">Resultado do Cálculo &amp; Cronograma de Operações</h1>
-              <p class="resultados-sub">Estimativa de horas orçadas e duração para o projeto selecionado</p>
-            </div>
-            <div class="resultados-actions">
-              <button type="button" class="btn" id="btnCopiarResumoCalculo" title="Copiar resumo de texto para área de transferência">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; margin-right:6px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                Copiar Resumo
-              </button>
-              <button type="button" class="btn" id="btnExportarExcel" title="Exportar planilha Excel completa (.xlsx)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; margin-right:6px; color: #107c41;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                Exportar Excel (.xlsx)
-              </button>
-              <button type="button" class="btn" id="btnExportarCsv" title="Exportar arquivo CSV (.csv)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; margin-right:6px; color: var(--accent);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Exportar CSV
-              </button>
-              <button type="button" class="btn primary" id="btnVoltarPlanejamento">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; margin-right:6px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Voltar ao Formulário
-              </button>
+        <!-- Sub-navegação: mesmo componente .section-nav / .snav-btn do Planejamento -->
+        <nav class="section-nav" id="sectionNavResultados">
+          <button type="button" class="snav-btn active" id="calcTabTotais" data-pane="calcPaneTotais">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Resumo Geral
+          </button>
+          <button type="button" class="snav-btn" id="calcTabCronograma" data-pane="calcPaneCronograma">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>
+            Cronograma de Operações <span class="n" id="resBadgeTarefas">0</span>
+          </button>
+          <button type="button" class="snav-btn" id="calcTabSeletor" data-pane="calcPaneSeletor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Seletor PEP &amp; CTs
+          </button>
+          <button type="button" class="snav-btn" id="calcTabResumo" data-pane="calcPaneResumo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Regras &amp; Processos
+          </button>
+
+          <div class="section-nav-tail">
+            <span class="dot-live"></span> <span id="resNavTailText">Cálculo concluído</span>
+          </div>
+        </nav>
+
+        <div class="content">
+          <div class="content-title">
+            <h1>Resultado do Cálculo &amp; Cronograma de Operações</h1>
+            <div class="legend">
+              <span class="lg"><i class="dot accent"></i><span id="resHeaderPep">PEP <b>-</b></span></span>
+              <span class="lg"><i class="dot green"></i><span id="resHeaderTarefasCount"><b>0</b> operações processadas</span></span>
             </div>
           </div>
 
-          <!-- Abas da View de Resultados -->
-          <div class="tabs-result">
-            <button type="button" class="tab-result active" id="calcTabTotais" data-pane="calcPaneTotais">Resumo Geral (Horas Totais)</button>
-            <button type="button" class="tab-result" id="calcTabCronograma" data-pane="calcPaneCronograma">
-              Cronograma de Operações <span class="tab-count-badge" id="resBadgeTarefas">0</span>
-            </button>
-            <button type="button" class="tab-result" id="calcTabSeletor" data-pane="calcPaneSeletor">Seletor PEP &amp; CTs</button>
-            <button type="button" class="tab-result" id="calcTabResumo" data-pane="calcPaneResumo">Regras &amp; Processos</button>
-          </div>
-
-          <div class="resultados-body">
-            <!-- PANE 1: RESUMO GERAL (HORAS TOTAIS POR DIAGRAMA) -->
-            <div class="calc-modal-pane" id="calcPaneTotais">
-              <p class="section-label-result">Horas por diagrama</p>
+          <!-- ============ PANE 1 — RESUMO GERAL ============ -->
+          <div class="stack" id="calcPaneTotais">
+            <section class="pane">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 7 14h5l-1 8 7-13h-5z"/></svg>
+                  Horas por Diagrama
+                </div>
+                <div class="pane-hint">Consolidado automático — Fase 3</div>
+              </div>
               <div class="kpi-cluster-result">
-                <svg class="trace-svg-result" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true">
-                  <path class="trace-line-result" d="M125,0 L125,17 L875,17 L875,0" stroke="var(--eng-color)" opacity="0.6"/>
-                  <path class="trace-line-result" d="M375,0 L375,17" stroke="var(--mec-color)" opacity="0.6"/>
-                  <path class="trace-line-result" d="M625,0 L625,17" stroke="var(--ele-color)" opacity="0.6"/>
-                  <path class="trace-line-result" d="M875,17 L875,34" stroke="var(--total-color)" opacity="0.85"/>
-                  <circle class="trace-node-result" cx="875" cy="17" r="3.5" stroke="var(--total-color)"/>
+                <svg class="trace-svg-result" viewBox="0 0 1000 32" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="trace-line-result" d="M125,0 L125,16 L875,16 L875,0" stroke="var(--eng-color)" opacity="0.55"/>
+                  <path class="trace-line-result" d="M375,0 L375,16" stroke="var(--mec-color)" opacity="0.55"/>
+                  <path class="trace-line-result" d="M625,0 L625,16" stroke="var(--ele-color)" opacity="0.55"/>
+                  <path class="trace-line-result" d="M875,16 L875,32" stroke="var(--total-color)" opacity="0.85"/>
+                  <circle class="trace-node-result" cx="875" cy="16" r="3.2" stroke="var(--total-color)"/>
                 </svg>
-
                 <div class="kpi-grid-result">
                   <div class="kpi-card-result" data-d="eng">
                     <div class="kpi-top-result">
@@ -647,196 +649,209 @@
                       <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
                     </div>
                     <div class="kpi-value-result"><span id="resKpiEngH">0,0</span><span class="unit">h</span></div>
+                    <p class="kpi-caption-result">Tarefas &lt; 0703 — sem tempo 0,1 e ROM</p>
                   </div>
-
                   <div class="kpi-card-result" data-d="mec">
                     <div class="kpi-top-result">
                       <span class="kpi-label-result">Mecânica · MEC</span>
                       <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
                     </div>
                     <div class="kpi-value-result"><span id="resKpiMecH">0,0</span><span class="unit">h</span></div>
+                    <p class="kpi-caption-result">Tarefas 0705–0798 + 0894 — exceto exceções</p>
                   </div>
-
                   <div class="kpi-card-result" data-d="ele">
                     <div class="kpi-top-result">
                       <span class="kpi-label-result">Elétrica · ELE</span>
                       <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
                     </div>
                     <div class="kpi-value-result"><span id="resKpiEleH">0,0</span><span class="unit">h</span></div>
+                    <p class="kpi-caption-result">Tarefas 0799–0893 + 0895 — exceto exceções</p>
                   </div>
-
                   <div class="kpi-card-result total" data-d="total">
                     <div class="kpi-top-result">
                       <span class="kpi-label-result">Total do projeto</span>
                       <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
                     </div>
                     <div class="kpi-value-result"><span id="resKpiTotalH">0,0</span><span class="unit">h</span></div>
+                    <p class="kpi-caption-result">Soma consolidada dos 3 diagramas</p>
                   </div>
                 </div>
               </div>
+            </section>
 
-              <!-- Tabela Comparativa de Horas Totais por Diagrama -->
-              <p class="section-label-result">Participação por diagrama</p>
+            <section class="pane">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+                  Participação por Diagrama
+                </div>
+                <div class="pane-hint">Regra de filtro por intervalo de tarefas</div>
+              </div>
               <div class="table-wrap-result">
                 <table class="table-result">
                   <thead>
-                    <tr>
-                      <th style="width: 200px;">Diagrama</th>
-                      <th>Regra / Intervalo de Operações</th>
-                      <th class="num" style="width: 130px;">Horas Totais</th>
-                      <th class="num" style="width: 140px;">Participação</th>
-                    </tr>
+                    <tr><th style="width:190px;">Diagrama</th><th>Regra / intervalo de operações</th><th class="num" style="width:110px;">Horas totais</th><th class="num" style="width:130px;">Participação</th></tr>
                   </thead>
                   <tbody id="resTotaisTableBody">
                     <!-- Renderizado dinamicamente -->
                   </tbody>
                 </table>
               </div>
+            </section>
 
-              <!-- Informações Estruturais & Seletor Rápido -->
-              <div class="panels-grid-result">
-                <div class="panel-box-result">
-                  <div class="panel-box-head-result">
-                    <span class="panel-box-title-result">Especificação da Estrutura</span>
-                  </div>
-                  <p class="struct-title-result" id="resTotaisEstrutura">1 Módulo — 10m × 3,6m (Fixo)</p>
-                  <div class="struct-tags-result" id="resTotaisTags">
-                    <!-- Tags dinâmicas -->
+            <div class="row c2">
+              <section class="pane">
+                <div class="pane-head">
+                  <div class="pane-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+                    Especificação da Estrutura
                   </div>
                 </div>
-
-                <div class="panel-box-result">
-                  <div class="panel-box-head-result">
-                    <span class="panel-box-title-result">Centros de Trabalho (Seletor)</span>
-                    <span class="pep-chip-result" id="resTotaisPepBadge">PEP -</span>
-                  </div>
-                  <div class="ct-list-result" id="resTotaisCtsResumo">
-                    <!-- CTs rápidos -->
-                  </div>
+                <p class="struct-title-result" id="resTotaisEstrutura">1 Módulo — 10m × 3,6m (Fixo)</p>
+                <div class="struct-tags-result" id="resTotaisTags">
+                  <!-- Tags dinâmicas -->
                 </div>
-              </div>
+              </section>
+
+              <section class="pane">
+                <div class="pane-head">
+                  <div class="pane-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Centros de Trabalho (Seletor)
+                  </div>
+                  <span class="pep-chip-result" id="resTotaisPepBadge">PEP -</span>
+                </div>
+                <div class="ct-list-result" id="resTotaisCtsResumo">
+                  <!-- CTs rápidos -->
+                </div>
+              </section>
             </div>
+          </div>
 
-            <!-- PANE 4: RESUMO DETALHADO POR REGRAS & PROCESSOS (ANTIGA ABA 1) -->
-            <div class="calc-modal-pane hidden" id="calcPaneResumo">
-              <p class="section-label-result">Resumo consolidado das regras orçadas</p>
-              <!-- KPI Cards Summary Header -->
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;">
-                <div class="kpi-card-result" data-d="total">
-                  <div class="kpi-top-result">
-                    <span class="kpi-label-result">Total Horas Orçadas</span>
-                    <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-                  </div>
-                  <div class="kpi-value-result"><span id="resTotalH">0,00</span><span class="unit">h</span></div>
-                  <p class="kpi-caption-result" style="color:var(--text-dim);">Soma de todos os processos orçados</p>
+          <!-- ============ PANE 2 — CRONOGRAMA ============ -->
+          <div class="stack hidden" id="calcPaneCronograma">
+            <section class="pane" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+              <div class="cronograma-toolbar">
+                <div class="search-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…">
                 </div>
-
-                <div class="kpi-card-result" data-d="mec">
-                  <div class="kpi-top-result">
-                    <span class="kpi-label-result">Duração Estimada Total</span>
-                    <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                  </div>
-                  <div class="kpi-value-result"><span id="resTotalDUR">0,0</span><span class="unit">dias</span></div>
-                  <p class="kpi-caption-result" style="color:var(--text-dim);">Tempo de ciclo produtivo estimado</p>
-                </div>
-
-                <div class="kpi-card-result" data-d="eng">
-                  <div class="kpi-top-result">
-                    <span class="kpi-label-result">Especificação Estrutural</span>
-                    <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
-                  </div>
-                  <div style="font-size: 15px; font-weight: 700; color: var(--text); margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="resEstruturaInfo">-</div>
-                  <p class="kpi-caption-result" id="resDetagensInfo" style="color:var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px;">-</p>
-                </div>
+                <select id="cronogramaDisciplineFilter" class="ipt" style="min-width:180px;">
+                  <option value="ALL">Todos os Diagramas</option>
+                  <option value="Engenharia Mecânica">Eng. Mecânica</option>
+                  <option value="Engenharia Elétrica">Eng. Elétrica</option>
+                  <option value="Processos">Processos</option>
+                  <option value="Mecânica">Mecânica / Caldeiraria</option>
+                  <option value="Pintura">Pintura</option>
+                  <option value="Elétrica / Testes">Elétrica / Testes</option>
+                  <option value="Acessórios & Elétrica">Acessórios</option>
+                  <option value="Faturamento & Encerramento">Faturamento</option>
+                </select>
+                <span class="scenario-chip" id="cronogramaCenarioBadge">Cenário: -</span>
               </div>
-
-              <!-- Table of Results -->
-              <p class="section-label-result">Detalhamento dos processos &amp; fórmulas</p>
-              <div class="table-wrap-result">
-                <table class="calc-table" style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+              <div class="table-wrap-result" style="flex:1; overflow-y:auto;">
+                <table class="table-result">
                   <thead>
-                    <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
-                      <th style="padding: 12px 16px;">Processo / Campo</th>
-                      <th style="padding: 12px 16px; text-align: right; width: 150px;">Horas (H)</th>
-                      <th style="padding: 12px 16px; text-align: right; width: 160px;">Duração (DUR)</th>
+                    <tr>
+                      <th style="width:40px; text-align:center;">#</th>
+                      <th style="width:100px; text-align:center;">Operação</th>
+                      <th>Descrição da tarefa</th>
+                      <th class="num" style="width:90px;">Duração</th>
+                      <th style="width:60px; text-align:center;">Unid.</th>
+                      <th class="num" style="width:110px;">Trabalho</th>
+                      <th style="width:150px;">Diagrama</th>
                     </tr>
                   </thead>
+                  <tbody id="resCronogramaTableBody"></tbody>
+                </table>
+              </div>
+              <div class="cron-foot">
+                <span id="cronogramaFootSummary">Mostrando 0 de 0 operações</span>
+                <span>Total: <b id="cronogramaFootDias">0,0 d</b> · <b id="cronogramaFootHoras" style="color:var(--total-color);">0,00 h</b></span>
+              </div>
+            </section>
+          </div>
+
+          <!-- ============ PANE 3 — SELETOR PEP & CTs ============ -->
+          <div class="stack hidden" id="calcPaneSeletor">
+            <section class="pane">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  Seletor — PEP Standard &amp; Centros de Trabalho
+                </div>
+                <span class="pep-chip-result" id="resSeletorPepBadge">PEP Standard: -</span>
+              </div>
+              <div class="ct-grid" id="resSeletorCtsGrid">
+                <!-- Rendered dynamically -->
+              </div>
+            </section>
+          </div>
+
+          <!-- ============ PANE 4 — REGRAS & PROCESSOS ============ -->
+          <div class="stack hidden" id="calcPaneRegras">
+            <section class="pane">
+              <div class="pane-head">
+                <div class="pane-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  Resumo Consolidado das Regras Orçadas
+                </div>
+              </div>
+              <div class="row" style="grid-template-columns:repeat(3,1fr);">
+                <div class="kpi-card-result" data-d="total">
+                  <div class="kpi-top-result"><span class="kpi-label-result">Total Horas Orçadas</span><span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div>
+                  <div class="kpi-value-result"><span id="resTotalH">0,00</span><span class="unit">h</span></div>
+                  <p class="kpi-caption-result">Soma de todos os processos orçados</p>
+                </div>
+                <div class="kpi-card-result" data-d="mec">
+                  <div class="kpi-top-result"><span class="kpi-label-result">Duração Estimada</span><span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
+                  <div class="kpi-value-result"><span id="resTotalDUR">0,0</span><span class="unit">dias</span></div>
+                  <p class="kpi-caption-result">Tempo de ciclo produtivo estimado</p>
+                </div>
+                <div class="kpi-card-result" data-d="eng">
+                  <div class="kpi-top-result"><span class="kpi-label-result">Especificação</span><span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span></div>
+                  <div style="font-size:14px; font-weight:700; color:var(--text); margin-top:2px;" id="resEstruturaInfo">-</div>
+                  <p class="kpi-caption-result" id="resDetagensInfo">-</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="pane">
+              <div class="pane-head">
+                <div class="pane-title">Detalhamento dos processos &amp; fórmulas</div>
+              </div>
+              <div class="table-wrap-result">
+                <table class="table-result">
+                  <thead><tr><th>Processo / Campo</th><th class="num" style="width:140px;">Horas (H)</th><th class="num" style="width:140px;">Duração (DUR)</th></tr></thead>
                   <tbody id="resTableBody">
                     <!-- Dynamically rendered -->
                   </tbody>
                 </table>
               </div>
-            </div>
+            </section>
+          </div>
+        </div>
 
-            <!-- PANE 2: CRONOGRAMA COMPLETO DE OPERAÇÕES (FASE 3) -->
-            <div class="calc-modal-pane hidden" id="calcPaneCronograma">
-              <div class="cronograma-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
-                <div style="display:flex; gap:10px; align-items:center; flex:1; min-width:300px;">
-                  <div class="search-wrap" style="position:relative; flex:1;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…" style="padding-left:36px; font-size:12.5px;">
-                  </div>
-                  <select id="cronogramaDisciplineFilter" class="ipt" style="max-width:200px; font-size:12.5px; cursor:pointer;">
-                    <option value="ALL">Todos os Diagramas</option>
-                    <option value="Engenharia Mecânica">Eng. Mecânica</option>
-                    <option value="Engenharia Elétrica">Eng. Elétrica</option>
-                    <option value="Processos">Processos</option>
-                    <option value="Mecânica">Mecânica / Caldeiraria</option>
-                    <option value="Pintura">Pintura</option>
-                    <option value="Elétrica / Testes">Elétrica / Testes</option>
-                    <option value="Acessórios & Elétrica">Acessórios</option>
-                    <option value="Faturamento & Encerramento">Faturamento</option>
-                  </select>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <span id="cronogramaCenarioBadge" style="font-size:12px; font-weight:700; color:var(--total-color); background:var(--green-dim); border:1px solid var(--green); padding:5px 12px; border-radius:6px;">Cenário: -</span>
-                </div>
-              </div>
-
-              <div class="table-wrap-result">
-                <table class="cronograma-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
-                  <thead style="position:sticky; top:0; background:var(--panel-2); z-index:2; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                    <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
-                      <th style="padding: 11px 10px; width:45px; text-align: center;">#</th>
-                      <th style="padding: 11px 12px; width:85px; text-align: center;">Operação</th>
-                      <th style="padding: 11px 12px;">Descrição da Tarefa</th>
-                      <th style="padding: 11px 10px; width:95px; text-align: right;">Duração (dias)</th>
-                      <th style="padding: 11px 8px; width:65px; text-align: center;">Unid.</th>
-                      <th style="padding: 11px 12px; width:110px; text-align: right;">Trabalho (H)</th>
-                      <th style="padding: 11px 12px; width:150px;">Diagrama / Fase</th>
-                    </tr>
-                  </thead>
-                  <tbody id="resCronogramaTableBody">
-                    <!-- Dynamically rendered -->
-                  </tbody>
-                  <tfoot style="position:sticky; bottom:0; background:var(--panel-3); font-weight:700; border-top:2px solid var(--border);">
-                    <tr>
-                      <td colspan="3" style="padding:12px 14px; color:var(--text);" id="cronogramaFootSummary">Total de tarefas</td>
-                      <td style="padding:12px 10px; text-align:right; font-family:'IBM Plex Mono'; color:var(--amber); font-size:13.5px;" id="cronogramaFootDias">0,0 d</td>
-                      <td style="padding:12px 8px; text-align:center; font-size:11.5px; color:var(--text-dim);">DIAS</td>
-                      <td style="padding:12px 12px; text-align:right; font-family:'IBM Plex Mono'; color:var(--total-color); font-size:14px;" id="cronogramaFootHoras">0,00 h</td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-
-            <!-- PANE 3: SELETOR DE PEP & CENTROS DE TRABALHO -->
-            <div class="calc-modal-pane hidden" id="calcPaneSeletor">
-              <div id="resSeletorWrap" class="panel-box-result" style="margin-bottom: 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                  <span style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); display: flex; align-items: center; gap: 8px;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--total-color);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    Seletor — PEP Standard &amp; Centros de Trabalho (CTs)
-                  </span>
-                  <span id="resSeletorPepBadge" class="pep-chip-result">PEP Standard: -</span>
-                </div>
-                <div id="resSeletorCtsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; font-size: 13px;">
-                  <!-- Rendered dynamically -->
-                </div>
-              </div>
-            </div>
+        <!-- ================= FOOTER ================= -->
+        <div class="app-footer">
+          <span class="footer-meta" id="resFooterMeta"><b>0,0 h</b> totais · <b>0</b> operações · PEP <b>-</b></span>
+          <div class="footer-btns">
+            <button type="button" class="btn" id="btnCopiarResumoCalculo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar Resumo
+            </button>
+            <button type="button" class="btn" id="btnExportarExcel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#107c41;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+              Exportar Excel (.xlsx)
+            </button>
+            <button type="button" class="btn" id="btnExportarCsv">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar CSV
+            </button>
+            <button type="button" class="btn primary" id="btnVoltarPlanejamento">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Voltar ao Formulário
+            </button>
           </div>
         </div>
       </div>
