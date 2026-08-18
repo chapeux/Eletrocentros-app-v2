@@ -450,7 +450,7 @@
           "base": {
             "forma": "derivado_h",
             "valor": 5,
-            "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"} ]
+            "etapas": [ {"tipo": "dividir", "valor": 7.92}, {"tipo": "arredondar", "modo": "padrao"}, {"tipo": "limitar_min", "valor": 1} ]
           },
           "condicoes": [  ],
           "especiais": {
