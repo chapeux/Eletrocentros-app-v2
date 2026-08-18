@@ -3936,9 +3936,29 @@
               "INT",
               "MCM"
             ],
-            "etapas": [ {"tipo": "dividir", "valor": 0.9}, {"tipo": "multiplicar", "valor": 0.1}, {"tipo": "multiplicar", "valor": 0.8} ]
+            "etapas": [ {"tipo": "multiplicar", "valor": 0.072} ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -3990,7 +4010,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4049,7 +4089,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4108,7 +4168,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4175,7 +4255,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4241,7 +4341,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4307,7 +4427,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4373,7 +4513,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
@@ -4425,7 +4585,27 @@
               }
             ]
           },
-          "condicoes": [  ]
+          "condicoes": [  ],
+          "especiais": {
+            "solar": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            },
+            "essw": {
+              "ativo": false,
+              "base": {
+                "forma": "constante",
+                "valor": 0
+              },
+              "herdar_condicoes": true,
+              "condicoes": [  ]
+            }
+          }
         },
         "DUR": {
           "base": {
