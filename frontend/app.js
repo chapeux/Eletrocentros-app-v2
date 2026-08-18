@@ -655,7 +655,7 @@
 
     var comp = !isNaN(firstComp) && firstComp > 0 ? firstComp : (parseFloat(($('comp') ? $('comp').value : '10').replace(',', '.')) || 10);
     var larg = !isNaN(firstLarg) && firstLarg > 0 ? firstLarg : (parseFloat(($('larg') ? $('larg').value : '3.6').replace(',', '.')) || 3.6);
-    var alt = parseFloat(($('alt') ? $('alt').value : '2.6').replace(',', '.')) || 2.6;
+    var alt = parseFloat(($('alt') ? $('alt').value : '0').replace(',', '.')) || 0;
     var nmod = parseInt(selVal('nrmodulos') || ($('nmod') ? $('nmod').value : '1'), 10) || 1;
     var qtdmaq = parseInt(($('qtdmaq') ? $('qtdmaq').value : '0'), 10) || 0;
     var nrcolunas = parseInt(($('nrcolunas') ? $('nrcolunas').value : '0'), 10) || 0;
@@ -1675,7 +1675,7 @@
 
     // 3. Info Estrutura e CTs no Resumo Geral
     if ($('resTotaisEstrutura')) {
-      $('resTotaisEstrutura').textContent = ctx.nmod + ' Módulo(s) — ' + ctx.comp + 'm × ' + ctx.larg + 'm × ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')';
+      $('resTotaisEstrutura').textContent = ctx.nmod + ' Módulo(s) — ' + ctx.comp + 'm × ' + ctx.larg + 'm (' + ctx.tipoestrutura + ')';
     }
     if ($('resTotaisTags')) {
       $('resTotaisTags').innerHTML =
@@ -1713,7 +1713,7 @@
     // 4. KPIs da Aba de Regras & Processos (Antiga Aba 1)
     if ($('resTotalH')) $('resTotalH').textContent = res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if ($('resTotalDUR')) $('resTotalDUR').textContent = res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    if ($('resEstruturaInfo')) $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm × ' + ctx.alt.toLocaleString('pt-BR') + 'm)';
+    if ($('resEstruturaInfo')) $('resEstruturaInfo').textContent = ctx.nmod + ' Mód. (' + ctx.comp.toLocaleString('pt-BR') + 'm × ' + ctx.larg.toLocaleString('pt-BR') + 'm)';
     if ($('resDetagensInfo')) $('resDetagensInfo').textContent = ctx.tipoestrutura + ' | ' + ctx.planpin + ' | ' + ctx.tipomaq;
 
     // Reset para primeira aba (Resumo Geral de Horas)
@@ -1844,7 +1844,7 @@
       lines.push('==================================================');
       lines.push('ELETROCENTROS APP — RESUMO DO CÁLCULO DE TEMPOS');
       lines.push('==================================================');
-      lines.push('Estrutura: ' + ctx.nmod + ' Módulos — ' + ctx.comp + 'm x ' + ctx.larg + 'm x ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')');
+      lines.push('Estrutura: ' + ctx.nmod + ' Módulos — ' + ctx.comp + 'm x ' + ctx.larg + 'm (' + ctx.tipoestrutura + ')');
       lines.push('Plano Pintura: ' + ctx.planpin + ' | Máquina: ' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x)');
       lines.push('Complexidade: ' + ctx.complexidade + ' | Incêndio: ' + ctx.incendio + ' | Segurança: ' + ctx.seguranca);
       if (res.seletor && res.seletor['PEP Standard']) {
@@ -2115,7 +2115,7 @@
     var ctx = {
       comp: 10,
       larg: 3.6,
-      alt: 2.6,
+      alt: 0,
       nmod: 1,
       tipoestrutura: 'Fixo',
       planpin: 'WAU-ELETRO-08',

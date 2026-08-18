@@ -494,7 +494,7 @@ class AppAPI:
             meta_rows = [
                 ("Código PEP / Ordem:", pep, "Data / Hora de Cálculo:", data_hora),
                 ("Tipo de Estrutura:", str(ctx.get("tipoestrutura", "-")), "Quantidade de Módulos:", f"{ctx.get('nmod', 1)} Módulo(s)"),
-                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L) x {ctx.get('alt', 0)}m (A)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
+                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
                 ("Ar Condicionado:", f"{ctx.get('tipomaq', '-')} ({ctx.get('qtdmaq', 0)}x)", "Complexidade Elétrica:", str(ctx.get("complexidade", "-"))),
                 ("Sist. Incêndio:", str(ctx.get("incendio", "-")), "Sist. Segurança:", str(ctx.get("seguranca", "-"))),
                 ("Usuário Responsável:", usuario, "Nº Colunas Total:", str(ctx.get("nrcolunas", 0)))
@@ -514,7 +514,7 @@ class AppAPI:
                 curr_r += 1
 
             curr_r += 1
-            ws_tot[f"A{curr_r}"] = "HORAS TOTAIS POR DISCIPLINA (GABARITO CONSOLIDADO)"
+            ws_tot[f"A{curr_r}"] = "HORAS TOTAIS POR DIAGRAMA (GABARITO CONSOLIDADO)"
             ws_tot[f"A{curr_r}"].font = section_font
             curr_r += 1
 
@@ -688,7 +688,7 @@ class AppAPI:
             meta_rows = [
                 ("Código PEP / Ordem:", pep, "Data / Hora de Cálculo:", data_hora),
                 ("Tipo de Estrutura:", str(ctx.get("tipoestrutura", "-")), "Quantidade de Módulos:", f"{ctx.get('nmod', 1)} Módulo(s)"),
-                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L) x {ctx.get('alt', 0)}m (A)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
+                ("Dimensões Gerais:", f"{ctx.get('comp', 0)}m (C) x {ctx.get('larg', 0)}m (L)", "Plano de Pintura:", str(ctx.get("planpin", "-"))),
                 ("Ar Condicionado:", f"{ctx.get('tipomaq', '-')} ({ctx.get('qtdmaq', 0)}x)", "Complexidade Elétrica:", str(ctx.get("complexidade", "-"))),
                 ("Sist. Incêndio:", str(ctx.get("incendio", "-")), "Sist. Segurança:", str(ctx.get("seguranca", "-"))),
                 ("Usuário Responsável:", usuario, "Nº Colunas Total:", str(ctx.get("nrcolunas", 0)))
