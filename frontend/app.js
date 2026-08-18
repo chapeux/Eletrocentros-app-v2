@@ -101,8 +101,10 @@
      VIEW SWITCHING & AUTHENTICATION MODAL LOGIC
      ========================================================================== */
   var tabBtnPlanejamento = $('tabBtnPlanejamento');
+  var tabBtnResultados = $('tabBtnResultados');
   var tabBtnManutencao = $('tabBtnManutencao');
   var viewPlanejamento = $('view-planejamento');
+  var viewResultados = $('view-resultados');
   var viewManutencao = $('view-manutencao');
   var authModalOverlay = $('authModalOverlay');
   var authPasswordInput = $('authPassword');
@@ -119,33 +121,41 @@
     }
 
     state.currentView = targetView;
-    tabBtnPlanejamento.classList.toggle('active', targetView === 'planejamento');
-    tabBtnManutencao.classList.toggle('active', targetView === 'manutencao');
+    if (tabBtnPlanejamento) tabBtnPlanejamento.classList.toggle('active', targetView === 'planejamento');
+    if (tabBtnResultados) tabBtnResultados.classList.toggle('active', targetView === 'resultados');
+    if (tabBtnManutencao) tabBtnManutencao.classList.toggle('active', targetView === 'manutencao');
+
+    if (viewPlanejamento) viewPlanejamento.classList.toggle('hidden', targetView !== 'planejamento');
+    if (viewResultados) viewResultados.classList.toggle('hidden', targetView !== 'resultados');
+    if (viewManutencao) viewManutencao.classList.toggle('hidden', targetView !== 'manutencao');
 
     if (targetView === 'planejamento') {
-      viewPlanejamento.classList.remove('hidden');
-      viewManutencao.classList.add('hidden');
       if (modeChip) modeChip.style.display = 'none';
       if (btnHist) btnHist.style.display = 'none';
       if ($('btnCarregar')) $('btnCarregar').style.display = 'flex';
-      ringWrap.style.display = 'flex';
-      subTitleText.textContent = 'PCP & PLANEJAMENTO';
+      if (ringWrap) ringWrap.style.display = 'flex';
+      if (subTitleText) subTitleText.textContent = 'PCP & PLANEJAMENTO';
+    } else if (targetView === 'resultados') {
+      if (modeChip) modeChip.style.display = 'none';
+      if (btnHist) btnHist.style.display = 'none';
+      if ($('btnCarregar')) $('btnCarregar').style.display = 'none';
+      if (ringWrap) ringWrap.style.display = 'none';
+      if (subTitleText) subTitleText.textContent = 'RESULTADO DO CÁLCULO';
     } else {
-      viewPlanejamento.classList.add('hidden');
-      viewManutencao.classList.remove('hidden');
       if (modeChip) modeChip.style.display = 'none';
       if (btnHist) btnHist.style.display = 'flex';
       if ($('btnCarregar')) $('btnCarregar').style.display = 'none';
-      ringWrap.style.display = 'none';
-      subTitleText.textContent = 'REGRAS & PARÂMETROS';
+      if (ringWrap) ringWrap.style.display = 'none';
+      if (subTitleText) subTitleText.textContent = 'REGRAS & PARÂMETROS';
       if (!state.disciplinas.length) {
         carregarDisciplinas();
       }
     }
   }
 
-  tabBtnPlanejamento.addEventListener('click', function () { switchView('planejamento'); });
-  tabBtnManutencao.addEventListener('click', function () { switchView('manutencao'); });
+  if (tabBtnPlanejamento) tabBtnPlanejamento.addEventListener('click', function () { switchView('planejamento'); });
+  if (tabBtnResultados) tabBtnResultados.addEventListener('click', function () { switchView('resultados'); });
+  if (tabBtnManutencao) tabBtnManutencao.addEventListener('click', function () { switchView('manutencao'); });
 
   function openAuthModal() {
     authPasswordInput.value = '';
@@ -1610,10 +1620,8 @@
     }
   }
 
-  function exibirModalResultadoCalculo(res) {
+  function renderResultadoCalculoView(res) {
     if (!res) return;
-    var modal = $('modalResultadoCalculo');
-    if (!modal) return;
 
     var ctx = res.ctx;
     var seletorMatch = res.seletor || consultarSeletor(ctx);
@@ -1725,18 +1733,18 @@
           var trC = document.createElement('tr');
           trC.className = 'campo-row';
           trC.innerHTML =
-            '<td style="font-weight:600; color:#FFFFFF;"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:#60A5FA; margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FFFFFF;">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FBBF24;">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+            '<td style="font-weight:600; color:var(--text);"><span style="font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--eng-color); margin-right:8px;">' + escapeHtml(c.chave) + '</span></td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--text);">' + c.h.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+            '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--amber);">' + c.dur.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
           tbodyRegras.appendChild(trC);
         });
 
         var trSub = document.createElement('tr');
         trSub.className = 'area-total-row';
         trSub.innerHTML =
-          '<td style="font-weight:700; color:#CBD5E1;">Subtotal (' + escapeHtml(area.area) + ')</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#34D399;">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:#FBBF24;">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
+          '<td style="font-weight:700; color:var(--text-dim);">Subtotal (' + escapeHtml(area.area) + ')</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--total-color);">' + area.totalH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+          '<td style="text-align:right; font-family:\'IBM Plex Mono\'; font-weight:700; color:var(--amber);">' + area.totalDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' d</td>';
         tbodyRegras.appendChild(trSub);
       });
 
@@ -1744,8 +1752,8 @@
       trGrand.className = 'grand-total-row';
       trGrand.innerHTML =
         '<td>TOTAL DAS REGRAS ORÇADAS</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:#34D399; font-size:15px; font-weight:800;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
-        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:#FBBF24; font-size:15px; font-weight:800;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--total-color); font-size:15px; font-weight:800;">' + res.totalGeralH.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' h</td>' +
+        '<td style="text-align:right; font-family:\'IBM Plex Mono\'; color:var(--amber); font-size:15px; font-weight:800;">' + res.totalGeralDUR.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' dias</td>';
       tbodyRegras.appendChild(trGrand);
     }
 
@@ -1780,9 +1788,9 @@
 
           cts.forEach(function (ct) {
             var card = document.createElement('div');
-            card.style.cssText = 'background:#182232; border:1px solid #2B394E; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;';
-            card.innerHTML = '<span style="font-weight:600; color:#CBD5E1;">' + escapeHtml(ct.label) + ':</span>' +
-              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:#34D399;">DR ' + escapeHtml(ct.dr) + ' <span style="font-size:11px; color:#94A3B8; font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
+            card.style.cssText = 'background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;';
+            card.innerHTML = '<span style="font-weight:600; color:var(--text);">' + escapeHtml(ct.label) + ':</span>' +
+              '<span style="font-family:\'IBM Plex Mono\', monospace; font-weight:700; color:var(--total-color);">' + escapeHtml(ct.dr) + ' <span style="font-size:11px; color:var(--text-dim); font-weight:500;">(Alt ' + escapeHtml(ct.alt || '1') + ')</span></span>';
             ctsGrid.appendChild(card);
           });
         }
@@ -1791,17 +1799,18 @@
       }
     }
 
-    modal.classList.add('open');
+    if (tabBtnResultados) tabBtnResultados.style.display = 'flex';
+    switchView('resultados');
     window._lastCalculationResult = res;
   }
 
-  function fecharModalResultadoCalculo() {
-    var modal = $('modalResultadoCalculo');
-    if (modal) modal.classList.remove('open');
-  }
+  var exibirModalResultadoCalculo = renderResultadoCalculoView;
 
-  if ($('btnCloseResultadoCalculo')) $('btnCloseResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
-  if ($('btnFecharResultadoCalculo')) $('btnFecharResultadoCalculo').addEventListener('click', fecharModalResultadoCalculo);
+  if ($('btnVoltarPlanejamento')) {
+    $('btnVoltarPlanejamento').addEventListener('click', function () {
+      switchView('planejamento');
+    });
+  }
 
   initModalResultadoTabs();
 
