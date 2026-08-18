@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eletrocentros — Resultado do Cálculo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void: #090D14;
+    --panel: #10161F;
+    --panel-raised: #161E2A;
+    --panel-inset: #0C1119;
+    --line: #24304144;
+    --line-solid: #26314A;
+    --text-1: #E9EEF6;
+    --text-2: #9AA7BB;
+    --text-3: #64728A;
+
+    --eng: #5AA9FF;
+    --eng-soft: #5AA9FF1a;
+    --mec: #F2A93B;
+    --mec-soft: #F2A93B1a;
+    --ele: #B98CFF;
+    --ele-soft: #B98CFF1a;
+    --total: #33E0AF;
+    --total-soft: #33E0AF1a;
+
+    --radius: 10px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-ui: 'Inter', sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--void);
+    font-family: var(--font-ui);
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ambient backdrop suggesting the app behind the dialog */
+  .backdrop{
+    position:fixed; inset:0;
+    background:
+      radial-gradient(1100px 600px at 12% -10%, #16223a55, transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, #1a2b2455, transparent 60%),
+      var(--void);
+    overflow:hidden;
+  }
+  .backdrop::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(to right, #ffffff08 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff08 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(1200px 700px at 50% 30%, black, transparent 75%);
+  }
+
+  .stage{
+    position:relative;
+    min-height:100%;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding: 40px 20px 60px;
+  }
+
+  .modal{
+    width:100%;
+    max-width: 1180px;
+    background: var(--panel);
+    border: 1px solid var(--line-solid);
+    border-radius: 14px;
+    box-shadow: 0 40px 100px -30px #000c, 0 0 0 1px #000;
+    overflow:hidden;
+  }
+
+  /* ---------- header ---------- */
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, #131b27 0%, var(--panel) 100%);
+  }
+  .modal-head-left{ display:flex; align-items:center; gap:14px; }
+  .head-icon{
+    width:38px; height:38px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--total-soft);
+    border: 1px solid #33e0af33;
+    color: var(--total);
+    flex-shrink:0;
+  }
+  .head-icon svg{ width:19px; height:19px; }
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0 0 3px;
+  }
+  .head-title{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    color: var(--text-1);
+    margin:0;
+  }
+  .head-sub{
+    font-size: 12.5px;
+    color: var(--text-2);
+    margin: 3px 0 0;
+  }
+  .close-btn{
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    background: transparent; border: 1px solid transparent;
+    color: var(--text-3); cursor:pointer;
+    transition: all .15s ease;
+  }
+  .close-btn:hover{ background: var(--panel-raised); border-color: var(--line-solid); color: var(--text-1); }
+  .close-btn:focus-visible{ outline: 2px solid var(--total); outline-offset: 2px; }
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex; gap:4px;
+    padding: 10px 24px 0;
+    border-bottom: 1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab{
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-family: var(--font-ui);
+    font-size: 13px; font-weight:500;
+    color: var(--text-2);
+    padding: 11px 16px 12px;
+    display:flex; align-items:center; gap:8px;
+    border-bottom: 2px solid transparent;
+    white-space:nowrap;
+    transition: color .15s ease;
+  }
+  .tab:hover{ color: var(--text-1); }
+  .tab.active{ color: var(--text-1); border-bottom-color: var(--total); }
+  .tab-count{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    background: var(--total-soft);
+    color: var(--total);
+    border: 1px solid #33e0af2e;
+    border-radius: 20px;
+    padding: 1px 7px;
+  }
+  .tab:focus-visible{ outline: 2px solid var(--total); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---------- body ---------- */
+  .modal-body{ padding: 26px 28px 8px; }
+
+  .section-label{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0 0 12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-label::after{
+    content:""; flex:1; height:1px; background: var(--line);
+  }
+
+  /* ---------- KPI cluster with circuit trace ---------- */
+  .kpi-cluster{ position:relative; margin-bottom: 30px; }
+  .kpi-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    position:relative;
+    z-index:2;
+  }
+  .trace-svg{
+    position:absolute;
+    left:0; right:0;
+    top: 38px;
+    height: 34px;
+    width:100%;
+    z-index:1;
+    pointer-events:none;
+    overflow:visible;
+  }
+  .trace-line{
+    fill:none;
+    stroke-width: 1.6;
+    stroke-dasharray: 4 4;
+    animation: flow 1.4s linear infinite;
+  }
+  .trace-node{ fill: var(--panel); stroke-width: 1.6; }
+  @keyframes flow{ to{ stroke-dashoffset: -16; } }
+  @media (prefers-reduced-motion: reduce){ .trace-line{ animation: none; } }
+
+  .kpi-card{
+    background: var(--panel-raised);
+    border: 1px solid var(--line-solid);
+    border-radius: var(--radius);
+    padding: 16px 16px 15px;
+    position:relative;
+    overflow:hidden;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .kpi-card::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:3px;
+    background: var(--accent, var(--total));
+  }
+  .kpi-card:hover{ transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent, var(--total)) 45%, var(--line-solid)); }
+  .kpi-card.total{ background: linear-gradient(180deg, #14231e, var(--panel-raised)); }
+
+  .kpi-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+  .kpi-label{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent, var(--text-2));
+  }
+  .kpi-icon{ width:16px; height:16px; color: var(--accent, var(--text-3)); opacity:0.85; }
+  .kpi-icon svg{ width:100%; height:100%; }
+
+  .kpi-value{
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--text-1);
+    letter-spacing: -0.01em;
+    line-height:1;
+  }
+  .kpi-value .unit{ font-size: 14px; color: var(--text-2); font-weight:400; margin-left:3px; }
+  .kpi-caption{
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 8px;
+    line-height:1.4;
+  }
+
+  .kpi-card[data-d="eng"]{ --accent: var(--eng); }
+  .kpi-card[data-d="mec"]{ --accent: var(--mec); }
+  .kpi-card[data-d="ele"]{ --accent: var(--ele); }
+  .kpi-card[data-d="total"]{ --accent: var(--total); }
+
+  /* ---------- table ---------- */
+  .table-wrap{
+    border: 1px solid var(--line-solid);
+    border-radius: var(--radius);
+    overflow:hidden;
+    margin-bottom: 30px;
+  }
+  table{ width:100%; border-collapse: collapse; }
+  thead th{
+    text-align:left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    background: var(--panel-inset);
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--line-solid);
+    font-weight:500;
+  }
+  thead th.num{ text-align:right; }
+  tbody td{
+    padding: 13px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--line);
+    color: var(--text-1);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr.total-row td{
+    background: var(--total-soft);
+    font-weight:600;
+  }
+  tbody tr:not(.total-row):hover td{ background: #ffffff05; }
+  .disc-name{ display:flex; align-items:center; gap:9px; font-weight:600; }
+  .disc-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; background: var(--dot); }
+  tr[data-d="eng"] .disc-dot{ --dot: var(--eng); } tr[data-d="eng"] .disc-name{ color: var(--eng); }
+  tr[data-d="mec"] .disc-dot{ --dot: var(--mec); } tr[data-d="mec"] .disc-name{ color: var(--mec); }
+  tr[data-d="ele"] .disc-dot{ --dot: var(--ele); } tr[data-d="ele"] .disc-name{ color: var(--ele); }
+  tr.total-row .disc-dot{ --dot: var(--total); } tr.total-row .disc-name{ color: var(--total); }
+  .rule-text{ color: var(--text-2); font-size: 12.5px; }
+  td.num{ text-align:right; font-family: var(--font-mono); }
+  td.pct{ text-align:right; font-family: var(--font-mono); color: var(--text-2); width:110px; }
+  .pct-bar-wrap{ display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+  .pct-bar{ width:52px; height:4px; border-radius:3px; background: var(--panel-inset); overflow:hidden; }
+  .pct-bar > i{ display:block; height:100%; background: var(--dot, var(--total)); border-radius:3px; }
+  tr[data-d="eng"] .pct-bar > i{ --dot: var(--eng); } tr[data-d="mec"] .pct-bar > i{ --dot: var(--mec); }
+  tr[data-d="ele"] .pct-bar > i{ --dot: var(--ele); } tr.total-row .pct-bar > i{ --dot: var(--total); }
+
+  /* ---------- info panels ---------- */
+  .panels{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .panel-box{
+    background: var(--panel-inset);
+    border: 1px solid var(--line-solid);
+    border-radius: var(--radius);
+    padding: 18px 18px 20px;
+  }
+  .panel-box-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 14px;
+  }
+  .panel-box-title{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .pep-chip{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--total);
+    background: var(--total-soft);
+    border: 1px solid #33e0af2e;
+    border-radius: 6px;
+    padding: 3px 9px;
+  }
+  .struct-title{
+    font-family: var(--font-display);
+    font-weight:600; font-size: 15px;
+    color: var(--text-1);
+    margin: 0 0 12px;
+  }
+  .struct-tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tag{
+    font-size: 11.5px;
+    color: var(--text-2);
+    background: var(--panel-raised);
+    border: 1px solid var(--line-solid);
+    border-radius: 6px;
+    padding: 5px 10px;
+  }
+  .tag b{ color: var(--text-1); font-weight:500; }
+
+  .ct-list{ display:flex; flex-direction:column; }
+  .ct-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .ct-row:last-child{ border-bottom:none; padding-bottom:0; }
+  .ct-role{ font-size: 12.5px; color: var(--text-2); }
+  .ct-code{ font-family: var(--font-mono); font-size: 12.5px; color: var(--text-1); text-align:right; }
+  .ct-code .alt{ color: var(--text-3); }
+
+  /* ---------- footer ---------- */
+  .modal-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 12px;
+    padding: 18px 28px;
+    border-top: 1px solid var(--line);
+    background: var(--panel-inset);
+  }
+  .foot-left{ display:flex; gap:10px; }
+  .btn{
+    font-family: var(--font-ui);
+    font-size: 13px; font-weight:500;
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 9px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--line-solid);
+    background: var(--panel-raised);
+    color: var(--text-1);
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .btn svg{ width:14px; height:14px; }
+  .btn:hover{ background:#1f2a3a; border-color:#37455e; }
+  .btn:focus-visible{ outline: 2px solid var(--total); outline-offset:2px; }
+  .btn.primary{
+    background: var(--total);
+    border-color: var(--total);
+    color: #06251c;
+    font-weight:600;
+  }
+  .btn.primary:hover{ background:#48e8bc; }
+
+  @media (max-width: 860px){
+    .kpi-grid{ grid-template-columns: 1fr 1fr; }
+    .trace-svg{ display:none; }
+    .panels{ grid-template-columns: 1fr; }
+    .modal-foot{ flex-direction:column-reverse; align-items:stretch; }
+    .foot-left{ flex-wrap:wrap; }
+  }
+  @media (max-width: 520px){
+    .kpi-grid{ grid-template-columns: 1fr; }
+    thead th:nth-child(2), tbody td:nth-child(2){ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="backdrop">
+  <div class="stage">
+    <div class="modal" role="dialog" aria-labelledby="modalTitle">
+
+      <div class="modal-head">
+        <div class="modal-head-left">
+          <div class="head-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          </div>
+          <div>
+            <p class="eyebrow">PCP · Fase 3 · Cronograma de Operações</p>
+            <h1 class="head-title" id="modalTitle">Resultado do Cálculo &amp; Cronograma de Operações</h1>
+            <p class="head-sub">Estimativa de horas orçadas e duração para o projeto selecionado</p>
+          </div>
+        </div>
+        <button class="close-btn" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active">Resumo Geral (Horas Totais)</button>
+        <button class="tab">Cronograma de Operações <span class="tab-count">108</span></button>
+        <button class="tab">Seletor PEP &amp; CTs</button>
+        <button class="tab">Regras &amp; Processos</button>
+      </div>
+
+      <div class="modal-body">
+
+        <p class="section-label">Horas por disciplina</p>
+        <div class="kpi-cluster">
+          <svg class="trace-svg" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true">
+            <path class="trace-line" d="M125,0 L125,17 L875,17 L875,0" stroke="#5AA9FF" opacity="0.55"/>
+            <path class="trace-line" d="M375,0 L375,17" stroke="#F2A93B" opacity="0.55"/>
+            <path class="trace-line" d="M625,0 L625,17" stroke="#B98CFF" opacity="0.55"/>
+            <path class="trace-line" d="M875,17 L875,34" stroke="#33E0AF" opacity="0.8"/>
+            <circle class="trace-node" cx="875" cy="17" r="3.5" stroke="#33E0AF"/>
+          </svg>
+
+          <div class="kpi-grid">
+            <div class="kpi-card" data-d="eng">
+              <div class="kpi-top">
+                <span class="kpi-label">Engenharia · ENG</span>
+                <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+              </div>
+              <div class="kpi-value">432,8<span class="unit">h</span></div>
+              <p class="kpi-caption">Tarefas &lt; 0703 — sem tempo 0,1 e tarefas ROM</p>
+            </div>
+
+            <div class="kpi-card" data-d="mec">
+              <div class="kpi-top">
+                <span class="kpi-label">Mecânica · MEC</span>
+                <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+              </div>
+              <div class="kpi-value">655,3<span class="unit">h</span></div>
+              <p class="kpi-caption">Tarefas 0705–0798 + 0894 — exceto 754, 755, 765, 793, 794</p>
+            </div>
+
+            <div class="kpi-card" data-d="ele">
+              <div class="kpi-top">
+                <span class="kpi-label">Elétrica · ELE</span>
+                <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+              </div>
+              <div class="kpi-value">1.100,1<span class="unit">h</span></div>
+              <p class="kpi-caption">Tarefas 0799–0893 + 0895 — exceto 810, 828, 838, 858, 868</p>
+            </div>
+
+            <div class="kpi-card total" data-d="total">
+              <div class="kpi-top">
+                <span class="kpi-label">Total do projeto</span>
+                <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+              </div>
+              <div class="kpi-value">2.188,2<span class="unit">h</span></div>
+              <p class="kpi-caption">Soma consolidada das 3 disciplinas</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-label">Participação por disciplina</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:190px;">Disciplina</th>
+                <th>Regra / intervalo de operações</th>
+                <th class="num" style="width:120px;">Horas totais</th>
+                <th class="num" style="width:130px;">Participação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-d="eng">
+                <td><span class="disc-name"><span class="disc-dot"></span>Engenharia (ENG)</span></td>
+                <td class="rule-text">Tarefas &lt; 0703 — desconsidera tempo 0,1 e tarefas ROM</td>
+                <td class="num">432,8 h</td>
+                <td class="pct"><div class="pct-bar-wrap"><div class="pct-bar"><i style="width:19.8%"></i></div>19,8%</div></td>
+              </tr>
+              <tr data-d="mec">
+                <td><span class="disc-name"><span class="disc-dot"></span>Mecânica (MEC)</span></td>
+                <td class="rule-text">Tarefas 0705 a 0798 + 0894 — desconsidera tempo 0,1 e 754, 755, 765, 793, 794</td>
+                <td class="num">655,3 h</td>
+                <td class="pct"><div class="pct-bar-wrap"><div class="pct-bar"><i style="width:29.9%"></i></div>29,9%</div></td>
+              </tr>
+              <tr data-d="ele">
+                <td><span class="disc-name"><span class="disc-dot"></span>Elétrica (ELE)</span></td>
+                <td class="rule-text">Tarefas 0799 a 0893 + 0895 — desconsidera tempo 0,1 e 810, 828, 838, 858, 868</td>
+                <td class="num">1.100,1 h</td>
+                <td class="pct"><div class="pct-bar-wrap"><div class="pct-bar"><i style="width:50.3%"></i></div>50,3%</div></td>
+              </tr>
+              <tr class="total-row" data-d="total">
+                <td><span class="disc-name"><span class="disc-dot"></span>Total geral do projeto</span></td>
+                <td class="rule-text">Soma consolidada das 3 disciplinas — Engenharia + Mecânica + Elétrica</td>
+                <td class="num">2.188,2 h</td>
+                <td class="pct"><div class="pct-bar-wrap"><div class="pct-bar"><i style="width:100%"></i></div>100,0%</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panels">
+          <div class="panel-box">
+            <div class="panel-box-head">
+              <span class="panel-box-title">Especificação da estrutura</span>
+            </div>
+            <p class="struct-title">1 Módulo — 10m × 3,6m × 2,6m (Fixo)</p>
+            <div class="struct-tags">
+              <span class="tag">Pintura <b>WAU-ELETRO-08</b></span>
+              <span class="tag">Ar cond. <b>Wall Mounted (2×)</b></span>
+              <span class="tag">Complexidade <b>Médio</b></span>
+            </div>
+          </div>
+
+          <div class="panel-box">
+            <div class="panel-box-head">
+              <span class="panel-box-title">Centros de trabalho (seletor)</span>
+              <span class="pep-chip">PEP 130-1306050</span>
+            </div>
+            <div class="ct-list">
+              <div class="ct-row"><span class="ct-role">Eng. Mecânica</span><span class="ct-code">DR 10001272 <span class="alt">(Alt 1)</span></span></div>
+              <div class="ct-row"><span class="ct-role">Eng. Elétrica</span><span class="ct-code">DR 10001273 <span class="alt">(Alt 1)</span></span></div>
+              <div class="ct-row"><span class="ct-role">Mecânica Mód. 1</span><span class="ct-code">DR 10001274 <span class="alt">(Alt 1)</span></span></div>
+              <div class="ct-row"><span class="ct-role">Acessórios</span><span class="ct-code">DR 10001305 <span class="alt">(Alt 1)</span></span></div>
+              <div class="ct-row"><span class="ct-role">Eletromecânica</span><span class="ct-code">DR 10001275 <span class="alt">(Alt 1)</span></span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-foot">
+        <div class="foot-left">
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copiar resumo
+          </button>
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            Exportar Excel (.xlsx)
+          </button>
+          <button class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Exportar CSV
+          </button>
+        </div>
+        <button class="btn primary">Fechar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

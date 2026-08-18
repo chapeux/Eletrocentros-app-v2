@@ -1624,10 +1624,10 @@
     res.totaisDisciplinas = totaisDisc;
 
     // 1. Atualizar KPIs do Resumo Geral (Aba 1)
-    if ($('resKpiEngH')) $('resKpiEngH').textContent = totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
-    if ($('resKpiMecH')) $('resKpiMecH').textContent = totaisDisc.mec_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
-    if ($('resKpiEleH')) $('resKpiEleH').textContent = totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
-    if ($('resKpiTotalH')) $('resKpiTotalH').textContent = totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h';
+    if ($('resKpiEngH')) $('resKpiEngH').textContent = totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if ($('resKpiMecH')) $('resKpiMecH').textContent = totaisDisc.mec_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if ($('resKpiEleH')) $('resKpiEleH').textContent = totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if ($('resKpiTotalH')) $('resKpiTotalH').textContent = totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
     // 2. Tabela de Horas Totais por Disciplina (Aba 1)
     var tbodyTotais = $('resTotaisTableBody');
@@ -1638,29 +1638,30 @@
       var pctEle = totaisDisc.total_h > 0 ? (totaisDisc.ele_h / totaisDisc.total_h * 100).toFixed(1) : '0.0';
 
       var rowsData = [
-        { disc: 'Engenharia (ENG)', regra: 'Tarefas < 0703 (desconsidera tempo 0,1 e tarefas ROM)', h: totaisDisc.eng_h, pct: pctEng + ' %', color: '#38bdf8' },
-        { disc: 'Mecânica (MEC)', regra: 'Tarefas 0705 a 0798 + 0894 (desconsidera tempo 0,1 e 754, 755, 765, 793, 794)', h: totaisDisc.mec_h, pct: pctMec + ' %', color: '#f59e0b' },
-        { disc: 'Elétrica (ELE)', regra: 'Tarefas 0799 a 0893 + 0895 (desconsidera tempo 0,1 e 810, 828, 838, 858, 868)', h: totaisDisc.ele_h, pct: pctEle + ' %', color: '#a855f7' }
+        { code: 'eng', disc: 'Engenharia (ENG)', regra: 'Tarefas < 0703 — desconsidera tempo 0,1 e tarefas ROM', h: totaisDisc.eng_h, pct: pctEng },
+        { code: 'mec', disc: 'Mecânica (MEC)', regra: 'Tarefas 0705 a 0798 + 0894 — desconsidera tempo 0,1 e 754, 755, 765, 793, 794', h: totaisDisc.mec_h, pct: pctMec },
+        { code: 'ele', disc: 'Elétrica (ELE)', regra: 'Tarefas 0799 a 0893 + 0895 — desconsidera tempo 0,1 e 810, 828, 838, 858, 868', h: totaisDisc.ele_h, pct: pctEle }
       ];
 
       rowsData.forEach(function (r) {
         var tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid var(--border)';
+        tr.setAttribute('data-d', r.code);
         tr.innerHTML =
-          '<td style="padding: 10px 14px; font-weight: 700; color:' + r.color + ';">' + escapeHtml(r.disc) + '</td>' +
-          '<td style="padding: 10px 14px; font-size: 11.5px; color: var(--text-dim);">' + escapeHtml(r.regra) + '</td>' +
-          '<td style="padding: 10px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-weight: 700; color:' + r.color + ';">' + r.h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
-          '<td style="padding: 10px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-weight: 600; color: var(--text);">' + escapeHtml(r.pct) + '</td>';
+          '<td><span class="disc-name-result"><span class="disc-dot-result"></span>' + escapeHtml(r.disc) + '</span></td>' +
+          '<td class="rule-text-result">' + escapeHtml(r.regra) + '</td>' +
+          '<td class="num">' + r.h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+          '<td class="pct"><div class="pct-bar-wrap-result"><div class="pct-bar-result"><i style="width:' + r.pct + '%;"></i></div>' + r.pct.replace('.', ',') + '%</div></td>';
         tbodyTotais.appendChild(tr);
       });
 
       var trTot = document.createElement('tr');
-      trTot.style.cssText = 'background: var(--panel-2); font-weight: 800; border-top: 2px solid var(--border);';
+      trTot.className = 'total-row';
+      trTot.setAttribute('data-d', 'total');
       trTot.innerHTML =
-        '<td style="padding: 12px 14px; font-size: 13px; color: var(--accent);">TOTAL GERAL DO PROJETO</td>' +
-        '<td style="padding: 12px 14px; font-size: 11.5px; color: var(--text-faint);">Soma consolidada das 3 disciplinas (Engenharia + Mecânica + Elétrica)</td>' +
-        '<td style="padding: 12px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-size: 15px; font-weight: 800; color: var(--accent);">' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
-        '<td style="padding: 12px 14px; text-align: right; font-family: \'IBM Plex Mono\'; font-size: 13px; font-weight: 700; color: var(--accent);">100,0 %</td>';
+        '<td><span class="disc-name-result"><span class="disc-dot-result"></span>Total geral do projeto</span></td>' +
+        '<td class="rule-text-result">Soma consolidada das 3 disciplinas — Engenharia + Mecânica + Elétrica</td>' +
+        '<td class="num">' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
+        '<td class="pct"><div class="pct-bar-wrap-result"><div class="pct-bar-result"><i style="width:100%;"></i></div>100,0%</div></td>';
       tbodyTotais.appendChild(trTot);
     }
 
@@ -1668,20 +1669,37 @@
     if ($('resTotaisEstrutura')) {
       $('resTotaisEstrutura').textContent = ctx.nmod + ' Módulo(s) — ' + ctx.comp + 'm × ' + ctx.larg + 'm × ' + ctx.alt + 'm (' + ctx.tipoestrutura + ')';
     }
-    if ($('resTotaisDetalhes')) {
-      $('resTotaisDetalhes').textContent = 'Pintura: ' + ctx.planpin + ' | Ar Cond.: ' + ctx.tipomaq + ' (' + ctx.qtdmaq + 'x) | Complexidade: ' + ctx.complexidade;
+    if ($('resTotaisTags')) {
+      $('resTotaisTags').innerHTML =
+        '<span class="tag-result">Pintura <b>' + escapeHtml(ctx.planpin || '-') + '</b></span>' +
+        '<span class="tag-result">Ar cond. <b>' + escapeHtml(ctx.tipomaq || '-') + ' (' + (ctx.qtdmaq || 1) + '×)</b></span>' +
+        '<span class="tag-result">Complexidade <b>' + escapeHtml(ctx.complexidade || '-') + '</b></span>' +
+        (ctx.incendio ? '<span class="tag-result">Incêndio <b>' + escapeHtml(ctx.incendio) + '</b></span>' : '') +
+        (ctx.seguranca ? '<span class="tag-result">Segurança <b>' + escapeHtml(ctx.seguranca) + '</b></span>' : '');
     }
     if ($('resTotaisPepBadge')) {
-      $('resTotaisPepBadge').textContent = 'PEP: ' + (seletorMatch && seletorMatch['PEP Standard'] ? seletorMatch['PEP Standard'] : 'Sob Consulta');
+      $('resTotaisPepBadge').textContent = 'PEP ' + (seletorMatch && seletorMatch['PEP Standard'] ? seletorMatch['PEP Standard'] : 'Sob Consulta');
     }
     if ($('resTotaisCtsResumo') && seletorMatch) {
-      var ctsHtml = [];
-      if (seletorMatch['DR Eng Mec']) ctsHtml.push('• <b>Eng. Mecânica:</b> DR ' + seletorMatch['DR Eng Mec'] + ' (Alt ' + (seletorMatch['Alt Eng Mec'] || '1') + ')');
-      if (seletorMatch['DR Eng Ele']) ctsHtml.push('• <b>Eng. Elétrica:</b> DR ' + seletorMatch['DR Eng Ele'] + ' (Alt ' + (seletorMatch['Alt Eng Ele'] || '1') + ')');
-      if (seletorMatch['DR Mec 1']) ctsHtml.push('• <b>Mecânica Mód. 1:</b> DR ' + seletorMatch['DR Mec 1'] + ' (Alt ' + (seletorMatch['Alt Mec 1'] || '1') + ')');
-      if (seletorMatch['DR Acess']) ctsHtml.push('• <b>Acessórios:</b> DR ' + seletorMatch['DR Acess'] + ' (Alt ' + (seletorMatch['Alt Acess'] || '1') + ')');
-      if (seletorMatch['DR Eletromec']) ctsHtml.push('• <b>Eletromecânica:</b> DR ' + seletorMatch['DR Eletromec'] + ' (Alt ' + (seletorMatch['Alt Eletromec'] || '1') + ')');
-      $('resTotaisCtsResumo').innerHTML = ctsHtml.join('<br>');
+      var ctList = [];
+      if (seletorMatch['DR Eng Mec']) ctList.push({ role: 'Eng. Mecânica', dr: seletorMatch['DR Eng Mec'], alt: seletorMatch['Alt Eng Mec'] || '1' });
+      if (seletorMatch['DR Eng Ele']) ctList.push({ role: 'Eng. Elétrica', dr: seletorMatch['DR Eng Ele'], alt: seletorMatch['Alt Eng Ele'] || '1' });
+
+      var nmodNum = parseInt(ctx.nmod || '1', 10);
+      for (var m = 1; m <= 8; m++) {
+        var drM = seletorMatch['DR Mec ' + m] || seletorMatch['DR Mec' + m];
+        var altM = seletorMatch['Alt Mec ' + m] || seletorMatch['Alt Mec' + m] || '1';
+        if (drM && m <= nmodNum) {
+          ctList.push({ role: 'Mecânica Módulo ' + m, dr: drM, alt: altM });
+        }
+      }
+      if (seletorMatch['DR Acess']) ctList.push({ role: 'Acessórios', dr: seletorMatch['DR Acess'], alt: seletorMatch['Alt Acess'] || '1' });
+      if (seletorMatch['DR Eletromec']) ctList.push({ role: 'Eletromecânica', dr: seletorMatch['DR Eletromec'], alt: seletorMatch['Alt Eletromec'] || '1' });
+
+      var ctHtml = ctList.map(function(item) {
+        return '<div class="ct-row-result"><span class="ct-role-result">' + escapeHtml(item.role) + '</span><span class="ct-code-result">DR ' + escapeHtml(item.dr) + ' <span class="alt">(Alt ' + escapeHtml(item.alt) + ')</span></span></div>';
+      }).join('');
+      $('resTotaisCtsResumo').innerHTML = ctHtml;
     }
 
     // 4. KPIs da Aba de Regras & Processos (Antiga Aba 1)

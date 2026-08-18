@@ -7,7 +7,7 @@
   <title>Eletrocentros — Tempos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="assets/icone.ico">
   <link rel="shortcut icon" type="image/x-icon" href="assets/icone.ico">
@@ -1130,77 +1130,95 @@
 
   <!-- ================= MODAL RESULTADO DO CÁLCULO DE TEMPOS ================= -->
   <div class="modal-overlay" id="modalResultadoCalculo">
-    <div class="modal" style="max-width: 980px; width:95vw; max-height: 90vh; display: flex; flex-direction: column;">
-      <div class="modal-head">
-        <div class="ico" style="background: rgba(46, 196, 182, 0.15); color: var(--accent);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="4" y="2" width="16" height="20" rx="2" />
-            <line x1="8" y1="6" x2="16" y2="6" />
-            <line x1="8" y1="10" x2="16" y2="10" />
-            <line x1="8" y1="14" x2="11" y2="14" />
-            <line x1="13" y1="14" x2="16" y2="14" />
-            <line x1="8" y1="18" x2="11" y2="18" />
-            <line x1="13" y1="18" x2="16" y2="18" />
-          </svg>
+    <div class="modal modal-result-box">
+      <div class="modal-head-result">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="head-icon-bolt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:19px; height:19px;"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          </div>
+          <div>
+            <p class="eyebrow-text">PCP · Fase 3 · Cronograma de Operações</p>
+            <h1 class="head-title-result" id="modalTitle">Resultado do Cálculo &amp; Cronograma de Operações</h1>
+            <p class="head-sub-result">Estimativa de horas orçadas e duração para o projeto selecionado</p>
+          </div>
         </div>
-        <div class="modal-head-text">
-          <b>Resultado do Cálculo &amp; Cronograma de Operações</b>
-          <span>Estimativa de Horas Orçadas, Duração e Operações PCP — Fase 3</span>
-        </div>
-        <button type="button" class="btn-close" id="btnCloseResultadoCalculo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <button type="button" class="close-btn-result" id="btnCloseResultadoCalculo" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px; height:16px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
       <!-- Abas do Modal de Resultados -->
-      <div class="modal-tabs" style="display:flex; border-bottom:1px solid var(--border); padding:0 20px; background:var(--panel-2); gap:6px;">
-        <button type="button" class="modal-tab active" id="calcTabTotais" data-pane="calcPaneTotais">Resumo Geral (Horas Totais)</button>
-        <button type="button" class="modal-tab" id="calcTabCronograma" data-pane="calcPaneCronograma">
-          Cronograma de Operações <span id="resBadgeTarefas" style="background:var(--accent); color:#000; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:6px;">0</span>
+      <div class="tabs-result">
+        <button type="button" class="tab-result active" id="calcTabTotais" data-pane="calcPaneTotais">Resumo Geral (Horas Totais)</button>
+        <button type="button" class="tab-result" id="calcTabCronograma" data-pane="calcPaneCronograma">
+          Cronograma de Operações <span class="tab-count-badge" id="resBadgeTarefas">0</span>
         </button>
-        <button type="button" class="modal-tab" id="calcTabSeletor" data-pane="calcPaneSeletor">Seletor PEP &amp; CTs</button>
-        <button type="button" class="modal-tab" id="calcTabResumo" data-pane="calcPaneResumo">Regras &amp; Processos</button>
+        <button type="button" class="tab-result" id="calcTabSeletor" data-pane="calcPaneSeletor">Seletor PEP &amp; CTs</button>
+        <button type="button" class="tab-result" id="calcTabResumo" data-pane="calcPaneResumo">Regras &amp; Processos</button>
       </div>
 
-      <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+      <div class="modal-body" style="padding: 22px 26px 12px; overflow-y: auto; flex: 1;">
         <!-- PANE 1: RESUMO GERAL (HORAS TOTAIS POR DISCIPLINA) -->
         <div class="calc-modal-pane" id="calcPaneTotais">
-          <!-- KPI Cards Summary Header -->
-          <div class="calc-kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;">
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #38bdf8;">Engenharia (ENG)</span>
-              <span id="resKpiEngH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #38bdf8;">0,0 h</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Tarefas &lt; 0703 (sem 0,1 e ROM)</span>
-            </div>
+          <p class="section-label-result">Horas por disciplina</p>
+          <div class="kpi-cluster-result">
+            <svg class="trace-svg-result" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true">
+              <path class="trace-line-result" d="M125,0 L125,17 L875,17 L875,0" stroke="#5AA9FF" opacity="0.55"/>
+              <path class="trace-line-result" d="M375,0 L375,17" stroke="#F2A93B" opacity="0.55"/>
+              <path class="trace-line-result" d="M625,0 L625,17" stroke="#B98CFF" opacity="0.55"/>
+              <path class="trace-line-result" d="M875,17 L875,34" stroke="#33E0AF" opacity="0.8"/>
+              <circle class="trace-node-result" cx="875" cy="17" r="3.5" stroke="#33E0AF"/>
+            </svg>
 
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #f59e0b;">Mecânica (MEC)</span>
-              <span id="resKpiMecH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #f59e0b;">0,0 h</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Tarefas 0705–0798 + 0894</span>
-            </div>
+            <div class="kpi-grid-result">
+              <div class="kpi-card-result" data-d="eng">
+                <div class="kpi-top-result">
+                  <span class="kpi-label-result">Engenharia · ENG</span>
+                  <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+                </div>
+                <div class="kpi-value-result"><span id="resKpiEngH">0,0</span><span class="unit">h</span></div>
+                <p class="kpi-caption-result">Tarefas &lt; 0703 — sem tempo 0,1 e tarefas ROM</p>
+              </div>
 
-            <div class="calc-kpi-card" style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a855f7;">Elétrica (ELE)</span>
-              <span id="resKpiEleH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #a855f7;">0,0 h</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Tarefas 0799–0893 + 0895</span>
-            </div>
+              <div class="kpi-card-result" data-d="mec">
+                <div class="kpi-top-result">
+                  <span class="kpi-label-result">Mecânica · MEC</span>
+                  <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+                </div>
+                <div class="kpi-value-result"><span id="resKpiMecH">0,0</span><span class="unit">h</span></div>
+                <p class="kpi-caption-result">Tarefas 0705–0798 + 0894 — exceto 754, 755, 765, 793, 794</p>
+              </div>
 
-            <div class="calc-kpi-card" style="background: rgba(46,196,182,0.08); border: 1px solid rgba(46,196,182,0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent);">Total do Projeto</span>
-              <span id="resKpiTotalH" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 800; color: var(--accent);">0,0 h</span>
-              <span style="font-size: 11px; color: var(--text-faint);">Soma das 3 disciplinas</span>
+              <div class="kpi-card-result" data-d="ele">
+                <div class="kpi-top-result">
+                  <span class="kpi-label-result">Elétrica · ELE</span>
+                  <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
+                </div>
+                <div class="kpi-value-result"><span id="resKpiEleH">0,0</span><span class="unit">h</span></div>
+                <p class="kpi-caption-result">Tarefas 0799–0893 + 0895 — exceto 810, 828, 838, 858, 868</p>
+              </div>
+
+              <div class="kpi-card-result total" data-d="total">
+                <div class="kpi-top-result">
+                  <span class="kpi-label-result">Total do projeto</span>
+                  <span class="kpi-icon-result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+                </div>
+                <div class="kpi-value-result"><span id="resKpiTotalH">0,0</span><span class="unit">h</span></div>
+                <p class="kpi-caption-result">Soma consolidada das 3 disciplinas</p>
+              </div>
             </div>
           </div>
 
           <!-- Tabela Comparativa de Horas Totais por Disciplina -->
-          <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel-1); margin-bottom: 16px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+          <p class="section-label-result">Participação por disciplina</p>
+          <div class="table-wrap-result">
+            <table class="table-result">
               <thead>
-                <tr style="background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                  <th style="padding: 10px 14px;">Disciplina</th>
-                  <th style="padding: 10px 14px;">Regra / Intervalo de Operações</th>
-                  <th style="padding: 10px 14px; text-align: right;">Horas Totais (H)</th>
-                  <th style="padding: 10px 14px; text-align: right;">Participação (%)</th>
+                <tr>
+                  <th style="width: 200px;">Disciplina</th>
+                  <th>Regra / Intervalo de Operações</th>
+                  <th class="num" style="width: 130px;">Horas Totais</th>
+                  <th class="num" style="width: 140px;">Participação</th>
                 </tr>
               </thead>
               <tbody id="resTotaisTableBody">
@@ -1210,19 +1228,23 @@
           </div>
 
           <!-- Informações Estruturais & Seletor Rápido -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px;">
-              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;">Especificação da Estrutura</div>
-              <div id="resTotaisEstrutura" style="font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px;">-</div>
-              <div id="resTotaisDetalhes" style="font-size: 11.5px; color: var(--text-faint);">-</div>
+          <div class="panels-grid-result">
+            <div class="panel-box-result">
+              <div class="panel-box-head-result">
+                <span class="panel-box-title-result">Especificação da Estrutura</span>
+              </div>
+              <p class="struct-title-result" id="resTotaisEstrutura">1 Módulo — 10m × 3,6m × 2,6m (Fixo)</p>
+              <div class="struct-tags-result" id="resTotaisTags">
+                <!-- Tags dinâmicas -->
+              </div>
             </div>
 
-            <div style="background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Centros de Trabalho (Seletor)</span>
-                <span id="resTotaisPepBadge" style="font-family:'IBM Plex Mono'; font-size:11px; font-weight:700; color:var(--accent);">-</span>
+            <div class="panel-box-result">
+              <div class="panel-box-head-result">
+                <span class="panel-box-title-result">Centros de Trabalho (Seletor)</span>
+                <span class="pep-chip-result" id="resTotaisPepBadge">PEP -</span>
               </div>
-              <div id="resTotaisCtsResumo" style="font-size: 11.5px; color: var(--text); display:flex; flex-direction:column; gap:4px;">
+              <div class="ct-list-result" id="resTotaisCtsResumo">
                 <!-- CTs rápidos -->
               </div>
             </div>
