@@ -1627,7 +1627,7 @@
     var seletorMatch = res.seletor || consultarSeletor(ctx);
     var tarefas = (res.cronograma && res.cronograma.tarefas) ? res.cronograma.tarefas : [];
 
-    // Cálculo das Horas Totais por Disciplina (Padrão Excel Original)
+    // Cálculo das Horas Totais por Diagrama (Padrão Excel Original)
     var totaisDisc = calcularTotaisDisciplinasExcel(tarefas);
     res.totaisDisciplinas = totaisDisc;
 
@@ -1637,7 +1637,7 @@
     if ($('resKpiEleH')) $('resKpiEleH').textContent = totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     if ($('resKpiTotalH')) $('resKpiTotalH').textContent = totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-    // 2. Tabela de Horas Totais por Disciplina (Aba 1)
+    // 2. Tabela de Horas Totais por Diagrama (Aba 1)
     var tbodyTotais = $('resTotaisTableBody');
     if (tbodyTotais) {
       tbodyTotais.innerHTML = '';
@@ -1667,7 +1667,7 @@
       trTot.setAttribute('data-d', 'total');
       trTot.innerHTML =
         '<td><span class="disc-name-result"><span class="disc-dot-result"></span>Total geral do projeto</span></td>' +
-        '<td class="rule-text-result">Soma consolidada das 3 disciplinas — Engenharia + Mecânica + Elétrica</td>' +
+        '<td class="rule-text-result">Soma consolidada dos 3 diagramas — Engenharia + Mecânica + Elétrica</td>' +
         '<td class="num">' + totaisDisc.total_h.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' h</td>' +
         '<td class="pct"><div class="pct-bar-wrap-result"><div class="pct-bar-result"><i style="width:100%;"></i></div>100,0%</div></td>';
       tbodyTotais.appendChild(trTot);
@@ -1853,7 +1853,7 @@
       var totaisDisc = res.totaisDisciplinas || calcularTotaisDisciplinasExcel(crono ? crono.tarefas : []);
 
       lines.push('--------------------------------------------------');
-      lines.push('HORAS TOTAIS POR DISCIPLINA (PADRÃO EXCEL):');
+      lines.push('HORAS TOTAIS POR DIAGRAMA (PADRÃO EXCEL):');
       lines.push(' • Engenharia (ENG): ' + totaisDisc.eng_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
       lines.push(' • Mecânica (MEC):   ' + totaisDisc.mec_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
       lines.push(' • Elétrica (ELE):   ' + totaisDisc.ele_h.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) + ' h');
@@ -1939,7 +1939,7 @@
       }
 
       var lines = [];
-      lines.push('Tarefa;Descricao da Tarefa;Duracao;Unidade;Trabalho;Disciplina');
+      lines.push('Tarefa;Descricao da Tarefa;Duracao;Unidade;Trabalho;Diagrama');
       if (res.cronograma && res.cronograma.tarefas) {
         res.cronograma.tarefas.forEach(function (t) {
           lines.push(

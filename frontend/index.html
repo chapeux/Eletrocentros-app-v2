@@ -628,9 +628,9 @@
           </div>
 
           <div class="resultados-body">
-            <!-- PANE 1: RESUMO GERAL (HORAS TOTAIS POR DISCIPLINA) -->
+            <!-- PANE 1: RESUMO GERAL (HORAS TOTAIS POR DIAGRAMA) -->
             <div class="calc-modal-pane" id="calcPaneTotais">
-              <p class="section-label-result">Horas por disciplina</p>
+              <p class="section-label-result">Horas por diagrama</p>
               <div class="kpi-cluster-result">
                 <svg class="trace-svg-result" viewBox="0 0 1000 34" preserveAspectRatio="none" aria-hidden="true">
                   <path class="trace-line-result" d="M125,0 L125,17 L875,17 L875,0" stroke="var(--eng-color)" opacity="0.6"/>
@@ -675,13 +675,13 @@
                 </div>
               </div>
 
-              <!-- Tabela Comparativa de Horas Totais por Disciplina -->
-              <p class="section-label-result">Participação por disciplina</p>
+              <!-- Tabela Comparativa de Horas Totais por Diagrama -->
+              <p class="section-label-result">Participação por diagrama</p>
               <div class="table-wrap-result">
                 <table class="table-result">
                   <thead>
                     <tr>
-                      <th style="width: 200px;">Disciplina</th>
+                      <th style="width: 200px;">Diagrama</th>
                       <th>Regra / Intervalo de Operações</th>
                       <th class="num" style="width: 130px;">Horas Totais</th>
                       <th class="num" style="width: 140px;">Participação</th>
@@ -777,7 +777,7 @@
                     <input type="text" id="cronogramaSearch" class="ipt" placeholder="Pesquisar por operação ou descrição (ex: 0500, LOM, Pintura)…" style="padding-left:36px; font-size:12.5px;">
                   </div>
                   <select id="cronogramaDisciplineFilter" class="ipt" style="max-width:200px; font-size:12.5px; cursor:pointer;">
-                    <option value="ALL">Todas Disciplinas</option>
+                    <option value="ALL">Todos os Diagramas</option>
                     <option value="Engenharia Mecânica">Eng. Mecânica</option>
                     <option value="Engenharia Elétrica">Eng. Elétrica</option>
                     <option value="Processos">Processos</option>
@@ -793,7 +793,7 @@
                 </div>
               </div>
 
-              <div class="table-wrap-result" style="max-height:540px; overflow-y:auto; margin-bottom:0;">
+              <div class="table-wrap-result">
                 <table class="cronograma-table" style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
                   <thead style="position:sticky; top:0; background:var(--panel-2); z-index:2; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                     <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
@@ -803,7 +803,7 @@
                       <th style="padding: 11px 10px; width:95px; text-align: right;">Duração (dias)</th>
                       <th style="padding: 11px 8px; width:65px; text-align: center;">Unid.</th>
                       <th style="padding: 11px 12px; width:110px; text-align: right;">Trabalho (H)</th>
-                      <th style="padding: 11px 12px; width:150px;">Disciplina / Fase</th>
+                      <th style="padding: 11px 12px; width:150px;">Diagrama / Fase</th>
                     </tr>
                   </thead>
                   <tbody id="resCronogramaTableBody">
@@ -1049,7 +1049,7 @@
 
         <!-- Bloco 3: Centros de Trabalho Principais -->
         <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; letter-spacing: 0.5px;">
-          3. Centros de Trabalho — Engenharia &amp; Disciplinas Gerais
+          3. Centros de Trabalho — Engenharia &amp; Diagramas Gerais
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;">
           <div class="field">

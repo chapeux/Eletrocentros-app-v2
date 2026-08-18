@@ -77,9 +77,9 @@
   --border: rgba(15, 23, 42, 0.09);
   --border-strong: rgba(15, 23, 42, 0.16);
   --hairline: rgba(15, 23, 42, 0.05);
-  --text: #181B20;
-  --text-dim: #5E6672;
-  --text-faint: #959CA6;
+  --text: #334155;
+  --text-dim: #64748B;
+  --text-faint: #94A3B8;
   --accent: #3E5FD9;
   --accent-ink: #FFFFFF;
   --accent-dim: rgba(62, 95, 217, 0.10);
@@ -2132,10 +2132,42 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 
 /* Content Body */
 .resultados-body {
-  padding: 22px 28px;
+  padding: 20px 24px;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
+  min-height: 0;
+}
+
+.calc-modal-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.calc-modal-pane.hidden {
+  display: none !important;
+}
+
+#calcPaneCronograma {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+#calcPaneCronograma .table-wrap-result {
+  flex: 1;
+  min-height: 0;
+  max-height: none !important;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin-bottom: 0;
 }
 
 /* Section Labels */
@@ -2282,7 +2314,7 @@ select optgroup { background-color: var(--panel-3, #20252A) !important; color: v
 .kpi-card-result[data-d="ele"] { --card-accent: var(--ele-color); }
 .kpi-card-result[data-d="total"] { --card-accent: var(--total-color); }
 
-/* Table Participação por Disciplina */
+/* Table Participação por Diagrama */
 .table-wrap-result {
   border: 1px solid var(--border);
   border-radius: 10px;
