@@ -1,6 +1,6 @@
 """
-Eletrocentros App — Launcher & Auto-Updater Inteligente
-Verifica novas versões publicadas na pasta de rede da WEG, sincroniza
+Eletrocentros App — Launcher & Auto-Updater Inteligente (MySQL & Zero-Network-Share)
+Verifica novas versões publicadas no Banco de Dados MySQL da WEG, sincroniza
 com o cache local (%LOCALAPPDATA%\\EletrocentrosApp) e executa o aplicativo.
 """
 
@@ -8,13 +8,16 @@ import os
 import sys
 import json
 import shutil
+import hashlib
+import zipfile
 import subprocess
 import time
+from io import BytesIO
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-# 1. Definição correta do diretório base (funciona tanto como script quanto compilado .exe)
+# 1. Definição do diretório base e paths
 if getattr(sys, "frozen", False):
     BASE_DIR = Path(sys.executable).resolve().parent
     INTERNAL_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
@@ -22,40 +25,76 @@ else:
     BASE_DIR = Path(__file__).resolve().parent
     INTERNAL_DIR = BASE_DIR
 
-# Caminho principal na rede da WEG (com fallback para pasta local de releases)
-NETWORK_DIR_PRIMARY = Path(
-    r"Q:\GROUPS\BR_SC_ITJ_WAU_DPTO_PRODUCAO\Processos WAU Chaves Especiais e Acionamentos\10 - PASTAS PESSOAIS\Luan Schappo\Salas Elétricas\Eletrocentros-app-v2\releases"
-)
-NETWORK_DIR_FALLBACK = BASE_DIR / "releases"
-
 LOCAL_APPDATA = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
 LOCAL_CACHE_DIR = LOCAL_APPDATA / "EletrocentrosApp"
 CURRENT_VERSION_FILE = LOCAL_CACHE_DIR / "current_version.txt"
+
 ICON_PATH = INTERNAL_DIR / "assets" / "icone.ico"
 if not ICON_PATH.exists():
     ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 
+# Configuração do Banco de Dados MySQL
+DB_CONFIG = {
+    "host": os.environ.get("DB_HOST", "dcprd036187.weg.net"),
+    "port": int(os.environ.get("DB_PORT", 8502)),
+    "user": os.environ.get("DB_USER", "root"),
+    "password": os.environ.get("DB_PASS", "neoempresarial"),
+    "database": os.environ.get("DB_NAME", "bd_eletrocentros_app"),
+    "connect_timeout": 4
+}
 
-def obter_pasta_releases_rede() -> Path:
-    """Retorna o diretório de releases acessível (rede ou local)."""
+
+def get_mysql_connection():
+    """Tenta estabelecer conexão com o banco de dados MySQL com timeout seguro."""
     try:
-        if NETWORK_DIR_PRIMARY.exists():
-            return NETWORK_DIR_PRIMARY
-    except Exception:
-        pass
-    return NETWORK_DIR_FALLBACK
-
-
-def ler_manifesto_rede(releases_dir: Path) -> dict | None:
-    """Lê o arquivo version.json do repositório de releases."""
-    manifest_file = releases_dir / "version.json"
-    try:
-        if manifest_file.exists():
-            with open(manifest_file, "r", encoding="utf-8") as f:
-                return json.load(f)
+        import mysql.connector
+        return mysql.connector.connect(**DB_CONFIG)
     except Exception as e:
-        print(f"[Launcher] Aviso ao ler manifesto de rede ({manifest_file}): {e}")
-    return None
+        print(f"[Launcher MySQL] Falha de conexão: {e}")
+        return None
+
+
+def buscar_ponteiro_release_mysql() -> dict | None:
+    """Busca o ponteiro da release atual no MySQL (app_settings.release_atual)."""
+    conn = get_mysql_connection()
+    if conn is None:
+        return None
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT valor FROM app_settings WHERE chave = 'release_atual'")
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        raw_val = row[0]
+        return json.loads(raw_val) if isinstance(raw_val, str) else raw_val
+    except Exception as e:
+        print(f"[Launcher] Erro ao consultar app_settings.release_atual: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def baixar_pacote_mysql(version: str) -> tuple[bytes, str]:
+    """Baixa o pacote zip e o hash SHA-256 da tabela app_releases."""
+    conn = get_mysql_connection()
+    if conn is None:
+        raise RuntimeError("Não foi possível conectar ao banco de dados MySQL para baixar a release.")
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT pacote_zip, sha256 FROM app_releases WHERE version = %s AND status = 'publicada'",
+            (version,)
+        )
+        row = cursor.fetchone()
+        if row is None:
+            raise RuntimeError(f"Versão {version} não encontrada ou não está com status 'publicada'.")
+        return row[0], row[1]
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def ler_versao_local() -> str | None:
@@ -138,7 +177,7 @@ class UpdateSplash:
 
         self.info_lbl = tk.Label(
             self.root,
-            text=f"Instalando a nova versão {versao_nova} a partir da rede WEG...",
+            text=f"Instalando a versão {versao_nova} via Banco de Dados WEG...",
             font=("Segoe UI", 9),
             fg="#94a3b8",
             bg="#0e1726"
@@ -156,7 +195,7 @@ class UpdateSplash:
 
         self.status_lbl = tk.Label(
             self.root,
-            text="Copiando arquivos e sincronizando componentes...",
+            text="Conectando e baixando pacote do servidor...",
             font=("Segoe UI", 8, "italic"),
             fg="#64748b",
             bg="#0e1726"
@@ -180,64 +219,36 @@ class UpdateSplash:
             pass
 
 
-def copiar_arvore_com_progresso(origem: Path, destino: Path, splash: UpdateSplash | None = None):
-    """Copia a árvore de arquivos de forma atômica e resiliente, ignorando arquivos temporários ou de build."""
-    destino.mkdir(parents=True, exist_ok=True)
-    itens_ignorados = {".git", "__pycache__", "build", "dist", ".tmp"}
-    
-    for item in origem.iterdir():
-        if item.name in itens_ignorados or item.name.endswith(".tmp") or item.name.endswith(".spec"):
-            continue
-        dest_item = destino / item.name
-        if item.is_dir():
-            if splash:
-                splash.set_status(f"Copiando pasta: {item.name}...")
-            shutil.copytree(item, dest_item, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.tmp"))
-        else:
-            if splash:
-                splash.set_status(f"Copiando arquivo: {item.name}...")
-            shutil.copy2(item, dest_item)
-
-
-def atualizar_aplicativo(releases_dir: Path, manifest: dict) -> Path:
-    """Executa a atualização atômica para a nova versão especificada no manifesto."""
-    versao = manifest.get("version", "2.0.0")
-    nome_pasta = manifest.get("pasta", f"app-{versao}")
-    pasta_origem = releases_dir / nome_pasta
-    pasta_destino = LOCAL_CACHE_DIR / nome_pasta
-
-    # Se a pasta de release não existir na pasta releases, usa a pasta raiz da rede como origem
-    if not pasta_origem.exists():
-        pasta_origem = NETWORK_DIR_PRIMARY.parent if NETWORK_DIR_PRIMARY.parent.exists() else BASE_DIR
-
-    splash = UpdateSplash(versao)
-
+def aplicar_pacote_zip(pacote_bytes: bytes, version: str, splash: UpdateSplash | None = None) -> Path:
+    """Extrai atomicamente o pacote ZIP baixado no cache local."""
+    nome_pasta = f"app-{version}"
+    pasta_alvo = LOCAL_CACHE_DIR / nome_pasta
     pasta_tmp = LOCAL_CACHE_DIR / f"{nome_pasta}.tmp"
+
     if pasta_tmp.exists():
         shutil.rmtree(pasta_tmp, ignore_errors=True)
+    pasta_tmp.mkdir(parents=True, exist_ok=True)
 
-    try:
-        splash.set_status("Transferindo nova versão...")
-        copiar_arvore_com_progresso(pasta_origem, pasta_tmp, splash)
+    if splash:
+        splash.set_status("Extraindo componentes do aplicativo...")
 
-        # Troca atômica (remove destino antigo se houver e renomeia .tmp)
-        if pasta_destino.exists():
-            shutil.rmtree(pasta_destino, ignore_errors=True)
-        
-        pasta_tmp.rename(pasta_destino)
+    with zipfile.ZipFile(BytesIO(pacote_bytes)) as zf:
+        zf.extractall(pasta_tmp)
 
-        # Salva o número da versão atual
-        LOCAL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        CURRENT_VERSION_FILE.write_text(versao, encoding="utf-8")
-        time.sleep(0.3)
-        return pasta_destino
+    if pasta_alvo.exists():
+        shutil.rmtree(pasta_alvo, ignore_errors=True)
 
-    finally:
-        splash.close()
+    pasta_tmp.rename(pasta_alvo)
+
+    # Grava versão atual
+    LOCAL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    CURRENT_VERSION_FILE.write_text(version, encoding="utf-8")
+
+    return pasta_alvo
 
 
 def obter_python_exe() -> str:
-    """Retorna o caminho do interpretador Python para executar main.py em modo dev."""
+    """Retorna o caminho do interpretador Python para executar main.py."""
     if not getattr(sys, "frozen", False):
         return sys.executable
 
@@ -294,7 +305,6 @@ def executar_app(pasta_app: Path):
 
     print(f"[Launcher] Iniciando aplicação: {' '.join(cmd)}")
     
-    # Inicia desanexado para fechar o launcher imediatamente
     if sys.platform == "win32":
         creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
         subprocess.Popen(cmd, cwd=str(pasta_app), creationflags=creationflags, close_fds=True)
@@ -306,53 +316,73 @@ def executar_app(pasta_app: Path):
 
 def main():
     try:
-        releases_dir = obter_pasta_releases_rede()
-        manifest = ler_manifesto_rede(releases_dir)
         versao_local = ler_versao_local()
-
-        print(f"[Launcher] Diretório de Releases: {releases_dir}")
         print(f"[Launcher] Versão Local em Cache: {versao_local or 'Nenhuma'}")
 
-        if manifest is not None:
-            versao_remota = manifest.get("version")
-            pasta_remota = manifest.get("pasta", f"app-{versao_remota}")
-            pasta_alvo = LOCAL_CACHE_DIR / pasta_remota
+        # 1. Consulta o MySQL para obter a versão atual
+        ponteiro = buscar_ponteiro_release_mysql()
 
-            # Atualiza se a versão for diferente ou se os arquivos locais ainda não existirem
+        if ponteiro is not None:
+            versao_remota = ponteiro.get("version")
+            nome_pasta = f"app-{versao_remota}"
+            pasta_alvo = LOCAL_CACHE_DIR / nome_pasta
+
+            print(f"[Launcher] Versão no Banco MySQL: {versao_remota}")
+
+            # Se a versão for diferente ou os arquivos locais não existirem, baixa do MySQL
             if versao_local != versao_remota or not pasta_alvo.exists():
-                print(f"[Launcher] Nova versão detectada ({versao_remota}). Iniciando atualização...")
-                pasta_alvo = atualizar_aplicativo(releases_dir, manifest)
-                limpar_versoes_antigas(manter_ultimas=2)
+                print(f"[Launcher] Nova versão detectada ({versao_remota}). Iniciando download via MySQL...")
+                splash = UpdateSplash(versao_remota)
+
+                try:
+                    splash.set_status("Baixando pacote do servidor MySQL...")
+                    pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota)
+
+                    # Validação de integridade SHA-256
+                    sha_calculado = hashlib.sha256(pacote_bytes).hexdigest()
+                    if sha_calculado != sha_esperado:
+                        print("[Launcher] Aviso: Hash inconsistente no primeiro download. Tentando novamente...")
+                        splash.set_status("Reconectando para novo download...")
+                        pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota)
+                        sha_calculado = hashlib.sha256(pacote_bytes).hexdigest()
+                        if sha_calculado != sha_esperado:
+                            raise RuntimeError(f"Integridade inválida do pacote (Hash esperado: {sha_esperado}, calculado: {sha_calculado}).")
+
+                    splash.set_status("Instalando e validando arquivos...")
+                    pasta_alvo = aplicar_pacote_zip(pacote_bytes, versao_remota, splash)
+                    limpar_versoes_antigas(manter_ultimas=2)
+                    time.sleep(0.3)
+                finally:
+                    splash.close()
             else:
                 print("[Launcher] O aplicativo já está na versão mais recente.")
 
             executar_app(pasta_alvo)
 
         else:
-            # Modo Offline / Falha de Rede: roda a última versão em cache
-            print("[Launcher] Aviso: Rede indisponível. Tentando inicializar a partir do cache local...")
+            # 2. Modo Offline / Falha de Conexão: executa a última versão em cache
+            print("[Launcher] Aviso: Banco MySQL indisponível. Tentando inicializar do cache local...")
             if versao_local:
                 pasta_alvo = LOCAL_CACHE_DIR / f"app-{versao_local}"
                 if pasta_alvo.exists():
                     executar_app(pasta_alvo)
 
-            # Se não há nada no cache local, tenta rodar da pasta base atual
+            # Fallback para execução direta da pasta base
             if (BASE_DIR / "main.py").exists():
                 executar_app(BASE_DIR)
 
-            # Erro fatal se não há nada para executar
             root = tk.Tk()
             root.withdraw()
             messagebox.showerror(
                 "Conexão Indisponível",
-                "Não foi possível conectar à pasta de rede da WEG e não há nenhuma versão instalada no computador.\n\nPor favor, conecte-se à rede corporativa/VPN e tente novamente."
+                "Não foi possível conectar ao servidor MySQL da WEG e não há nenhuma versão instalada no computador.\n\nPor favor, verifique a conexão de rede corporativa/VPN e tente novamente."
             )
             sys.exit(1)
 
     except Exception as e:
         import traceback
-        err_msg = f"Ocorreu um erro inesperado ao iniciar o aplicativo:\n\n{str(e)}\n\nDetalhes:\n{traceback.format_exc()}"
-        print(f"[Launcher Erro Fatal] {err_msg}")
+        err_msg = f"Ocorreu um erro ao verificar ou atualizar o aplicativo:\n\n{str(e)}\n\nDetalhes:\n{traceback.format_exc()}"
+        print(f"[Launcher Erro] {err_msg}")
         root = tk.Tk()
         root.withdraw()
         messagebox.showerror("Erro no Launcher", err_msg)

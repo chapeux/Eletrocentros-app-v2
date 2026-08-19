@@ -101,7 +101,25 @@ def init_db() -> bool:
         """
         cursor.execute(create_settings_table_sql)
 
-        # 4. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em logs_modificacoes
+        # 4. Garante que a tabela 'app_releases' exista para distribuição de pacotes via banco
+        create_releases_table_sql = r"""
+        CREATE TABLE IF NOT EXISTS app_releases (
+            id              INT AUTO_INCREMENT PRIMARY KEY,
+            version         VARCHAR(20)  NOT NULL UNIQUE,
+            descricao       TEXT,
+            obrigatoria     BOOLEAN      NOT NULL DEFAULT FALSE,
+            pacote_zip      LONGBLOB     NOT NULL,
+            sha256          CHAR(64)     NOT NULL,
+            tamanho_bytes   BIGINT       NOT NULL,
+            status          ENUM('rascunho','publicada','revogada') NOT NULL DEFAULT 'rascunho',
+            publicado_em    DATETIME     NOT NULL,
+            publicado_por   VARCHAR(100) NOT NULL,
+            INDEX idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """
+        cursor.execute(create_releases_table_sql)
+
+        # 5. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em logs_modificacoes
         try:
             cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'motivo';")
             if not cursor.fetchone():

@@ -1,7 +1,8 @@
 {
   "version": "2.1.0",
   "pasta": "app-2.1.0",
-  "notas": "Release 2.1.0 - Parser Inteligente de PDF para Folha de Dados WEG",
+  "notas": "Release 2.1.0 - Parser Inteligente de PDF (Folha de Dados WEG)",
   "obrigatoria": true,
-  "data_publicacao": "2026-08-19 11:27:40"
+  "sha256": "f06ca3456b07ad3b5348eaea62205f5dde4a0f93a46eb86244fa062f8239063e",
+  "data_publicacao": "2026-08-19 13:11:27"
 }
