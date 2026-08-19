@@ -2266,7 +2266,7 @@
   }
 
   if ($('btnExportarCsv')) {
-    $('btnExportarCsv').addEventListener('click', function () {
+    $('btnExportarCsv').addEventListener('click', async function () {
       var res = window._lastCalculationResult;
       if (!res) {
         showToast('Nenhum resultado de cálculo disponível para exportar.', true);
@@ -2289,21 +2289,82 @@
       }
 
       var csvContent = '\uFEFF' + lines.join('\r\n');
-      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       var filename = getExportFilename('csv');
-      downloadBlob(blob, filename);
-      showToast('Arquivo CSV exportado com sucesso: ' + filename);
+
+      if (isPyWebviewAvailable() && window.pywebview.api.save_file) {
+        window.pywebview.api.save_file({
+          filename: filename,
+          content: csvContent,
+          is_base64: false,
+          file_type: 'csv'
+        }).then(function (resp) {
+          if (resp && resp.status === 'success') {
+            showToast('Arquivo CSV salvo com sucesso em: ' + (resp.filepath || resp.filename));
+          } else if (resp && resp.status === 'cancelled') {
+            showToast('Exportação cancelada.');
+          } else {
+            showToast('Erro ao salvar CSV: ' + ((resp && resp.message) || 'Erro desconhecido'), true);
+          }
+        }).catch(function (err) {
+          showToast('Erro ao salvar CSV via pywebview: ' + (err.message || err), true);
+        });
+        return;
+      }
+
+      if ('showSaveFilePicker' in window) {
+        try {
+          var handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'Arquivo CSV (*.csv)',
+              accept: { 'text/csv': ['.csv'] }
+            }]
+          });
+          var writable = await handle.createWritable();
+          await writable.write(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+          await writable.close();
+          showToast('Arquivo CSV salvo com sucesso: ' + handle.name);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            showToast('Exportação cancelada.');
+            return;
+          }
+        }
+      }
+
+      // Fallback via API backend ou download padrão
+      apiCall('/save_file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: filename, content: csvContent, is_base64: false, file_type: 'csv' })
+      }).then(function (resp) {
+        if (resp && resp.status === 'success') {
+          showToast('Arquivo CSV salvo com sucesso em: ' + (resp.filepath || resp.filename));
+        } else if (resp && resp.status === 'cancelled') {
+          showToast('Exportação cancelada.');
+        } else {
+          var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          downloadBlob(blob, filename);
+          showToast('Arquivo CSV exportado com sucesso: ' + filename);
+        }
+      }).catch(function () {
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        downloadBlob(blob, filename);
+        showToast('Arquivo CSV exportado com sucesso: ' + filename);
+      });
     });
   }
 
   if ($('btnExportarExcel')) {
-    $('btnExportarExcel').addEventListener('click', function () {
+    $('btnExportarExcel').addEventListener('click', async function () {
       var res = window._lastCalculationResult;
       if (!res) {
         showToast('Nenhum resultado de cálculo disponível para exportar.', true);
         return;
       }
 
+      var filename = getExportFilename('xlsx');
       var payload = {
         pep: isFilledEl($('pep')) ? $('pep').value.trim() : '',
         ctx: res.ctx,
@@ -2312,48 +2373,98 @@
         totalGeralDUR: res.totalGeralDUR,
         resultadosAreas: res.resultadosAreas,
         calc_times: res.calc_times,
-        cronograma: res.cronograma
+        cronograma: res.cronograma,
+        prompt_save: true
       };
 
-      showToast('Gerando planilha Excel (.xlsx)...');
-
-      function handleB64Download(b64, filename) {
-        var byteCharacters = atob(b64);
-        var byteNumbers = new Array(byteCharacters.length);
-        for (var i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        var byteArray = new Uint8Array(byteNumbers);
-        var blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        downloadBlob(blob, filename);
-        showToast('Planilha Excel exportada com sucesso: ' + filename);
-      }
+      showToast('Escolha onde salvar o arquivo na janela que foi aberta...');
 
       if (isPyWebviewAvailable() && window.pywebview.api.export_excel) {
         window.pywebview.api.export_excel(payload).then(function (resp) {
-          if (resp && resp.status === 'success' && resp.base64) {
-            handleB64Download(resp.base64, resp.filename || getExportFilename('xlsx'));
+          if (resp && resp.status === 'success') {
+            showToast('Planilha Excel salva com sucesso em: ' + (resp.filepath || resp.filename));
+          } else if (resp && resp.status === 'cancelled') {
+            showToast('Exportação cancelada.');
           } else {
             showToast('Erro ao gerar Excel: ' + ((resp && resp.message) || 'Falha no backend'), true);
           }
         }).catch(function (err) {
           showToast('Erro ao exportar Excel via pywebview: ' + (err.message || err), true);
         });
-      } else {
-        apiCall('/export_excel', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).then(function (resp) {
+        return;
+      }
+
+      // Se estiver no navegador e suportar showSaveFilePicker
+      if ('showSaveFilePicker' in window) {
+        try {
+          var handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'Planilha Excel (*.xlsx)',
+              accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+            }]
+          });
+
+          payload.prompt_save = false; // solicita o base64 para gravar diretamente no arquivo escolhido
+          var resp = await apiCall('/export_excel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
           if (resp && resp.status === 'success' && resp.base64) {
-            handleB64Download(resp.base64, resp.filename || getExportFilename('xlsx'));
+            var byteCharacters = atob(resp.base64);
+            var byteNumbers = new Array(byteCharacters.length);
+            for (var i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            var byteArray = new Uint8Array(byteNumbers);
+            var blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            var writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            showToast('Planilha Excel salva com sucesso: ' + handle.name);
+            return;
           } else {
             showToast('Erro ao gerar Excel: ' + ((resp && resp.message) || 'Falha na API'), true);
+            return;
           }
-        }).catch(function (err) {
-          showToast('Erro ao exportar Excel via API: ' + (err.message || err), true);
-        });
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            showToast('Exportação cancelada.');
+            return;
+          }
+        }
       }
+
+      // Fallback via API backend ou download padrão
+      apiCall('/export_excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (resp) {
+        if (resp && resp.status === 'success') {
+          if (resp.filepath) {
+            showToast('Planilha Excel salva com sucesso em: ' + resp.filepath);
+          } else if (resp.base64) {
+            var byteCharacters = atob(resp.base64);
+            var byteNumbers = new Array(byteCharacters.length);
+            for (var i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            var byteArray = new Uint8Array(byteNumbers);
+            var blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            downloadBlob(blob, resp.filename || filename);
+            showToast('Planilha Excel exportada: ' + (resp.filename || filename));
+          }
+        } else if (resp && resp.status === 'cancelled') {
+          showToast('Exportação cancelada.');
+        } else {
+          showToast('Erro ao gerar Excel: ' + ((resp && resp.message) || 'Falha na API'), true);
+        }
+      }).catch(function (err) {
+        showToast('Erro ao exportar Excel via API: ' + (err.message || err), true);
+      });
     });
   }
 

@@ -88,6 +88,43 @@ def format_compact_json(obj) -> str:
     return s
 
 
+def prompt_save_file_path(default_filename: str, file_type: str = "xlsx") -> str:
+    """Abre uma janela de diálogo nativa do Windows para o usuário escolher o local e nome do arquivo."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+
+        if file_type == "xlsx":
+            filetypes = [("Planilhas Excel (*.xlsx)", "*.xlsx"), ("Todos os Arquivos (*.*)", "*.*")]
+            defaultextension = ".xlsx"
+        elif file_type == "csv":
+            filetypes = [("Arquivos CSV (*.csv)", "*.csv"), ("Todos os Arquivos (*.*)", "*.*")]
+            defaultextension = ".csv"
+        elif file_type == "json":
+            filetypes = [("Arquivos JSON (*.json)", "*.json"), ("Todos os Arquivos (*.*)", "*.*")]
+            defaultextension = ".json"
+        else:
+            filetypes = [("Todos os Arquivos (*.*)", "*.*")]
+            defaultextension = ""
+
+        filepath = filedialog.asksaveasfilename(
+            parent=root,
+            title="Salvar arquivo como",
+            initialfile=default_filename,
+            defaultextension=defaultextension,
+            filetypes=filetypes
+        )
+        root.destroy()
+        return filepath or ""
+    except Exception as e:
+        print(f"[Backend Python] Erro ao abrir diálogo de salvamento: {e}")
+        return ""
+
+
 class AppAPI:
     """
     API exposta para o JavaScript via pywebview (window.pywebview.api)
@@ -911,22 +948,61 @@ class AppAPI:
                         if len(val_str) > max_len: max_len = len(val_str)
                     ws_sel.column_dimensions[col_letter].width = max(max_len + 4, 18)
 
-            output_stream = io.BytesIO()
-            wb.save(output_stream)
-            output_stream.seek(0)
-            b64_content = base64.b64encode(output_stream.read()).decode("utf-8")
-
             pep_clean = "".join(c for c in pep if c.isalnum() or c in ("-", "_")).strip()
             data_clean = datetime.now().strftime("%Y%m%d_%H%M")
             file_name = f"Resultado_PEP_{pep_clean}_{data_clean}.xlsx" if pep_clean and pep_clean != "Nãoinformado" else f"Resultado_Eletrocentro_{data_clean}.xlsx"
 
-            return {
-                "status": "success",
-                "filename": file_name,
-                "base64": b64_content
-            }
+            if data.get("prompt_save", True):
+                filepath = prompt_save_file_path(file_name, "xlsx")
+                if not filepath:
+                    return {"status": "cancelled", "message": "Operação cancelada pelo usuário."}
+                wb.save(filepath)
+                return {
+                    "status": "success",
+                    "filepath": filepath,
+                    "filename": os.path.basename(filepath)
+                }
+            else:
+                output_stream = io.BytesIO()
+                wb.save(output_stream)
+                output_stream.seek(0)
+                b64_content = base64.b64encode(output_stream.read()).decode("utf-8")
+                return {
+                    "status": "success",
+                    "filename": file_name,
+                    "base64": b64_content
+                }
         except Exception as e:
             print(f"[Backend Python] Erro ao exportar Excel: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def save_file(self, data: dict) -> dict:
+        """Abre janela nativa de Salvar Como e salva o conteúdo de arquivo (CSV, JSON, etc.) no caminho escolhido."""
+        try:
+            filename = data.get("filename", "arquivo")
+            file_type = data.get("file_type", "csv")
+            content = data.get("content", "")
+            is_base64 = data.get("is_base64", False)
+
+            filepath = prompt_save_file_path(filename, file_type)
+            if not filepath:
+                return {"status": "cancelled", "message": "Operação cancelada pelo usuário."}
+
+            if is_base64:
+                file_bytes = base64.b64decode(content)
+                with open(filepath, "wb") as f:
+                    f.write(file_bytes)
+            else:
+                with open(filepath, "w", encoding="utf-8-sig") as f:
+                    f.write(content)
+
+            return {
+                "status": "success",
+                "filepath": filepath,
+                "filename": os.path.basename(filepath)
+            }
+        except Exception as e:
+            print(f"[Backend Python] Erro ao salvar arquivo: {e}")
             return {"status": "error", "message": str(e)}
 
 
@@ -1061,6 +1137,22 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode("utf-8"))
                 result = self.api.export_excel(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/save_file":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.save_file(data)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
