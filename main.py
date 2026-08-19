@@ -19,16 +19,27 @@ from pathlib import Path
 from backend.database import init_db, comparar_e_registrar_alteracoes, obter_logs, registrar_log
 from backend.settings_store import get_setting, save_setting
 
-# Base Directory Setup
-BASE_DIR = Path(__file__).resolve().parent
+# Base Directory Setup (suporta execução em modo script ou compilado PyInstaller)
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+    INTERNAL_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR / "_internal"))
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    INTERNAL_DIR = BASE_DIR
+
 FRONTEND_DIR = BASE_DIR / "frontend"
+if not FRONTEND_DIR.exists() and (INTERNAL_DIR / "frontend").exists():
+    FRONTEND_DIR = INTERNAL_DIR / "frontend"
+
+ICON_PATH = BASE_DIR / "assets" / "icone.ico"
+if not ICON_PATH.exists() and (INTERNAL_DIR / "assets" / "icone.ico").exists():
+    ICON_PATH = INTERNAL_DIR / "assets" / "icone.ico"
 
 # CONFIG FILE PATHS, REGRAS, ASSETS & PASSWORDS
 CONFIG_FILE = FRONTEND_DIR / "config.json"
 REGRAS_FILE = FRONTEND_DIR / "regras.json"
 SELETOR_FILE = FRONTEND_DIR / "seletor.json"
 TEMPLATE_BLOCKS_FILE = FRONTEND_DIR / "template_blocks.json"
-ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
 
 from backend.schedule_generator import run_schedule_engine
@@ -1121,7 +1132,7 @@ def apply_native_window_icon():
         print(f"[GUI Python] Erro ao aplicar ícone nativo: {e}")
 
 
-APP_VERSION = "2.1.1"
+APP_VERSION = "2.1.2"
 
 
 def launch_app():

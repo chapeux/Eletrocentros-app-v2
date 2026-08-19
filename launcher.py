@@ -76,8 +76,8 @@ def buscar_ponteiro_release_mysql() -> dict | None:
         conn.close()
 
 
-def baixar_pacote_mysql(version: str) -> tuple[bytes, str]:
-    """Baixa o pacote zip e o hash SHA-256 da tabela app_releases."""
+def baixar_pacote_mysql(version: str, splash: UpdateSplash | None = None) -> tuple[bytes, str]:
+    """Baixa o pacote zip e o hash SHA-256 da tabela app_releases em chunks seguros."""
     conn = get_mysql_connection()
     if conn is None:
         raise RuntimeError("Não foi possível conectar ao banco de dados MySQL para baixar a release.")
@@ -85,13 +85,37 @@ def baixar_pacote_mysql(version: str) -> tuple[bytes, str]:
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT pacote_zip, sha256 FROM app_releases WHERE version = %s AND status = 'publicada'",
+            "SELECT sha256, tamanho_bytes FROM app_releases WHERE version = %s AND status = 'publicada'",
             (version,)
         )
         row = cursor.fetchone()
         if row is None:
             raise RuntimeError(f"Versão {version} não encontrada ou não está com status 'publicada'.")
-        return row[0], row[1]
+
+        sha256_esperado, total_bytes = row[0], row[1]
+
+        # Download em chunks de 8 MB (MySQL SUBSTRING é 1-indexed)
+        chunk_size = 8 * 1024 * 1024
+        chunks = []
+        pos = 1
+
+        while pos <= total_bytes:
+            if splash:
+                perc = min(100, int((pos / total_bytes) * 100))
+                splash.set_status(f"Baixando pacote do servidor ({perc}%)...")
+            cursor.execute(
+                "SELECT SUBSTRING(pacote_zip, %s, %s) FROM app_releases WHERE version = %s",
+                (pos, chunk_size, version)
+            )
+            part_row = cursor.fetchone()
+            if not part_row or not part_row[0]:
+                break
+            part_data = part_row[0]
+            chunks.append(part_data)
+            pos += len(part_data)
+
+        pacote_completo = b"".join(chunks)
+        return pacote_completo, sha256_esperado
     finally:
         cursor.close()
         conn.close()
@@ -336,14 +360,14 @@ def main():
 
                 try:
                     splash.set_status("Baixando pacote do servidor MySQL...")
-                    pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota)
+                    pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota, splash)
 
                     # Validação de integridade SHA-256
                     sha_calculado = hashlib.sha256(pacote_bytes).hexdigest()
                     if sha_calculado != sha_esperado:
                         print("[Launcher] Aviso: Hash inconsistente no primeiro download. Tentando novamente...")
                         splash.set_status("Reconectando para novo download...")
-                        pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota)
+                        pacote_bytes, sha_esperado = baixar_pacote_mysql(versao_remota, splash)
                         sha_calculado = hashlib.sha256(pacote_bytes).hexdigest()
                         if sha_calculado != sha_esperado:
                             raise RuntimeError(f"Integridade inválida do pacote (Hash esperado: {sha_esperado}, calculado: {sha_calculado}).")

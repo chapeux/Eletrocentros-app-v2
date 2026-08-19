@@ -21,33 +21,43 @@ from backend.database import get_db_connection, get_current_user, init_db
 
 def zipar_aplicativo(base_dir: Path) -> bytes:
     """
-    Compacta os arquivos essenciais do aplicativo para distribuição.
+    Compacta os arquivos do aplicativo para distribuição.
+    Se existir o build compilado autocontido em dist/app, empacota-o com prioridade.
     """
     buffer = BytesIO()
-    
-    pastas_incluir = ["backend", "frontend", "assets"]
-    arquivos_incluir = ["main.py"]
+    dist_app_dir = base_dir / "dist" / "app"
 
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-        # Arquivos raiz
-        for arq_nome in arquivos_incluir:
-            arq_path = base_dir / arq_nome
-            if arq_path.exists():
-                zf.write(arq_path, arq_nome)
-                print(f"  -> Adicionado arquivo: {arq_nome}")
+    if dist_app_dir.exists() and (dist_app_dir / "app.exe").exists():
+        print(f"  -> Usando distribuição compilada autocontida (PyInstaller onedir): {dist_app_dir}")
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+            for item in dist_app_dir.rglob("*"):
+                if item.is_file():
+                    if "__pycache__" in item.parts or item.suffix in [".pyc", ".pyo", ".tmp"]:
+                        continue
+                    rel_path = item.relative_to(dist_app_dir)
+                    zf.write(item, str(rel_path).replace("\\", "/"))
+    else:
+        print("  -> Usando distribuição de código-fonte...")
+        pastas_incluir = ["backend", "frontend", "assets"]
+        arquivos_incluir = ["main.py"]
 
-        # Pastas e subdiretórios
-        for pasta_nome in pastas_incluir:
-            pasta_path = base_dir / pasta_nome
-            if pasta_path.exists():
-                for item in pasta_path.rglob("*"):
-                    if item.is_file():
-                        # Ignora caches e arquivos temporários
-                        if "__pycache__" in item.parts or item.suffix in [".pyc", ".pyo", ".tmp"]:
-                            continue
-                        rel_path = item.relative_to(base_dir)
-                        zf.write(item, str(rel_path).replace("\\", "/"))
-                print(f"  -> Adicionado diretório: {pasta_nome}")
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+            for arq_nome in arquivos_incluir:
+                arq_path = base_dir / arq_nome
+                if arq_path.exists():
+                    zf.write(arq_path, arq_nome)
+                    print(f"  -> Adicionado arquivo: {arq_nome}")
+
+            for pasta_nome in pastas_incluir:
+                pasta_path = base_dir / pasta_nome
+                if pasta_path.exists():
+                    for item in pasta_path.rglob("*"):
+                        if item.is_file():
+                            if "__pycache__" in item.parts or item.suffix in [".pyc", ".pyo", ".tmp"]:
+                                continue
+                            rel_path = item.relative_to(base_dir)
+                            zf.write(item, str(rel_path).replace("\\", "/"))
+                    print(f"  -> Adicionado diretório: {pasta_nome}")
 
     return buffer.getvalue()
 
@@ -74,27 +84,41 @@ def publicar_release(version: str, descricao: str = "", obrigatoria: bool = True
     cursor = conn.cursor()
 
     try:
-        # 3. Grava o pacote como rascunho (Passo 1/4)
+        # 3. Grava o pacote como rascunho em partes (Passo 1/4)
         print("\n2. Gravando pacote na tabela 'app_releases' (status='rascunho')...")
         cursor.execute(
             """
             INSERT INTO app_releases
                 (version, descricao, obrigatoria, pacote_zip, sha256, tamanho_bytes, status, publicado_em, publicado_por)
             VALUES
-                (%s, %s, %s, %s, %s, %s, 'rascunho', %s, %s)
+                (%s, %s, %s, '', %s, %s, 'rascunho', %s, %s)
             ON DUPLICATE KEY UPDATE
                 descricao = VALUES(descricao),
                 obrigatoria = VALUES(obrigatoria),
-                pacote_zip = VALUES(pacote_zip),
+                pacote_zip = '',
                 sha256 = VALUES(sha256),
                 tamanho_bytes = VALUES(tamanho_bytes),
                 status = 'rascunho',
                 publicado_em = VALUES(publicado_em),
                 publicado_por = VALUES(publicado_por)
             """,
-            (version, descricao, obrigatoria, pacote, sha256_hash, tamanho_bytes, datetime.now(), usuario)
+            (version, descricao, obrigatoria, sha256_hash, tamanho_bytes, datetime.now(), usuario)
         )
         conn.commit()
+
+        # Envio em chunks de 8 MB para respeitar o max_allowed_packet do MySQL
+        chunk_size = 8 * 1024 * 1024
+        total_chunks = (tamanho_bytes + chunk_size - 1) // chunk_size
+        print(f"   Enviando {tamanho_bytes / 1024 / 1024:.1f} MB em {total_chunks} partes de até 8 MB...")
+
+        for idx, offset in enumerate(range(0, tamanho_bytes, chunk_size), 1):
+            chunk = pacote[offset:offset + chunk_size]
+            cursor.execute(
+                "UPDATE app_releases SET pacote_zip = CONCAT(pacote_zip, %s) WHERE version = %s",
+                (chunk, version)
+            )
+            conn.commit()
+            print(f"   -> Parte {idx}/{total_chunks} enviada com sucesso ({len(chunk)/1024/1024:.1f} MB)")
 
         # 4. Confirma integridade do BLOB gravado (Passo 2/4)
         print("3. Validando integridade e hash do pacote gravado no banco...")

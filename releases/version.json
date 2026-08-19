@@ -1,8 +1,8 @@
 {
-  "version": "2.1.1",
-  "pasta": "app-2.1.1",
-  "notas": "Fix: Alocacao dinamica de portas TCP [WinError 10048] e suporte robusto para maquinas sem pywebview",
+  "version": "2.1.2",
+  "pasta": "app-2.1.2",
+  "notas": "Release 2.1.2 - Executavel Autocontido Standalone com PyInstaller (onedir) e Fallback HTTP Resiliente",
   "obrigatoria": true,
-  "sha256": "186f89c392c11c1792fc54fb2a4fed45b09f161703eb6d8a820669d0cb22a3b5",
-  "data_publicacao": "2026-08-19 13:57:26"
+  "sha256": "6298d3c9a5cc1e5a8f0a7961992234b13fc16a4a6baef0ae41eb7bcc73f53350",
+  "data_publicacao": "2026-08-19 14:22:48"
 }
