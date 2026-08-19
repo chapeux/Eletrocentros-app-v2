@@ -2432,11 +2432,95 @@
     });
   }
 
-  if ($('btnSair')) {
-    $('btnSair').addEventListener('click', function () {
-      if (confirm('Deseja realmente encerrar a sessão atual?')) {
-        location.reload();
-      }
+  function limparFormularioCompleto() {
+    // 1. Limpar e restaurar selects customizados para o estado padrão
+    setSelectValue('tipoestrutura', 'Fixo');
+    setSelectValue('nrmodulos', '1');
+    setSelectValue('planpin', 'WAU-ELETRO-08');
+    setSelectValue('tipomaq', 'Wall Mounted');
+    setSelectValue('complexidade', 'Médio');
+    setSelectValue('incendio', 'Com instalações');
+    setSelectValue('seguranca', 'CFTV + Controle Acesso');
+    setSelectValue('planejadorSel', '');
+
+    // 2. Limpar campos de entrada / steppers
+    if ($('nrcolunas')) $('nrcolunas').value = '';
+    if ($('qtdmaq')) $('qtdmaq').value = '0';
+    if ($('horLOM')) $('horLOM').value = '';
+    if ($('horEDF')) $('horEDF').value = '';
+    if ($('horINT')) $('horINT').value = '';
+
+    // 3. Limpar dados dos módulos
+    if (moduleInputs && moduleInputs.length > 0) {
+      moduleInputs.forEach(function (row) {
+        var comp = row.querySelector('.mod-comp');
+        var larg = row.querySelector('.mod-larg');
+        if (comp) comp.value = '';
+        if (larg) larg.value = '';
+      });
+    }
+
+    // 4. Limpar checkboxes da estrutura, elétrica e equipamentos
+    if ($('chapaRemovivel')) $('chapaRemovivel').checked = false;
+    if ($('peDireito')) $('peDireito').checked = false;
+    if ($('testesw')) $('testesw').checked = false;
+    if ($('whiteMartins')) $('whiteMartins').checked = false;
+    if ($('trafoOleo')) $('trafoOleo').checked = false;
+
+    // 5. Limpar container marítimo e fabricação
+    if ($('progReles')) $('progReles').checked = false;
+    if ($('diagBTI')) $('diagBTI').checked = false;
+    if ($('diagAgrup')) $('diagAgrup').checked = false;
+    if ($('fab1313')) $('fab1313').checked = false;
+    if ($('itemFilho')) $('itemFilho').checked = false;
+    if ($('semEngenharia')) $('semEngenharia').checked = false;
+
+    // 6. Limpar acessórios
+    document.querySelectorAll('.acessorio').forEach(function (el) {
+      el.checked = false;
+    });
+
+    // 7. Limpar automação SAP
+    if ($('criarDRs')) $('criarDRs').checked = false;
+    if ($('cpc47')) $('cpc47').checked = false;
+    if ($('solar')) $('solar').checked = false;
+    if ($('planejar')) $('planejar').checked = false;
+    if ($('camposUsuario')) $('camposUsuario').checked = false;
+    if ($('amarrarMaterial')) $('amarrarMaterial').checked = false;
+
+    // 8. Limpar campos de Dados do SAP
+    if ($('pep')) $('pep').value = '';
+    if ($('cliente')) $('cliente').value = '';
+    if ($('valorMec')) $('valorMec').value = '';
+    if ($('valorEletr')) $('valorEletr').value = '';
+    if ($('dataOV')) $('dataOV').value = '';
+    if ($('nrOV')) $('nrOV').value = '';
+    if ($('itemOV')) $('itemOV').value = '';
+    if ($('material')) $('material').value = '';
+    if ($('dataInicio')) $('dataInicio').value = '';
+    if ($('materialMec')) $('materialMec').value = '';
+    if ($('materialEle')) $('materialEle').value = '';
+    if ($('materialAvo')) $('materialAvo').value = '';
+
+    // 9. Resetar estado do PDF Dropzone
+    if (parsedPdfState) {
+      parsedPdfState.lastResult = null;
+      parsedPdfState.filename = '';
+    }
+    var statusBar = $('pdfStatusBar');
+    if (statusBar) statusBar.style.display = 'none';
+    var pdfFileInput = $('pdfFileInput');
+    if (pdfFileInput) pdfFileInput.value = '';
+
+    // 10. Recalcular todo o formulário (LEDs, contadores, bloqueios)
+    recomputeForm();
+    showToast('Formulário limpo com sucesso!');
+  }
+
+  var btnLimpar = $('btnLimparDados') || $('btnLimpar') || $('btnSair');
+  if (btnLimpar) {
+    btnLimpar.addEventListener('click', function () {
+      limparFormularioCompleto();
     });
   }
 
