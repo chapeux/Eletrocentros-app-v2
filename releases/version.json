@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "pasta": "app-2.0.0",
-  "notas": "Adicionado Dropzone e Parser Inteligente de PDF para formulário de Planejamento",
+  "notas": "Ajuste fino do Parser de PDF para padrao Folha de Dados WEG",
   "obrigatoria": true,
-  "data_publicacao": "2026-08-19 10:26:20"
+  "data_publicacao": "2026-08-19 11:24:01"
 }
