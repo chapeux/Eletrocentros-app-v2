@@ -1,8 +1,8 @@
 {
-  "version": "2.1.0",
-  "pasta": "app-2.1.0",
-  "notas": "Release 2.1.0 - Parser Inteligente de PDF (Folha de Dados WEG)",
+  "version": "2.1.1",
+  "pasta": "app-2.1.1",
+  "notas": "Fix: Alocacao dinamica de portas TCP [WinError 10048] e suporte robusto para maquinas sem pywebview",
   "obrigatoria": true,
-  "sha256": "f06ca3456b07ad3b5348eaea62205f5dde4a0f93a46eb86244fa062f8239063e",
-  "data_publicacao": "2026-08-19 13:11:27"
+  "sha256": "186f89c392c11c1792fc54fb2a4fed45b09f161703eb6d8a820669d0cb22a3b5",
+  "data_publicacao": "2026-08-19 13:57:26"
 }

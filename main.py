@@ -1065,14 +1065,27 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().do_POST()
 
 
-def run_local_server(port: int = 8000):
-    """Inicia um servidor HTTP local com suporte a API para servir a aplicação."""
-    os.chdir(FRONTEND_DIR)
-    handler = AppHTTPRequestHandler
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        print(f"[Python HTTP Server] Servindo frontend e API em http://localhost:{port}")
-        httpd.serve_forever()
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
 
+
+def find_available_port(start_port: int = 8000, max_attempts: int = 50) -> int:
+    """Busca uma porta TCP disponível para o servidor local a partir de start_port."""
+    import socket
+    for p in range(start_port, start_port + max_attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("127.0.0.1", p))
+                return p
+        except OSError:
+            continue
+
+    # Fallback: porta efêmera aleatória atribuída pelo SO
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
 
 
 def apply_native_window_icon():
@@ -1108,11 +1121,11 @@ def apply_native_window_icon():
         print(f"[GUI Python] Erro ao aplicar ícone nativo: {e}")
 
 
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.1.1"
 
 
 def launch_app():
-    """Tenta abrir via pywebview como janela nativa. Caso contrário, usa navegador local."""
+    """Tenta abrir via pywebview como janela nativa. Caso contrário, usa servidor HTTP local com porta dinâmica."""
     api = AppAPI()
     index_file = FRONTEND_DIR / "index.html"
 
@@ -1138,23 +1151,38 @@ def launch_app():
 
         webview.start(on_started, debug=False)
     except ImportError:
-        print("[GUI Python] pywebview não encontrado no ambiente Python.")
-        print("[GUI Python] Iniciando servidor HTTP local de fallback...")
+        print("[GUI Python] pywebview não encontrado no ambiente Python corporativo.")
+        print("[GUI Python] Iniciando servidor HTTP local dinâmico...")
 
-        port = 8000
-        server_thread = threading.Thread(target=run_local_server, args=(port,), daemon=True)
+        port = find_available_port(8000)
+        server_ready_event = threading.Event()
+
+        def server_worker():
+            try:
+                os.chdir(FRONTEND_DIR)
+                with ThreadedTCPServer(("127.0.0.1", port), AppHTTPRequestHandler) as httpd:
+                    print(f"[Python HTTP Server] Servindo frontend e API em http://127.0.0.1:{port}")
+                    server_ready_event.set()
+                    httpd.serve_forever()
+            except Exception as e:
+                print(f"[Python HTTP Server Erro] {e}")
+                server_ready_event.set()
+
+        server_thread = threading.Thread(target=server_worker, daemon=True)
         server_thread.start()
+        server_ready_event.wait(timeout=5)
 
-        url = f"http://localhost:{port}/index.html"
-        print(f"[GUI Python] Abrindo navegador padrão em {url}...")
+        url = f"http://127.0.0.1:{port}/index.html"
+        print(f"[GUI Python] Abrindo aplicação no navegador padrão em {url}...")
         webbrowser.open(url)
 
         try:
             while True:
-                pass
+                time.sleep(1)
         except KeyboardInterrupt:
             print("\n[GUI Python] Aplicação encerrada pelo usuário.")
 
 
 if __name__ == "__main__":
     launch_app()
+

@@ -6,9 +6,9 @@
         "H": {
           "base": {
             "forma": "aditiva",
-            "valor_base": 35.61,
+            "valor_base": 35.6,
             "passo": 17.8,
-            "valor": 35.61,
+            "valor": 35.6,
             "perfis": [
               {
                 "id": "perfil_cs_essw",
