@@ -1108,6 +1108,9 @@ def apply_native_window_icon():
         print(f"[GUI Python] Erro ao aplicar ícone nativo: {e}")
 
 
+APP_VERSION = "2.1.0"
+
+
 def launch_app():
     """Tenta abrir via pywebview como janela nativa. Caso contrário, usa navegador local."""
     api = AppAPI()
@@ -1115,9 +1118,9 @@ def launch_app():
 
     try:
         import webview
-        print("[GUI Python] Inicializando janela nativa com PyWebView...")
+        print(f"[GUI Python] Inicializando janela nativa com PyWebView (v{APP_VERSION})...")
         window = webview.create_window(
-            title="Eletrocentros — Sistema Integrado PCP & Manutenção",
+            title=f"Eletrocentros — PCP & Planejamento v{APP_VERSION}",
             url=str(index_file),
             js_api=api,
             width=1380,
