@@ -2585,4 +2585,177 @@ tr.total-row .pct-bar-result > i { --dot: var(--total-color); }
   .kpi-grid-result { grid-template-columns: 1fr; }
 }
 
+/* ==========================================================================
+   PDF DROPZONE & AUTO-PARSER STYLES
+   ========================================================================== */
+.pdf-dropzone-wrap {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-dropzone {
+  border: 1.5px dashed var(--border-strong);
+  background: var(--panel);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-dropzone:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-dim) 35%, var(--panel));
+}
+
+.pdf-dropzone.dragover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-dim) 60%, var(--panel));
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  transform: scale(1.005);
+}
+
+.pdf-drop-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.pdf-dropzone:hover .pdf-drop-icon {
+  transform: scale(1.08);
+}
+
+.pdf-drop-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pdf-drop-title {
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pdf-drop-title strong {
+  font-weight: 600;
+}
+
+.pdf-drop-title .link-sel {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.badge-opt {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  background: var(--panel-3);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pdf-drop-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-drop-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-dim);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdf-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+}
+
+.pdf-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pdf-file-name {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-badge-fields {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.pdf-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-highlight-pulse {
+  animation: pulseGlow 1.8s ease-out;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 3px rgba(108, 142, 255, 0.6); }
+  70% { box-shadow: 0 0 0 3px rgba(108, 142, 255, 0.2); }
+  100% { box-shadow: none; }
+}
+
 

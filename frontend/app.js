@@ -595,6 +595,332 @@
 
   recomputeForm();
 
+  /* ==========================================================================
+     PDF DROPZONE & PARSER AUTOFILL LOGIC
+     ========================================================================== */
+  var parsedPdfState = {
+    lastResult: null,
+    filename: ''
+  };
+
+  function setupPdfDropzone() {
+    var dropzone = $('pdfDropzone');
+    var fileInput = $('pdfFileInput');
+    var dropLoading = $('pdfDropLoading');
+    var dropContent = document.querySelector('.pdf-drop-content');
+    var dropIcon = document.querySelector('.pdf-drop-icon');
+    var statusBar = $('pdfStatusBar');
+    var btnRemover = $('btnRemoverPdf');
+    var btnVerCampos = $('btnVerCamposPdf');
+
+    if (!dropzone || !fileInput) return;
+
+    dropzone.addEventListener('click', function () {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function (e) {
+      if (e.target.files && e.target.files.length > 0) {
+        processarPdfArquivo(e.target.files[0]);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(function (eventName) {
+      dropzone.addEventListener(eventName, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(function (eventName) {
+      dropzone.addEventListener(eventName, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+      var dt = e.dataTransfer;
+      var files = dt.files;
+      if (files && files.length > 0) {
+        processarPdfArquivo(files[0]);
+      }
+    });
+
+    if (btnRemover) {
+      btnRemover.addEventListener('click', function (e) {
+        e.stopPropagation();
+        parsedPdfState.lastResult = null;
+        parsedPdfState.filename = '';
+        if (statusBar) statusBar.style.display = 'none';
+        if (fileInput) fileInput.value = '';
+        showToast('Importação de PDF removida.');
+      });
+    }
+
+    if (btnVerCampos) {
+      btnVerCampos.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (parsedPdfState.lastResult && parsedPdfState.lastResult.logs) {
+          var msg = 'Campos identificados no PDF (' + (parsedPdfState.filename || 'Documento') + '):\n\n' +
+            parsedPdfState.lastResult.logs.map(function (l) { return '• ' + l; }).join('\n');
+          alert(msg);
+        } else {
+          alert('Nenhum detalhe disponível para exibição.');
+        }
+      });
+    }
+  }
+
+  function processarPdfArquivo(file) {
+    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+      showToast('Por favor selecione um arquivo no formato PDF.', true);
+      return;
+    }
+
+    var dropLoading = $('pdfDropLoading');
+    var dropContent = document.querySelector('.pdf-drop-content');
+    var dropIcon = document.querySelector('.pdf-drop-icon');
+    var statusBar = $('pdfStatusBar');
+
+    if (dropLoading) dropLoading.style.display = 'flex';
+    if (dropContent) dropContent.style.display = 'none';
+    if (dropIcon) dropIcon.style.display = 'none';
+    if (statusBar) statusBar.style.display = 'none';
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var base64Data = e.target.result;
+
+      function onResult(res) {
+        if (dropLoading) dropLoading.style.display = 'none';
+        if (dropContent) dropContent.style.display = '';
+        if (dropIcon) dropIcon.style.display = '';
+
+        if (!res || res.status === 'error') {
+          showToast(res ? res.message : 'Erro ao processar PDF.', true);
+          return;
+        }
+
+        parsedPdfState.lastResult = res;
+        parsedPdfState.filename = file.name;
+
+        if (statusBar) {
+          statusBar.style.display = 'flex';
+          if ($('pdfFileName')) $('pdfFileName').textContent = file.name;
+          if ($('pdfBadgeFields')) $('pdfBadgeFields').textContent = (res.total_campos || Object.keys(res.fields || {}).length) + ' campos identificados';
+        }
+
+        applyParsedPdfData(res.fields || {});
+        showToast('PDF importado com sucesso! ' + (res.total_campos || 0) + ' campos preenchidos automaticamente.');
+      }
+
+      if (isPyWebviewAvailable()) {
+        window.pywebview.api.parse_pdf({
+          pdf_base64: base64Data,
+          filename: file.name
+        }).then(onResult).catch(function (err) {
+          onResult({ status: 'error', message: err.message || 'Falha ao executar parser de PDF' });
+        });
+      } else {
+        apiCall('/parse_pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdf_base64: base64Data, filename: file.name })
+        }).then(onResult).catch(function (err) {
+          onResult({ status: 'error', message: err.message || 'Falha na requisição ao backend' });
+        });
+      }
+    };
+    reader.onerror = function () {
+      if (dropLoading) dropLoading.style.display = 'none';
+      if (dropContent) dropContent.style.display = '';
+      if (dropIcon) dropIcon.style.display = '';
+      showToast('Erro ao ler arquivo PDF do disco.', true);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyParsedPdfData(fields) {
+    if (!fields || typeof fields !== 'object') return;
+
+    var modifiedElements = [];
+
+    function findBestMatch(list, targetVal) {
+      if (!list || !Array.isArray(list) || !targetVal) return null;
+      var cleanTarget = String(targetVal).trim().toLowerCase();
+      for (var i = 0; i < list.length; i++) {
+        var it = list[i];
+        var itemVal = typeof it === 'string' ? it : (it.value || it.label || '');
+        if (itemVal.toLowerCase() === cleanTarget || itemVal.toLowerCase().indexOf(cleanTarget) !== -1 || cleanTarget.indexOf(itemVal.toLowerCase()) !== -1) {
+          return typeof it === 'string' ? it : it.value;
+        }
+      }
+      return null;
+    }
+
+    // 1. Tipo de Estrutura
+    if (fields.tipoestrutura && CONFIG && CONFIG.listas && CONFIG.listas.tipoestrutura) {
+      var matchTipo = findBestMatch(CONFIG.listas.tipoestrutura, fields.tipoestrutura);
+      if (matchTipo) {
+        setSelectValue('tipoestrutura', matchTipo);
+        var cEl = $('csel-tipoestrutura');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+
+    // 2. Qtd Módulos
+    if (fields.nrmodulos) {
+      var nmodStr = String(fields.nrmodulos);
+      setSelectValue('nrmodulos', nmodStr);
+      var cEl = $('csel-nrmodulos');
+      if (cEl) modifiedElements.push(cEl);
+    }
+
+    // 3. Plano de Pintura
+    if (fields.planpin && CONFIG && CONFIG.listas && CONFIG.listas.planpin) {
+      var matchPlan = findBestMatch(CONFIG.listas.planpin, fields.planpin);
+      if (matchPlan) {
+        setSelectValue('planpin', matchPlan);
+        var cEl = $('csel-planpin');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+
+    // 4. Dimensões por Módulo
+    if (fields.modulos && Array.isArray(fields.modulos)) {
+      fields.modulos.forEach(function (m, idx) {
+        if (idx < 8 && moduleInputs && moduleInputs[idx]) {
+          var row = moduleInputs[idx];
+          var compInput = row.querySelector('.mod-comp');
+          var largInput = row.querySelector('.mod-larg');
+          if (compInput && m.c !== undefined) {
+            compInput.value = String(m.c).replace('.', ',');
+            modifiedElements.push(compInput);
+          }
+          if (largInput && m.l !== undefined) {
+            largInput.value = String(m.l).replace('.', ',');
+            modifiedElements.push(largInput);
+          }
+        }
+      });
+    }
+
+    // 5. Checkboxes Estruturais
+    if (fields.chapaRemovivel !== undefined && $('chapaRemovivel')) {
+      $('chapaRemovivel').checked = Boolean(fields.chapaRemovivel);
+      modifiedElements.push($('chapaRemovivel').parentElement);
+    }
+    if (fields.peDireito !== undefined && $('peDireito')) {
+      $('peDireito').checked = Boolean(fields.peDireito);
+      modifiedElements.push($('peDireito').parentElement);
+    }
+
+    // 6. Ar Condicionado
+    if (fields.tipomaq && CONFIG && CONFIG.listas && CONFIG.listas.tipomaq) {
+      var matchMaq = findBestMatch(CONFIG.listas.tipomaq, fields.tipomaq);
+      if (matchMaq) {
+        setSelectValue('tipomaq', matchMaq);
+        var cEl = $('csel-tipomaq');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+    if (fields.qtdmaq !== undefined && $('qtdmaq')) {
+      $('qtdmaq').value = String(fields.qtdmaq);
+      modifiedElements.push($('qtdmaq').parentElement);
+    }
+
+    // 7. Incêndio e Segurança
+    if (fields.incendio && CONFIG && CONFIG.listas && CONFIG.listas.incendio) {
+      var matchInc = findBestMatch(CONFIG.listas.incendio, fields.incendio);
+      if (matchInc) {
+        setSelectValue('incendio', matchInc);
+        var cEl = $('csel-incendio');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+    if (fields.seguranca && CONFIG && CONFIG.listas && CONFIG.listas.seguranca) {
+      var matchSeg = findBestMatch(CONFIG.listas.seguranca, fields.seguranca);
+      if (matchSeg) {
+        setSelectValue('seguranca', matchSeg);
+        var cEl = $('csel-seguranca');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+
+    // 8. Equipamentos e Complexidade
+    if (fields.complexidade && CONFIG && CONFIG.listas && CONFIG.listas.complexidade) {
+      var matchCpx = findBestMatch(CONFIG.listas.complexidade, fields.complexidade);
+      if (matchCpx) {
+        setSelectValue('complexidade', matchCpx);
+        var cEl = $('csel-complexidade');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+    if (fields.nrcolunas !== undefined && $('nrcolunas')) {
+      $('nrcolunas').value = String(fields.nrcolunas);
+      modifiedElements.push($('nrcolunas').parentElement);
+    }
+    if (fields.trafoOleo !== undefined && $('trafoOleo')) {
+      $('trafoOleo').checked = Boolean(fields.trafoOleo);
+      modifiedElements.push($('trafoOleo').parentElement);
+    }
+    if (fields.testesw !== undefined && $('testesw')) {
+      $('testesw').checked = Boolean(fields.testesw);
+      modifiedElements.push($('testesw').parentElement);
+    }
+
+    // 9. Acessórios
+    if (fields.acessorios && Array.isArray(fields.acessorios)) {
+      document.querySelectorAll('.acessorio').forEach(function (chk) {
+        var flag = chk.dataset.flag;
+        if (flag && fields.acessorios.indexOf(flag) !== -1) {
+          chk.checked = true;
+          modifiedElements.push(chk.parentElement);
+        }
+      });
+    }
+
+    // 10. Container Solar Flags
+    if (fields.progReles !== undefined && $('progReles')) $('progReles').checked = Boolean(fields.progReles);
+    if (fields.diagBTI !== undefined && $('diagBTI')) $('diagBTI').checked = Boolean(fields.diagBTI);
+    if (fields.diagAgrup !== undefined && $('diagAgrup')) $('diagAgrup').checked = Boolean(fields.diagAgrup);
+
+    // 11. PEP, Cliente, Planejador (SAP)
+    if (fields.pep && $('pep')) {
+      $('pep').value = fields.pep;
+      modifiedElements.push($('pep'));
+    }
+    if (fields.cliente && $('cliente')) {
+      $('cliente').value = fields.cliente;
+      modifiedElements.push($('cliente'));
+    }
+    if (fields.planejadorSel && CONFIG && CONFIG.listas && CONFIG.listas.planejadorSel) {
+      var matchPlanSel = findBestMatch(CONFIG.listas.planejadorSel, fields.planejadorSel);
+      if (matchPlanSel) {
+        setSelectValue('planejadorSel', matchPlanSel);
+        var cEl = $('csel-planejadorSel');
+        if (cEl) modifiedElements.push(cEl);
+      }
+    }
+
+    // Recalcula todo o formulário
+    recomputeForm();
+
+    // Pulse animation nos elementos atualizados
+    modifiedElements.forEach(function (el) {
+      if (!el) return;
+      el.classList.remove('field-highlight-pulse');
+      void el.offsetWidth;
+      el.classList.add('field-highlight-pulse');
+      setTimeout(function () { el.classList.remove('field-highlight-pulse'); }, 2000);
+    });
+  }
+
+  setupPdfDropzone();
+
   /* Section Navigation Smooth Scroll & Active Observer */
   var planNavBtns = document.querySelectorAll('#sectionNavPlanejamento .snav-btn');
   planNavBtns.forEach(function (btn) {

@@ -32,6 +32,7 @@ ICON_PATH = BASE_DIR / "assets" / "icone.ico"
 MAINTENANCE_PASSWORD = os.environ.get("MAINTENANCE_PASSWORD", "admin")
 
 from backend.schedule_generator import run_schedule_engine
+from backend.pdf_parser import parse_pdf_document
 
 
 # Diretório de rede para armazenamento de anexos do histórico
@@ -410,6 +411,16 @@ class AppAPI:
             return {"status": "success", "data": result}
         except Exception as e:
             print(f"[Backend Python] Erro ao gerar cronograma: {e}")
+    def parse_pdf(self, payload: dict) -> dict:
+        """Processa o PDF do projeto e extrai campos para preenchimento automático do formulário."""
+        try:
+            pdf_b64 = payload.get("pdf_base64") or payload.get("base64")
+            filename = payload.get("filename", "documento.pdf")
+            if not pdf_b64:
+                return {"status": "error", "message": "Nenhum arquivo PDF fornecido."}
+            return parse_pdf_document(pdf_b64, filename=filename)
+        except Exception as e:
+            print(f"[Backend Python] Erro ao processar PDF: {e}")
             return {"status": "error", "message": str(e)}
 
     def export_excel(self, data: dict) -> dict:
@@ -1007,6 +1018,22 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode("utf-8"))
                 result = self.api.generate_schedule(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/parse_pdf":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.parse_pdf(data)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()

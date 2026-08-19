@@ -160,6 +160,51 @@
             </div>
           </div>
 
+          <!-- PDF DROPZONE (AUTO-PREENCHIMENTO INTELIGENTE) -->
+          <div class="pdf-dropzone-wrap" id="pdfDropzoneWrap">
+            <div class="pdf-dropzone" id="pdfDropzone">
+              <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;">
+              <div class="pdf-drop-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="18" x2="12" y2="12" />
+                  <line x1="9" y1="15" x2="12" y2="12" />
+                  <line x1="15" y1="15" x2="12" y2="12" />
+                </svg>
+              </div>
+              <div class="pdf-drop-content">
+                <div class="pdf-drop-title">
+                  <strong>Arraste o PDF do projeto aqui</strong> ou <span class="link-sel">clique para selecionar</span>
+                  <span class="badge-opt">Opcional</span>
+                </div>
+                <div class="pdf-drop-sub">
+                  Preenchimento automático do formulário via Parser de PDF (PEP, cliente, dimensões, módulos e equipamentos)
+                </div>
+              </div>
+              <div class="pdf-drop-loading" id="pdfDropLoading" style="display:none;">
+                <div class="spinner-sm"></div>
+                <span>Processando documento PDF...</span>
+              </div>
+            </div>
+
+            <!-- PDF Status / Resultado do Parser -->
+            <div class="pdf-status-bar" id="pdfStatusBar" style="display:none;">
+              <div class="pdf-status-info">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--green); flex-shrink:0;">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span class="pdf-file-name" id="pdfFileName">proposta.pdf</span>
+                <span class="pdf-badge-fields" id="pdfBadgeFields">12 campos identificados</span>
+              </div>
+              <div class="pdf-status-actions">
+                <button type="button" class="btn-sm btn-ghost" id="btnVerCamposPdf" title="Ver campos extraídos">Ver detalhes</button>
+                <button type="button" class="btn-sm btn-ghost" id="btnRemoverPdf" title="Limpar e enviar outro PDF">✕</button>
+              </div>
+            </div>
+          </div>
+
           <div class="stack">
             <!-- ESTRUTURA -->
             <section class="pane" id="sec-estrutura">
