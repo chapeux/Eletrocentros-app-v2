@@ -191,39 +191,72 @@ button {
 .brandmark {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 12px;
   flex: none;
 }
 
 .brandmark .mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(160deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #7A4CFF));
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #091326;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  color: #FFF;
 }
 
 .brandmark .mark svg {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
 }
 
-.brandmark-text b {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.1px;
-  display: block;
+.brandmark-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.brandmark-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.brandmark-title b {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.2px;
+  line-height: 1.1;
+}
+
+.brandmark-title .app-version-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #FFFFFF;
+  font-family: "IBM Plex Mono", monospace;
   line-height: 1.2;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.brandmark-text span {
-  font-size: 10.5px;
-  color: var(--text-faint);
-  font-family: "IBM Plex Mono";
+.brandmark-text #subTitleText {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748B;
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  line-height: 1.1;
   display: block;
 }
 
