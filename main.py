@@ -1224,7 +1224,7 @@ def apply_native_window_icon():
         print(f"[GUI Python] Erro ao aplicar ícone nativo: {e}")
 
 
-APP_VERSION = "2.1.3"
+APP_VERSION = "2.1.4"
 
 
 def launch_app():
