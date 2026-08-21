@@ -119,7 +119,38 @@ def init_db() -> bool:
         """
         cursor.execute(create_releases_table_sql)
 
-        # 5. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em logs_modificacoes
+        # 5. Garante que a tabela 'logs_calculos' exista para auditoria de execuções de cálculo
+        create_calculos_table_sql = r"""
+        CREATE TABLE IF NOT EXISTS logs_calculos (
+            id                 INT AUTO_INCREMENT PRIMARY KEY,
+            data_hora          DATETIME NOT NULL,
+            usuario            VARCHAR(100) NOT NULL,
+            pep                VARCHAR(100),
+            cliente            VARCHAR(150),
+            tipo_estrutura     VARCHAR(100),
+            nr_modulos         INT DEFAULT 1,
+            dimensoes_modulos  TEXT,
+            plano_pintura      VARCHAR(100),
+            ar_condicionado    VARCHAR(100),
+            qtd_ar_cond        INT DEFAULT 0,
+            sistema_incendio   VARCHAR(100),
+            sistema_seguranca  VARCHAR(100),
+            complexidade       VARCHAR(100),
+            nr_colunas         INT DEFAULT 0,
+            acessorios         TEXT,
+            opcoes_flags       TEXT,
+            total_horas        DECIMAL(10,2),
+            total_operacoes    INT DEFAULT 0,
+            totais_disciplinas JSON,
+            dados_completos    LONGTEXT,
+            INDEX idx_data_hora (data_hora),
+            INDEX idx_pep (pep),
+            INDEX idx_usuario (usuario)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """
+        cursor.execute(create_calculos_table_sql)
+
+        # 6. Garante adição das colunas 'motivo', 'anexo_nome' e 'anexo_caminho' em logs_modificacoes
         try:
             cursor.execute("SHOW COLUMNS FROM logs_modificacoes LIKE 'motivo';")
             if not cursor.fetchone():
@@ -139,7 +170,7 @@ def init_db() -> bool:
         cursor.close()
         conn.close()
 
-        print(f"[Database Python] Conexão MySQL com '{DB_CONFIG['database']}.{DB_TABELA}' verificada e inicializada com sucesso!")
+        print(f"[Database Python] Conexão MySQL com '{DB_CONFIG['database']}' verificada e inicializada com sucesso!")
         return True
     except Exception as e:
         print(f"[Database Python] Erro ao inicializar BD MySQL: {e}")
@@ -294,5 +325,97 @@ def obter_logs(limit: int = 100) -> List[Dict[str, Any]]:
         conn.close()
     except Exception as e:
         print(f"[Database Python] Erro ao buscar logs em {DB_TABELA}: {e}")
+
+    return logs
+
+
+def registrar_log_calculo(
+    usuario: Optional[str] = None,
+    pep: str = "",
+    cliente: str = "",
+    tipo_estrutura: str = "",
+    nr_modulos: int = 1,
+    dimensoes_modulos: str = "",
+    plano_pintura: str = "",
+    ar_condicionado: str = "",
+    qtd_ar_cond: int = 0,
+    sistema_incendio: str = "",
+    sistema_seguranca: str = "",
+    complexidade: str = "",
+    nr_colunas: int = 0,
+    acessorios: str = "",
+    opcoes_flags: str = "",
+    total_horas: float = 0.0,
+    total_operacoes: int = 0,
+    totais_disciplinas: Any = None,
+    dados_completos: Any = None
+) -> bool:
+    """Insere um novo registro de auditoria na tabela 'logs_calculos' no MySQL."""
+    if not usuario:
+        usuario = get_current_user()
+
+    data_hora = datetime.now()
+    totais_disc_str = json.dumps(totais_disciplinas, ensure_ascii=False) if totais_disciplinas is not None else None
+    dados_comp_str = json.dumps(dados_completos, ensure_ascii=False) if dados_completos is not None else None
+
+    sql = """
+        INSERT INTO logs_calculos 
+        (data_hora, usuario, pep, cliente, tipo_estrutura, nr_modulos, dimensoes_modulos,
+         plano_pintura, ar_condicionado, qtd_ar_cond, sistema_incendio, sistema_seguranca,
+         complexidade, nr_colunas, acessorios, opcoes_flags, total_horas, total_operacoes,
+         totais_disciplinas, dados_completos)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    valores = (
+        data_hora, usuario, pep, cliente, tipo_estrutura, nr_modulos, dimensoes_modulos,
+        plano_pintura, ar_condicionado, qtd_ar_cond, sistema_incendio, sistema_seguranca,
+        complexidade, nr_colunas, acessorios, opcoes_flags, total_horas, total_operacoes,
+        totais_disc_str, dados_comp_str
+    )
+
+    try:
+        conn = get_db_connection(with_db=True)
+        cursor = conn.cursor()
+        cursor.execute(sql, valores)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[Database Python] Erro ao gravar log de cálculo no MySQL: {e}")
+        return False
+
+
+def obter_logs_calculos(limit: int = 50) -> List[Dict[str, Any]]:
+    """Retorna os logs de cálculos mais recentes cadastrados na tabela 'logs_calculos'."""
+    sql = """
+        SELECT id, data_hora, usuario, pep, cliente, tipo_estrutura, nr_modulos, dimensoes_modulos,
+               plano_pintura, ar_condicionado, qtd_ar_cond, sistema_incendio, sistema_seguranca,
+               complexidade, nr_colunas, acessorios, opcoes_flags, total_horas, total_operacoes,
+               totais_disciplinas, dados_completos
+        FROM logs_calculos
+        ORDER BY id DESC
+        LIMIT %s
+    """
+    logs = []
+    try:
+        conn = get_db_connection(with_db=True)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(sql, (limit,))
+        rows = cursor.fetchall()
+        for r in rows:
+            if isinstance(r.get("data_hora"), datetime):
+                r["data_hora"] = r["data_hora"].strftime("%d/%m/%Y %H:%M:%S")
+            for key in ["totais_disciplinas", "dados_completos"]:
+                if isinstance(r.get(key), str):
+                    try:
+                        r[key] = json.loads(r[key])
+                    except Exception:
+                        pass
+            logs.append(r)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"[Database Python] Erro ao buscar logs de cálculo: {e}")
 
     return logs

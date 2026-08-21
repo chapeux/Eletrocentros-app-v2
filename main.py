@@ -16,7 +16,15 @@ from datetime import datetime
 from pathlib import Path
 
 # Módulo Backend de Banco de Dados MySQL
-from backend.database import init_db, comparar_e_registrar_alteracoes, obter_logs, registrar_log
+from backend.database import (
+    init_db,
+    comparar_e_registrar_alteracoes,
+    obter_logs,
+    registrar_log,
+    registrar_log_calculo,
+    obter_logs_calculos,
+    get_current_user
+)
 from backend.settings_store import get_setting, save_setting
 
 # Base Directory Setup (suporta execução em modo script ou compilado PyInstaller)
@@ -1005,6 +1013,170 @@ class AppAPI:
             print(f"[Backend Python] Erro ao salvar arquivo: {e}")
             return {"status": "error", "message": str(e)}
 
+    def log_calculo(self, *args, **kwargs) -> dict:
+        """Registra log detalhado das informações preenchidas e resultados calculados no arquivo local e no MySQL."""
+        try:
+            payload = {}
+            if len(args) >= 1 and isinstance(args[0], dict):
+                payload = args[0]
+            elif kwargs:
+                payload = kwargs
+
+            ctx = payload.get("ctx") or {}
+            totais_disc = payload.get("totais_disciplinas") or {}
+            resumo_areas = payload.get("resumo_areas") or []
+            cronograma = payload.get("cronograma") or {}
+            seletor = payload.get("seletor") or {}
+
+            usuario = get_current_user()
+            agora = datetime.now()
+            ts_str = agora.strftime("%Y-%m-%d %H:%M:%S")
+
+            # Montagem das dimensões formatadas
+            modules_list = ctx.get("modules") or []
+            dimensoes_list = []
+            for i, m in enumerate(modules_list, 1):
+                comp_m = m.get("comp", "")
+                larg_m = m.get("larg", "")
+                dimensoes_list.append(f"Módulo {i}: {comp_m}m x {larg_m}m")
+            dimensoes_str = " | ".join(dimensoes_list) if dimensoes_list else f"{ctx.get('comp', '')}m x {ctx.get('larg', '')}m"
+
+            # Flags/checkboxes ativas
+            flags_marcadas = []
+            if ctx.get("chapaRemovivel") in [True, "Sim", "sim", "1"]:
+                flags_marcadas.append("Chapa Removível")
+            if ctx.get("peDireito") in [True, "Sim", "sim", "1"]:
+                flags_marcadas.append("Pé Direito 3,3m")
+            if ctx.get("testesw") in [True, "Sim", "sim", "1"]:
+                flags_marcadas.append("Teste de Software")
+            if ctx.get("white_martins") in [True, "Sim", "sim", "1"]:
+                flags_marcadas.append("White Martins")
+            if ctx.get("trafo_oleo") in [True, "Sim", "sim", "1"]:
+                flags_marcadas.append("Transformador a Óleo / Bacia")
+
+            # Acessórios
+            acessorios_marcados = []
+            acess_map = {
+                "acess_escada_weg": "Escada Padrão WEG",
+                "acess_escada_esp": "Escada Especial",
+                "acess_porao": "Porão de Cabos",
+                "acess_pilotis": "Pilotis",
+                "acess_dutos": "Rede de Dutos",
+                "acess_fundo_falso": "Fundo Falso",
+                "acess_dutos_bww": "Dutos BWW",
+                "acess_calhas": "Calhas Pluviais",
+                "acess_dutos_gases": "Dutos de Gases"
+            }
+            for k_ac, nome_ac in acess_map.items():
+                if ctx.get(k_ac) in [True, "Sim", "sim", "1"]:
+                    acessorios_marcados.append(nome_ac)
+
+            pep_val = str(ctx.get("pep") or (seletor.get("PEP Standard") if seletor else "") or "").strip()
+            cliente_val = str(ctx.get("cliente") or "").strip()
+            tipo_est = str(ctx.get("tipoestrutura") or "").strip()
+            nr_mod = int(ctx.get("nmod") or 1)
+            plano_pin = str(ctx.get("planpin") or "").strip()
+            maq_ac = str(ctx.get("tipomaq") or "").strip()
+            qtd_ac = int(ctx.get("qtdmaq") or 0)
+            incendio_val = str(ctx.get("incendio") or "").strip()
+            seguranca_val = str(ctx.get("seguranca") or "").strip()
+            complex_val = str(ctx.get("complexidade") or "").strip()
+            nr_col = int(ctx.get("nrcolunas") or 0)
+            tot_h = float(cronograma.get("total_horas") or totais_disc.get("total_h") or 0.0)
+            tot_ops = int(cronograma.get("qtd_tarefas") or len(cronograma.get("tarefas") or []))
+
+            # 1. Montagem do Log Formatado para Arquivo Local
+            linhas_log = [
+                "=" * 80,
+                f"[LOG CÁLCULO DE TEMPOS] {ts_str} — Usuário: {usuario}",
+                "-" * 80,
+                f"IDENTIFICAÇÃO: PEP: {pep_val or 'Não informado'} | Cliente: {cliente_val or 'Não informado'}",
+                f"ESTRUTURA: Tipo: {tipo_est} | {nr_mod} Módulo(s) | Plano Pintura: {plano_pin}",
+                f"DIMENSÕES: {dimensoes_str}",
+                f"OPÇÕES ESTRUTURA: {', '.join(flags_marcadas) if flags_marcadas else 'Nenhuma'}",
+                f"ELÉTRICA & EQUIPAMENTOS:",
+                f"  • Ar Condicionado: {maq_ac} ({qtd_ac} un)",
+                f"  • Sistema Incêndio: {incendio_val}",
+                f"  • Sistema Segurança: {seguranca_val}",
+                f"  • Complexidade Equipamentos: {complex_val} | Nº Colunas: {nr_col}",
+                f"  • Acessórios: {', '.join(acessorios_marcados) if acessorios_marcados else 'Nenhum'}",
+                "-" * 80,
+                f"RESULTADOS CALCULADOS:",
+                f"  • Total de Operações Geradas: {tot_ops} tarefas",
+                f"  • Total de Horas Geral: {tot_h:.2f} h",
+                f"  • Horas por Diagrama (Padrão Excel):",
+                f"      - Engenharia (ENG): {float(totais_disc.get('eng_h', 0)):.1f} h",
+                f"      - Mecânica (MEC):   {float(totais_disc.get('mec_h', 0)):.1f} h",
+                f"      - Elétrica (ELE):   {float(totais_disc.get('ele_h', 0)):.1f} h",
+                f"      - Total Consolidado:{float(totais_disc.get('total_h', 0)):.1f} h",
+            ]
+
+            if resumo_areas:
+                linhas_log.append("  • Subtotais por Áreas Analíticas (regras.json):")
+                for area in resumo_areas:
+                    nome_a = area.get("area", "")
+                    th_a = float(area.get("totalH", 0))
+                    td_a = float(area.get("totalDUR", 0))
+                    linhas_log.append(f"      - {nome_a.ljust(22)}: {th_a:8.2f} h ({td_a:.1f} dias)")
+
+            if seletor and seletor.get("PEP Standard"):
+                linhas_log.append(f"  • Seletor PEP/CTs: PEP Standard: {seletor.get('PEP Standard')}")
+
+            linhas_log.append("=" * 80 + "\n")
+            log_texto = "\n".join(linhas_log)
+
+            # Grava no arquivo local
+            try:
+                logs_dir = BASE_DIR / "logs"
+                logs_dir.mkdir(parents=True, exist_ok=True)
+                arquivo_log = logs_dir / "calculos.log"
+                with open(arquivo_log, "a", encoding="utf-8") as f_log:
+                    f_log.write(log_texto)
+                print(f"[Log Cálculo] Registro gravado em {arquivo_log}")
+            except Exception as f_err:
+                print(f"[Log Cálculo] Aviso ao gravar arquivo local: {f_err}")
+
+            # Grava no banco de dados MySQL
+            try:
+                sucesso_db = registrar_log_calculo(
+                    usuario=usuario,
+                    pep=pep_val,
+                    cliente=cliente_val,
+                    tipo_estrutura=tipo_est,
+                    nr_modulos=nr_mod,
+                    dimensoes_modulos=dimensoes_str,
+                    plano_pintura=plano_pin,
+                    ar_condicionado=maq_ac,
+                    qtd_ar_cond=qtd_ac,
+                    sistema_incendio=incendio_val,
+                    sistema_seguranca=seguranca_val,
+                    complexidade=complex_val,
+                    nr_colunas=nr_col,
+                    acessorios=", ".join(acessorios_marcados),
+                    opcoes_flags=", ".join(flags_marcadas),
+                    total_horas=tot_h,
+                    total_operacoes=tot_ops,
+                    totais_disciplinas=totais_disc,
+                    dados_completos=payload
+                )
+                if sucesso_db:
+                    print(f"[Log Cálculo] Registro gravado com sucesso no MySQL (tabela 'logs_calculos')!")
+            except Exception as db_err:
+                print(f"[Log Cálculo] Aviso ao gravar log no MySQL: {db_err}")
+
+            return {"status": "success", "message": "Log de cálculo registrado com sucesso"}
+        except Exception as e:
+            print(f"[Log Cálculo] Erro ao registrar log: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def get_logs_calculos(self, limit: int = 50) -> list:
+        """Retorna os logs de cálculos mais recentes do MySQL."""
+        try:
+            return obter_logs_calculos(limit=limit)
+        except Exception as e:
+            print(f"[Backend Python] Erro ao buscar logs de cálculo: {e}")
+            return []
+
 
 class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Handler HTTP customizado com suporte a rotas da API /api/*."""
@@ -1017,6 +1189,13 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             logs = self.api.get_logs()
+            self.wfile.write(json.dumps(logs, ensure_ascii=False).encode("utf-8"))
+            return
+        elif self.path == "/api/logs_calculos" or self.path.startswith("/api/logs_calculos?"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            logs = self.api.get_logs_calculos()
             self.wfile.write(json.dumps(logs, ensure_ascii=False).encode("utf-8"))
             return
         elif self.path == "/api/get_regras":
@@ -1153,6 +1332,22 @@ class AppHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode("utf-8"))
                 result = self.api.save_file(data)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+            return
+        elif self.path == "/api/log_calculo":
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                result = self.api.log_calculo(data)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()

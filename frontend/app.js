@@ -1805,7 +1805,7 @@
     var seletorMatch = consultarSeletor(ctx);
     var cronograma = gerarCronogramaCompleto(ctx, calcTimes, state.templateBlocksData, seletorMatch);
 
-    return {
+    var calcResult = {
       ctx: ctx,
       seletor: seletorMatch,
       resultadosAreas: resultadosAreas,
@@ -1814,6 +1814,71 @@
       calc_times: calcTimes,
       cronograma: cronograma
     };
+
+    // Calcula os totais por disciplina do padrão Excel
+    calcResult.totaisDisciplinas = calcularTotaisDisciplinasExcel(cronograma ? cronograma.tarefas : []);
+
+    // Dispara log automático de auditoria das informações preenchidas e calculadas
+    enviarLogCalculo(calcResult);
+
+    return calcResult;
+  }
+
+  function enviarLogCalculo(res) {
+    if (!res || !res.ctx) return;
+    try {
+      var ctx = res.ctx;
+      var crono = res.cronograma || {};
+      var totaisDisc = res.totaisDisciplinas || calcularTotaisDisciplinasExcel(crono.tarefas || []);
+
+      var logPayload = {
+        ctx: ctx,
+        totais_disciplinas: totaisDisc,
+        resumo_areas: res.resultadosAreas || [],
+        cronograma: {
+          cenario_id: crono.cenario_id,
+          qtd_tarefas: crono.qtd_tarefas || (crono.tarefas ? crono.tarefas.length : 0),
+          total_horas: crono.total_horas || 0,
+          total_dias: crono.total_dias || 0
+        },
+        seletor: res.seletor || {},
+        data_hora: new Date().toISOString()
+      };
+
+      // Guarda snapshot no localStorage
+      try {
+        localStorage.setItem('ultimo_log_calculo', JSON.stringify(logPayload));
+      } catch (e) {}
+
+      // Log estruturado no console do navegador
+      console.group('📊 [LOG CÁLCULO DE TEMPOS — Eletrocentros]');
+      console.info('Formulário preenchido:', ctx);
+      console.info('Horas por Diagrama (Padrão Excel):', totaisDisc);
+      console.info('Resumo 5 Áreas Analíticas:', res.resultadosAreas);
+      console.info('Cronograma (tarefas):', crono);
+      console.groupEnd();
+
+      // Envia ao backend Python / MySQL
+      if (isPyWebviewAvailable()) {
+        window.pywebview.api.log_calculo(logPayload).then(function (resp) {
+          console.log('[Log Cálculo] Registrado com sucesso via pywebview:', resp);
+        }).catch(function (err) {
+          console.warn('[Log Cálculo] Falha via pywebview:', err);
+        });
+      } else {
+        apiCall('/log_calculo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logPayload)
+        }).then(function (resp) {
+          console.log('[Log Cálculo] Registrado com sucesso via API:', resp);
+        }).catch(function (err) {
+          console.warn('[Log Cálculo] Falha via API local:', err);
+        });
+      }
+    } catch (err) {
+      console.error('[Log Cálculo] Erro ao enviar log:', err);
+    }
   }
 
   function calcularTotaisDisciplinasExcel(tarefas) {
