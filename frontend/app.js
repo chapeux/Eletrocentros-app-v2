@@ -431,27 +431,11 @@
     if (field && section === 'sec-sapinfo') {
       field.style.display = applicable ? '' : 'none';
     }
-    if (!applicable) { 
-      setLed(id, 'na'); 
-      if (wrap) {
-        wrap.removeAttribute('data-req');
-        wrap.removeAttribute('data-filled');
-        wrap.classList.remove('field-missing', 'pulse-missing');
-      }
-      el.removeAttribute('data-req');
-      el.removeAttribute('data-filled');
-      el.classList.remove('field-missing', 'pulse-missing');
-      return; 
-    }
+    if (!applicable) { setLed(id, 'na'); if (wrap) wrap.removeAttribute('data-req'); el.removeAttribute('data-req'); return; }
     var filled = isFilledEl(el);
     el.dataset.req = required ? '1' : '0';
     el.dataset.filled = filled ? '1' : '0';
-    el.classList.toggle('field-missing', required && !filled);
-    if (wrap) { 
-      wrap.dataset.req = required ? '1' : '0'; 
-      wrap.dataset.filled = filled ? '1' : '0'; 
-      wrap.classList.toggle('field-missing', required && !filled);
-    }
+    if (wrap) { wrap.dataset.req = required ? '1' : '0'; wrap.dataset.filled = filled ? '1' : '0'; }
     setLed(id, required ? (filled ? 'ok' : 'req') : (filled ? 'ok' : 'na'));
     if (required) trackField(section, !filled);
   }
@@ -464,17 +448,10 @@
     if (field && section === 'sec-sapinfo') {
       field.style.display = applicable ? '' : 'none';
     }
-    if (!applicable) { 
-      setLed(id, 'na'); 
-      container.removeAttribute('data-req'); 
-      container.removeAttribute('data-filled');
-      container.classList.remove('field-missing', 'pulse-missing');
-      return; 
-    }
+    if (!applicable) { setLed(id, 'na'); container.removeAttribute('data-req'); return; }
     var filled = selVal(id) !== '';
     container.dataset.req = required ? '1' : '0';
     container.dataset.filled = filled ? '1' : '0';
-    container.classList.toggle('field-missing', required && !filled);
     setLed(id, required ? (filled ? 'ok' : 'req') : (filled ? 'ok' : 'na'));
     if (required) trackField(section, !filled);
   }
@@ -501,28 +478,7 @@
       var comp = row.querySelector('.mod-comp');
       var larg = row.querySelector('.mod-larg');
       comp.disabled = !active; larg.disabled = !active;
-      
-      var compFilled = comp.value.trim() !== '';
-      var largFilled = larg.value.trim() !== '';
-      
-      if (active) {
-        comp.dataset.req = '1';
-        comp.dataset.filled = compFilled ? '1' : '0';
-        comp.classList.toggle('field-missing', !compFilled);
-        
-        larg.dataset.req = '1';
-        larg.dataset.filled = largFilled ? '1' : '0';
-        larg.classList.toggle('field-missing', !largFilled);
-      } else {
-        comp.removeAttribute('data-req');
-        comp.removeAttribute('data-filled');
-        comp.classList.remove('field-missing', 'pulse-missing');
-        larg.removeAttribute('data-req');
-        larg.removeAttribute('data-filled');
-        larg.classList.remove('field-missing', 'pulse-missing');
-      }
-
-      var filled = active && compFilled && largFilled;
+      var filled = active && comp.value.trim() !== '' && larg.value.trim() !== '';
       setLed('mod' + idx, !active ? 'na' : (filled ? 'ok' : 'req'));
       if (active) trackField('sec-estrutura', !filled);
     });
@@ -2517,14 +2473,6 @@
     $('btnOk').addEventListener('click', function () {
       recomputeForm();
       if (reqDone < reqTotal) {
-        // Aplica a animação de pulso/circulação em todos os campos pendentes
-        document.querySelectorAll('.field-missing, .csel[data-req="1"]:not([data-filled="1"]) .csel-btn, .stepper[data-req="1"]:not([data-filled="1"]), input[data-req="1"]:not([data-filled="1"])').forEach(function (el) {
-          var target = el.classList.contains('csel') ? (el.querySelector('.csel-btn') || el) : el;
-          target.classList.remove('pulse-missing');
-          void target.offsetWidth; // força reflow para reiniciar animação
-          target.classList.add('pulse-missing');
-        });
-
         var missingNames = [];
         document.querySelectorAll('.csel[data-req="1"], .stepper[data-req="1"], input[data-req="1"]').forEach(function (el) {
           if (el.dataset.filled !== '1') {
@@ -2539,9 +2487,9 @@
         var tipo = selVal('tipoestrutura');
         var nrmod = parseInt(selVal('nrmodulos') || '0', 10);
         var temModulos = tipo !== '' && CONFIG.regras.estruturasSemModulo.indexOf(tipo) === -1;
-        if (temModulos && nrmod > 0 && moduleInputs) {
+        if (temModulos && nrmod > 0) {
           for (var i = 1; i <= nrmod; i++) {
-            var row = moduleInputs[i - 1];
+            var row = $('modRow' + i);
             if (row) {
               var comp = row.querySelector('.mod-comp');
               var larg = row.querySelector('.mod-larg');
@@ -2560,11 +2508,13 @@
         }
         showToast(msg, true);
 
-        // Rola suavemente até o primeiro campo faltante
-        var firstMissing = document.querySelector('.csel[data-req="1"]:not([data-filled="1"]), .stepper[data-req="1"]:not([data-filled="1"]), input[data-req="1"]:not([data-filled="1"]), .field-missing');
+        // Highlight and scroll to first missing field
+        var firstMissing = document.querySelector('.csel[data-req="1"][data-filled="0"], .stepper[data-req="1"][data-filled="0"], .led.req');
         if (firstMissing) {
-          var targetField = firstMissing.closest('.field') || firstMissing.closest('.mrow') || firstMissing;
+          var targetField = firstMissing.closest('.field') || firstMissing;
           targetField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetField.classList.add('highlighted');
+          setTimeout(function () { targetField.classList.remove('highlighted'); }, 2000);
         }
         return;
       }
